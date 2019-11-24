@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 # Project Settings
-project(GarlicModels VERSION 1.0.1 DESCRIPTION "Library for parsing and schema validation.")
+project(GarlicModel VERSION 1.0.1 DESCRIPTION "Library for parsing and schema validation.")
 include(GNUInstallDirs)
 
 # If conan file is there, load it up.
