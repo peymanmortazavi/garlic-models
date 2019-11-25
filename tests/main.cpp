@@ -4,10 +4,10 @@
 * Description:      Main entry for garlic model tests.
 *****************************************************************************/
 
-#include <iostream>
+#include <gtest/gtest.h>
 
 
 int main(int argc, char* argv[]) {
-  std::cout << "Welcome to GarlicModel tests." << std::endl;
-  return 0;
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
