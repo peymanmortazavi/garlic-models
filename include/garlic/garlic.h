@@ -98,8 +98,8 @@ namespace garlic
     type_flag type_;
 
   public:
-    inline list_range get_list() const     { return list_range   { *this}; };
-    inline object_range get_object() const { return object_range { *this}; };
+    inline list_range get_list() const     { return list_range   { *this }; };
+    inline object_range get_object() const { return object_range { *this }; };
   };
 
 
