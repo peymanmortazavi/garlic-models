@@ -9,5 +9,6 @@ fi
 mkdir build
 cd build
 conan install ..
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make
+cd .. && ln -s build/compile_commands.json  # for tools like ccls.
