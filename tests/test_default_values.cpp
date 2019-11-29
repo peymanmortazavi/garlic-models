@@ -33,7 +33,7 @@ TEST(DefaultValue, StringValue) {
   ASSERT_THROW(value.get_int(), garlic::TypeError);
   ASSERT_THROW(value.get_bool(), garlic::TypeError);
   ASSERT_THROW(value.get_double(), garlic::TypeError);
-  
+
   assert_no_list(value);
   assert_no_object(value);
 }
@@ -69,4 +69,7 @@ TEST(DefaultValue, BooleanValue) {
   ASSERT_THROW(value.get_double(), garlic::TypeError);
   ASSERT_THROW(value.get_int(), garlic::TypeError);
   ASSERT_THROW(value.get_string(), garlic::TypeError);
+
+  assert_no_list(value);
+  assert_no_object(value);
 }
