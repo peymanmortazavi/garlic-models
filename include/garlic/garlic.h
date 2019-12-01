@@ -43,13 +43,18 @@ namespace garlic
   };
 
 
-  class value
+  template <template<typename...> typename PointerType>
+  class base_value
   {
   public:
-    virtual ~value() = default;
+    virtual ~base_value() = default;
 
-    using const_list_iterator = typename std::vector<std::shared_ptr<value>>::const_iterator;
-    using const_object_iterator = typename std::map<std::string, std::shared_ptr<value>>::const_iterator;
+    using store_type = PointerType<base_value>;
+    using const_list_iterator = typename std::vector<store_type>::const_iterator;
+    using const_object_iterator = typename std::map<std::string, store_type>::const_iterator;
+
+    static const store_type no_result;
+    static const store_type none;
 
     bool is_null()   const noexcept { return type_ & type_flag::null;         }
     bool is_int()    const noexcept { return type_ & type_flag::integer_type; }
@@ -68,33 +73,33 @@ namespace garlic
     // list
     virtual const_list_iterator begin_element() const        { throw TypeError(); }
     virtual const_list_iterator end_element() const          { throw TypeError(); }
-    virtual void append(const std::shared_ptr<value>& value) { throw TypeError(); }
-    virtual void append(std::shared_ptr<value>&& value)      { throw TypeError(); }
+    virtual void append(const store_type& value) { throw TypeError(); }
+    virtual void append(store_type&& value)      { throw TypeError(); }
     virtual void remove(size_t index)                        { throw TypeError(); }
-    virtual std::shared_ptr<value>& operator[](size_t index) { throw TypeError(); }
+    virtual store_type& operator[](size_t index) { throw TypeError(); }
 
     // object
     virtual const_object_iterator begin_member() const                            { throw TypeError(); }
     virtual const_object_iterator end_member() const                              { throw TypeError(); }
-    virtual void set(const std::string& key, const std::shared_ptr<value>& value) { throw TypeError(); }
-    virtual void set(const std::string& key, std::shared_ptr<value>&& value)      { throw TypeError(); }
-    virtual const std::shared_ptr<value>& get(const std::string& key) const       { throw TypeError(); }
+    virtual void set(const std::string& key, const store_type& value) { throw TypeError(); }
+    virtual void set(const std::string& key, store_type&& value)      { throw TypeError(); }
+    virtual const store_type& get(const std::string& key) const       { throw TypeError(); }
 
   private:
     struct list_range {
-      const value& self;
+      const base_value& self;
       inline const_list_iterator begin() { return self.begin_element(); }
       inline const_list_iterator end()   { return self.end_element(); }
     };
 
     struct object_range {
-      const value& self;
+      const base_value& self;
       inline const_object_iterator begin() { return self.begin_member(); }
       inline const_object_iterator end()   { return self.end_member(); }
     };
 
   protected:
-    value(const type_flag& type) : type_(type) {}
+    base_value(const type_flag& type) : type_(type) {}
     type_flag type_;
 
   public:
@@ -102,9 +107,8 @@ namespace garlic
     inline object_range get_object() const { return object_range { *this }; };
   };
 
-
-  const static std::shared_ptr<value> NoResult = nullptr;
-
+  using value = base_value<std::shared_ptr>;
+  using shareable_value = base_value<std::unique_ptr>;
 
   class string : public value
   {
@@ -162,18 +166,18 @@ namespace garlic
 
     const_object_iterator begin_member() const override { return table_.cbegin(); }
     const_object_iterator end_member() const override { return table_.cend(); }
-    void set(const std::string& key, const std::shared_ptr<value>& value) override { table_.emplace(key, value); }
-    void set(const std::string& key, std::shared_ptr<value>&& value) override { table_.emplace(key, std::move(value)); }
-    const std::shared_ptr<value>& get(const std::string& key) const override {
+    void set(const std::string& key, const value::store_type& value) override { table_.emplace(key, value); }
+    void set(const std::string& key, value::store_type&& value) override { table_.emplace(key, std::move(value)); }
+    const value::store_type& get(const std::string& key) const override {
       const auto& it = table_.find(key);
       if (it != end(table_)) {
         return it->second;
       }
-      return NoResult;
+      return value::no_result;
     }
 
   private:
-    std::map<std::string, std::shared_ptr<value>> table_;
+    std::map<std::string, value::store_type> table_;
   };
 
 
@@ -188,19 +192,19 @@ namespace garlic
 
     const_list_iterator begin_element() const override { return items_.cbegin(); }
     const_list_iterator end_element() const override { return items_.cend(); }
-    void append(const std::shared_ptr<value>& value) override { items_.push_back(value); }
-    void append(std::shared_ptr<value>&& value) override { items_.push_back(value); }
+    void append(const value::store_type& value) override { items_.push_back(value); }
+    void append(value::store_type&& value) override { items_.push_back(value); }
     void remove(size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
       items_.erase(begin(items_) + 1);
     }
-    std::shared_ptr<value>& operator[](size_t index) override {
+    value::store_type& operator[](size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
       return *(items_.begin() + index);
     }
 
   private:
-    std::vector<std::shared_ptr<value>> items_;
+    std::vector<value::store_type> items_;
   };
 
 

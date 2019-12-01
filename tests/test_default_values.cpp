@@ -9,18 +9,20 @@
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
 
+#include <map>
+
 
 void assert_no_list(garlic::value& val) {
   ASSERT_THROW(val.get_list().begin(), garlic::TypeError);
   ASSERT_THROW(val.get_list().end(), garlic::TypeError);
-  ASSERT_THROW(val.append(garlic::NoResult), garlic::TypeError);
+  ASSERT_THROW(val.append(garlic::value::none), garlic::TypeError);
   ASSERT_THROW(val.remove(0), garlic::TypeError);
   ASSERT_THROW(val[0], garlic::TypeError);
 }
 
 
 void assert_no_object(garlic::value& val) {
-  ASSERT_THROW(val.set("Peyman", garlic::NoResult), garlic::TypeError);
+  ASSERT_THROW(val.set("Peyman", garlic::value::none), garlic::TypeError);
   ASSERT_THROW(val.get("Peyman"), garlic::TypeError);
   ASSERT_THROW(val.get_object().begin(), garlic::TypeError);
   ASSERT_THROW(val.get_object().end(), garlic::TypeError);
@@ -72,4 +74,8 @@ TEST(DefaultValue, BooleanValue) {
 
   assert_no_list(value);
   assert_no_object(value);
+}
+
+
+TEST(PerformanceTest, DefaultObject) {
 }

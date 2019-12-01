@@ -6,7 +6,7 @@ set_target_properties(GarlicModel PROPERTIES VERSION ${PROJECT_VERSION} PUBLIC_H
 
 target_include_directories(GarlicModel
   INTERFACE "$<BUILD_INTERFACE:${GarlicModel_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
-  PRIVATE "src"
+  PRIVATE "src include"
 )
 
 target_compile_features(GarlicModel PUBLIC cxx_std_17)
