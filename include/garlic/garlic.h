@@ -43,20 +43,19 @@ namespace garlic
   };
 
 
-  template <template<typename...> typename PointerType>
+  template <template<typename...> typename ptr>
   class base_value
   {
   public:
     virtual ~base_value() = default;
 
-    using store_type = PointerType<base_value>;
-    using const_list_iterator = typename std::vector<store_type>::const_iterator;
+    using store_type            = ptr<base_value>;
+    using const_list_iterator   = typename std::vector<store_type>::const_iterator;
     using const_object_iterator = typename std::map<std::string, store_type>::const_iterator;
 
-    static const store_type no_result;
-    static const store_type none;
+    static const base_value none;
 
-    bool is_null()   const noexcept { return type_ & type_flag::null;         }
+    bool is_null()   const noexcept { return ~(type_ & type_flag::null);      }
     bool is_int()    const noexcept { return type_ & type_flag::integer_type; }
     bool is_string() const noexcept { return type_ & type_flag::string_type;  }
     bool is_double() const noexcept { return type_ & type_flag::double_type;  }
@@ -71,19 +70,23 @@ namespace garlic
     virtual const bool& get_bool() const { throw TypeError(); }
 
     // list
-    virtual const_list_iterator begin_element() const        { throw TypeError(); }
-    virtual const_list_iterator end_element() const          { throw TypeError(); }
-    virtual void append(const store_type& value) { throw TypeError(); }
-    virtual void append(store_type&& value)      { throw TypeError(); }
-    virtual void remove(size_t index)                        { throw TypeError(); }
-    virtual store_type& operator[](size_t index) { throw TypeError(); }
+    virtual const_list_iterator begin_element() const { throw TypeError(); }
+    virtual const_list_iterator end_element() const   { throw TypeError(); }
+    virtual void append(const base_value& value)      { throw TypeError(); }
+    virtual void append(base_value&& value)           { throw TypeError(); }
+    virtual void remove(size_t index)                 { throw TypeError(); }
+    virtual base_value& operator[](size_t index)      { throw TypeError(); }
 
     // object
-    virtual const_object_iterator begin_member() const                            { throw TypeError(); }
-    virtual const_object_iterator end_member() const                              { throw TypeError(); }
-    virtual void set(const std::string& key, const store_type& value) { throw TypeError(); }
-    virtual void set(const std::string& key, store_type&& value)      { throw TypeError(); }
-    virtual const store_type& get(const std::string& key) const       { throw TypeError(); }
+    virtual const_object_iterator begin_member() const                { throw TypeError(); }
+    virtual const_object_iterator end_member() const                  { throw TypeError(); }
+    virtual void set(const std::string& key, const base_value& value) { throw TypeError(); }
+    virtual void set(const std::string& key, base_value&& value)      { throw TypeError(); }
+    virtual const base_value* get(const std::string& key) const       { throw TypeError(); }
+
+    // cloning.
+    virtual store_type clone() const { return store_type(new base_value(*this)); };
+    virtual store_type move_clone() { return store_type(new base_value(std::move(*this))); };
 
   private:
     struct list_range {
@@ -107,15 +110,26 @@ namespace garlic
     inline object_range get_object() const { return object_range { *this }; };
   };
 
-  using value = base_value<std::shared_ptr>;
-  using shareable_value = base_value<std::unique_ptr>;
+  using value = base_value<std::unique_ptr>;
+  //using shareable_value = base_value<std::unique_ptr>;
+
+  template<> const value value::none{type_flag::null};
+  //template<> const shareable_value shareable_value::none{type_flag::null};
 
   class string : public value
   {
   public:
     virtual ~string() = default;
+    string(const std::string& text="") : value_(text), value(type_flag::string_type) {}
     string(std::string&& text) : value_(std::move(text)), value(type_flag::string_type) {}
+    string(const char* text) : value_(text), value(type_flag::string_type) {}
     const std::string& get_string() const override { return value_; }
+
+    store_type clone() const override { return store_type(new string(value_)); }
+    store_type move_clone() override { return store_type(new string(std::move(*this))); }
+
+    operator const char* () const { return value_.c_str(); }
+    operator const std::string& () const { return value_; }
 
   private:
     std::string value_;
@@ -126,8 +140,13 @@ namespace garlic
   {
   public:
     virtual ~integer() = default;
-    integer(int num) : value_(num), value(type_flag::integer_type) {}
+    integer(int num=0) : value_(num), value(type_flag::integer_type) {}
     const int& get_int() const override { return value_; }
+
+    store_type clone() const override { return store_type(new integer(value_)); }
+    store_type move_clone() override { return store_type(new integer(std::move(*this))); }
+
+    operator int() const { return value_; }
 
   private:
     int value_;
@@ -138,8 +157,13 @@ namespace garlic
   {
   public:
     virtual ~float64() = default;
-    float64(double num) : value_(num), value(type_flag::double_type) {}
+    float64(double num=0) : value_(num), value(type_flag::double_type) {}
     const double& get_double() const override { return value_; }
+
+    store_type clone() const override { return store_type(new float64(value_)); }
+    store_type move_clone() override { return store_type(new float64(std::move(*this))); }
+
+    operator const double& () const { return value_; }
 
   private:
     double value_;
@@ -150,8 +174,13 @@ namespace garlic
   {
   public:
     virtual ~boolean() = default;
-    boolean(bool val) : value_(val), value(type_flag::boolean_type) {}
+    boolean(bool val=false) : value_(val), value(type_flag::boolean_type) {}
     const bool& get_bool() const override { return value_; }
+
+    store_type clone() const override { return store_type(new boolean(value_)); }
+    store_type move_clone() override { return store_type(new boolean(std::move(*this))); }
+
+    operator bool () const { return value_; }
 
   private:
     bool value_;
@@ -163,21 +192,30 @@ namespace garlic
   public:
     virtual ~object() = default;
     object() : value(type_flag::object_type) {}
+    object(const object& other) : value(type_flag::object_type) {
+      for(auto& pair : other.table_) {
+        table_.emplace(pair.first, pair.second->clone());
+      }
+    }
+    object(object&& other) : table_(std::move(other.table_)), value(type_flag::object_type) {}
 
     const_object_iterator begin_member() const override { return table_.cbegin(); }
     const_object_iterator end_member() const override { return table_.cend(); }
-    void set(const std::string& key, const value::store_type& value) override { table_.emplace(key, value); }
-    void set(const std::string& key, value::store_type&& value) override { table_.emplace(key, std::move(value)); }
-    const value::store_type& get(const std::string& key) const override {
+    void set(const std::string& key, const value& val) override { table_.emplace(key, val.clone()); }
+    void set(const std::string& key, value&& val) override { table_.emplace(key, val.move_clone()); }
+    const value* get(const std::string& key) const override {
       const auto& it = table_.find(key);
       if (it != end(table_)) {
-        return it->second;
+        return it->second.get();
       }
-      return value::no_result;
+      return nullptr;
     }
 
+    store_type clone() const override { return store_type(new object(*this)); }
+    store_type move_clone() override { return store_type(new object(std::move(*this))); }
+
   private:
-    std::map<std::string, value::store_type> table_;
+    std::map<std::string, store_type> table_;
   };
 
 
@@ -189,22 +227,32 @@ namespace garlic
     list(size_t capacity) : value(type_flag::list_type) {
       items_.reserve(capacity);
     }
+    list(const list& other) : value(type_flag::list_type) {
+      items_.reserve(other.items_.size());
+      for (auto& item : other.items_) {
+        items_.push_back(item->clone());
+      }
+    }
+    list(list&& other) : items_(std::move(other.items_)), value(type_flag::list_type) {}
 
     const_list_iterator begin_element() const override { return items_.cbegin(); }
     const_list_iterator end_element() const override { return items_.cend(); }
-    void append(const value::store_type& value) override { items_.push_back(value); }
-    void append(value::store_type&& value) override { items_.push_back(value); }
+    void append(const value& val) override { items_.push_back(val.clone()); }
+    void append(value&& val) override { items_.push_back(val.move_clone()); }
     void remove(size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
       items_.erase(begin(items_) + 1);
     }
-    value::store_type& operator[](size_t index) override {
+    value& operator[](size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
-      return *(items_.begin() + index);
+      return **(items_.begin() + index);
     }
 
+    store_type clone() const override { return store_type(new list(*this)); }
+    store_type move_clone() override { return store_type(new list(std::move(*this))); }
+
   private:
-    std::vector<value::store_type> items_;
+    std::vector<store_type> items_;
   };
 
 

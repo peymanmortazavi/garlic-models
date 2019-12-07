@@ -36,6 +36,12 @@ TEST(DefaultValue, StringValue) {
   ASSERT_THROW(value.get_bool(), garlic::TypeError);
   ASSERT_THROW(value.get_double(), garlic::TypeError);
 
+  // convenience check.
+  garlic::string value2;
+  value2 = "test";  // assignment to const char* is easy.
+  const char* value3 = value2;  // getting const char* out of it is easy.
+  ASSERT_EQ(strcmp(value3, "test"), 0);
+
   assert_no_list(value);
   assert_no_object(value);
 }
@@ -47,6 +53,12 @@ TEST(DefaultValue, IntegerValue) {
   ASSERT_THROW(value.get_string(), garlic::TypeError);
   ASSERT_THROW(value.get_double(), garlic::TypeError);
   ASSERT_THROW(value.get_bool(), garlic::TypeError);
+
+  // convenience check.
+  garlic::integer value2;
+  value2 = 14;  // assignment to it is easy.
+  int value3 = value2;  // getting int out of it is easy.
+  ASSERT_EQ(value3, 14);
 
   assert_no_list(value);
   assert_no_object(value);
@@ -60,6 +72,12 @@ TEST(DefaultValue, DoubleValue) {
   ASSERT_THROW(value.get_int(), garlic::TypeError);
   ASSERT_THROW(value.get_bool(), garlic::TypeError);
 
+  // convenience check.
+  garlic::float64 value2;
+  value2 = 12.43;  // assignment to it is easy.
+  double value3 = value2;  // getting double out of it is easy.
+  ASSERT_EQ(value3, 12.43);
+
   assert_no_list(value);
   assert_no_object(value);
 }
@@ -72,10 +90,38 @@ TEST(DefaultValue, BooleanValue) {
   ASSERT_THROW(value.get_int(), garlic::TypeError);
   ASSERT_THROW(value.get_string(), garlic::TypeError);
 
+  garlic::boolean value2;
+  value2 = true;
+  bool value3 = value2;
+  ASSERT_EQ(value3, true);
+
   assert_no_list(value);
   assert_no_object(value);
 }
 
 
-TEST(PerformanceTest, DefaultObject) {
+TEST(DefaultValue, ObjectValue) {
+  garlic::object value;
+  value.set("name", garlic::string{"test"});
+  value.set("age", garlic::integer{25});
+  ASSERT_EQ(value.get("name")->get_string(), "test");
+  ASSERT_EQ(value.get("age")->get_int(), 25);
+
+  garlic::object value2;
+  value2.set("title", garlic::string{"c++ programmer"});
+  value.set("job", value2);
+  ASSERT_EQ(value.get("job")->get("title")->get_string(), "c++ programmer");
+}
+
+
+TEST(DefaultValue, ListValue) {
+  garlic::list value;
+  value.append(garlic::string{"peyman"});
+  value.append(garlic::value::none);
+  value.append(garlic::boolean{true});
+  ASSERT_EQ(value[0].get_string(), "peyman");
+  ASSERT_EQ(value[1].is_null(), true);
+  ASSERT_EQ(value[1].is_string(), false);
+  ASSERT_EQ(value[2].get_bool(), true);
+  ASSERT_EQ(value[2].is_string(), false);
 }
