@@ -61,8 +61,8 @@ void test_list_iterations(T& list_container) {
   index = 0;
   const T& list_container_ref = list_container;
   for(const auto& element : list_container_ref.get_list()) {
-    //LIST_ITERATOR_INNER_TEST(element, index);
-    //index++;
+    LIST_ITERATOR_INNER_TEST(element, index);
+    index++;
   }
 }
 
