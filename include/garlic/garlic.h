@@ -50,33 +50,27 @@ namespace garlic
     virtual ~base_value() = default;
 
     using store_type            = ptr<base_value>;
+    using list_container        = std::vector<store_type>;
+    using object_container      = std::map<std::string, store_type>;
     using const_object_iterator = typename std::map<std::string, store_type>::const_iterator;
 
-    class list_iterator : public std::iterator<std::forward_iterator_tag, base_value> {
+    template<typename T, typename IT>
+    class list_iterator_base : public std::iterator<std::forward_iterator_tag, base_value> {
     private:
-      using it = typename std::vector<store_type>::iterator;
-      it iterator_;
+      IT iterator_;
     public:
-      explicit list_iterator(it&& iterator) : iterator_(std::move(iterator)) {}
-      list_iterator& operator ++ () { iterator_++; return *this; }
-      list_iterator& operator ++ (int) { list_iterator old_it = *this; ++(*this); return old_it; }
-      bool operator == (const list_iterator& other) const { return other.iterator_ == this->iterator_; }
-      bool operator != (const list_iterator& other) const { return !(other == *this); }
-      base_value& operator * () const { return **iterator_; }
+      explicit list_iterator_base(IT&& iterator) : iterator_(std::move(iterator)) {}
+      list_iterator_base& operator ++ () { iterator_++; return *this; }
+      list_iterator_base& operator ++ (int) { list_iterator_base old_it = *this; ++(*this); return old_it; }
+      bool operator == (const list_iterator_base& other) const { return other.iterator_ == this->iterator_; }
+      bool operator != (const list_iterator_base& other) const { return !(other == *this); }
+      T& operator * () const { return **iterator_; }
     };
 
-    class const_list_iterator : public std::iterator<std::forward_iterator_tag, base_value> {
-    private:
-      using it = typename std::vector<store_type>::const_iterator;
-      it iterator_;
-    public:
-      explicit const_list_iterator(it&& iterator) : iterator_(std::move(iterator)) {}
-      const_list_iterator& operator ++ () { iterator_++; return *this; }
-      const_list_iterator& operator ++ (int) { const_list_iterator old_it = *this; ++(*this); return old_it; }
-      bool operator == (const const_list_iterator& other) const { return other.iterator_ == this->iterator_; }
-      bool operator != (const const_list_iterator& other) const { return !(other == *this); }
-      const base_value& operator * () const { return **iterator_; }
-    };
+    using list_iterator = list_iterator_base<base_value, typename list_container::iterator>;
+    using const_list_iterator = list_iterator_base<
+      const base_value, typename list_container::const_iterator
+    >;
 
     static const base_value none;
 
