@@ -30,19 +30,6 @@ void assert_no_object(garlic::value& val) {
   ASSERT_THROW(val.get_object().end(), garlic::TypeError);
 }
 
-#define LIST_ITERATOR_INNER_TEST(element, index) switch (index) {\
-      case 0:\
-        ASSERT_EQ(element.is_string(), true);\
-        ASSERT_EQ(element.get_string(), "a");\
-        break;\
-      case 1:\
-        ASSERT_EQ(element.is_null(), true);\
-        break;\
-      case 2:\
-        ASSERT_EQ(element.is_bool(), true);\
-        ASSERT_EQ(element.get_bool(), true);\
-        break;\
-    }
 
 /**
  * Tests out a generic garlic list container.
@@ -50,10 +37,24 @@ void assert_no_object(garlic::value& val) {
  */
 template<typename T>
 void test_list_iterations(T& list_container) {
+  #define TRY_ITEM(element, index) switch (index) {\
+    case 0:\
+      ASSERT_EQ(element.is_string(), true);\
+      ASSERT_EQ(element.get_string(), "a");\
+      break;\
+    case 1:\
+      ASSERT_EQ(element.is_null(), true);\
+      break;\
+    case 2:\
+      ASSERT_EQ(element.is_bool(), true);\
+      ASSERT_EQ(element.get_bool(), true);\
+      break;\
+  }
+
   // Reference Range Iteration
   auto index = 0;
   for(auto& element : list_container.get_list()) {
-    LIST_ITERATOR_INNER_TEST(element, index);
+    TRY_ITEM(element, index);
     index++;
   }
 
@@ -61,7 +62,7 @@ void test_list_iterations(T& list_container) {
   index = 0;
   const T& list_container_ref = list_container;
   for(const auto& element : list_container_ref.get_list()) {
-    LIST_ITERATOR_INNER_TEST(element, index);
+    TRY_ITEM(element, index);
     index++;
   }
 }
