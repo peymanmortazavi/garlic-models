@@ -9,7 +9,6 @@
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
 
-#include <iostream>
 #include <map>
 #include <vector>
 
