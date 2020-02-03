@@ -52,7 +52,6 @@ namespace garlic
     using store_type            = ptr<base_value>;
     using list_container        = std::vector<store_type>;
     using object_container      = std::map<std::string, store_type>;
-    using const_object_iterator = typename std::map<std::string, store_type>::const_iterator;
 
     template<typename T, typename IT>
     class list_iterator_base : public std::iterator<std::forward_iterator_tag, base_value> {
@@ -61,8 +60,8 @@ namespace garlic
     public:
       explicit list_iterator_base(IT&& iterator) : iterator_(std::move(iterator)) {}
       list_iterator_base& operator ++ () { iterator_++; return *this; }
-      list_iterator_base& operator ++ (int) { list_iterator_base old_it = *this; ++(*this); return old_it; }
-      bool operator == (const list_iterator_base& other) const { return other.iterator_ == this->iterator_; }
+      list_iterator_base& operator ++ (int) { auto old_it = *this; ++(*this); return old_it; }
+      bool operator == (const list_iterator_base& other) const { return other.iterator_ == iterator_; }
       bool operator != (const list_iterator_base& other) const { return !(other == *this); }
       T& operator * () const { return **iterator_; }
     };
@@ -70,6 +69,31 @@ namespace garlic
     using list_iterator = list_iterator_base<base_value, typename list_container::iterator>;
     using const_list_iterator = list_iterator_base<
       const base_value, typename list_container::const_iterator
+    >;
+
+    struct object_element {
+      const std::string& first;
+      base_value& second;
+    };
+
+    template<typename T, typename IT>
+    class object_iterator_base : public std::iterator<std::forward_iterator_tag, object_element> {
+    private:
+      IT iterator_;
+    public:
+      explicit object_iterator_base(IT&& iterator) : iterator_(std::move(iterator)) {}
+      object_iterator_base& operator ++ () { iterator_++; return *this; }
+      object_iterator_base& operator ++ (int) { auto old_it = *this; ++(*this); old_it; }
+      bool operator == (const object_iterator_base& other) const { return other.iterator_ == iterator_; }
+      bool operator != (const object_iterator_base& other) const { return !(*this == other); }
+      T operator * () const { return object_element{iterator_->first, *iterator_->second}; }
+    };
+
+    using object_iterator = object_iterator_base<
+      object_element, typename object_container::iterator
+    >;
+    using const_object_iterator = object_iterator_base<
+      const object_element, typename object_container::const_iterator
     >;
 
     static const base_value none;
@@ -99,11 +123,14 @@ namespace garlic
     virtual base_value& operator[](size_t index)      { throw TypeError(); }
 
     // object
-    virtual const_object_iterator begin_member() const                { throw TypeError(); }
-    virtual const_object_iterator end_member() const                  { throw TypeError(); }
+    virtual object_iterator begin_member() { throw TypeError(); }
+    virtual object_iterator end_member() { throw TypeError(); }
+    virtual const_object_iterator cbegin_member() const { throw TypeError(); }
+    virtual const_object_iterator cend_member() const { throw TypeError(); }
     virtual void set(const std::string& key, const base_value& value) { throw TypeError(); }
     virtual void set(const std::string& key, base_value&& value)      { throw TypeError(); }
     virtual const base_value* get(const std::string& key) const       { throw TypeError(); }
+    virtual base_value& operator[](const std::string& key)      { throw TypeError(); }
 
     // cloning.
     virtual store_type clone() const { return store_type(new base_value(*this)); };
@@ -123,9 +150,15 @@ namespace garlic
     };
 
     struct object_range {
+      base_value& self;
+      inline object_iterator begin() { return self.begin_member(); }
+      inline object_iterator end()   { return self.end_member(); }
+    };
+
+    struct const_object_range {
       const base_value& self;
-      inline const_object_iterator begin() { return self.begin_member(); }
-      inline const_object_iterator end()   { return self.end_member(); }
+      inline const_object_iterator begin() { return self.cbegin_member(); }
+      inline const_object_iterator end()   { return self.cend_member(); }
     };
 
   protected:
@@ -135,7 +168,8 @@ namespace garlic
   public:
     inline list_range get_list() { return list_range   { *this }; };
     inline const_list_range get_list() const { return const_list_range   { *this }; };
-    inline object_range get_object() const { return object_range { *this }; };
+    inline object_range get_object() { return object_range { *this }; };
+    inline const_object_range get_object() const { return const_object_range { *this }; };
   };
 
   using value = base_value<std::unique_ptr>;
@@ -227,12 +261,14 @@ namespace garlic
     }
     object(object&& other) : table_(std::move(other.table_)), value(type_flag::object_type) {}
 
-    const_object_iterator begin_member() const override { return table_.cbegin(); }
-    const_object_iterator end_member() const override { return table_.cend(); }
+    const_object_iterator cbegin_member() const override { return const_object_iterator{table_.cbegin()}; }
+    const_object_iterator cend_member() const override { return const_object_iterator{table_.cend()}; }
+    object_iterator begin_member() override { return object_iterator{table_.begin()}; }
+    object_iterator end_member() override { return object_iterator{table_.end()}; }
     void set(const std::string& key, const value& val) override { table_.emplace(key, val.clone()); }
     void set(const std::string& key, value&& val) override { table_.emplace(key, val.move_clone()); }
     const value* get(const std::string& key) const override {
-      const auto& it = table_.find(key);
+      auto it = table_.find(key);
       if (it != end(table_)) {
         return it->second.get();
       }

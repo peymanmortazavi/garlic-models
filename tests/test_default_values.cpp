@@ -36,7 +36,7 @@ void assert_no_object(garlic::value& val) {
  */
 template<typename T>
 void test_list_iterations(T& list_container) {
-  #define TRY_ITEM(element, index) switch (index) {\
+  #define TRY_LIST_ITEM(element, index) switch (index) {\
     case 0:\
       ASSERT_EQ(element.is_string(), true);\
       ASSERT_EQ(element.get_string(), "a");\
@@ -53,7 +53,7 @@ void test_list_iterations(T& list_container) {
   // Reference Range Iteration
   auto index = 0;
   for(auto& element : list_container.get_list()) {
-    TRY_ITEM(element, index);
+    TRY_LIST_ITEM(element, index);
     index++;
   }
 
@@ -61,7 +61,44 @@ void test_list_iterations(T& list_container) {
   index = 0;
   const T& list_container_ref = list_container;
   for(const auto& element : list_container_ref.get_list()) {
-    TRY_ITEM(element, index);
+    TRY_LIST_ITEM(element, index);
+    index++;
+  }
+}
+
+
+/**
+ * Tests out a generic garlic object container.
+ * @param object_container it assumes this container has {"name": "peyman", "age": 27, "photo": null}
+ */
+template<typename T>
+void test_object_iterations(T& object_container) {
+  #define TRY_OBJECT_ITEM(element, index) switch (index) {\
+    case 0:\
+      ASSERT_EQ(element.first, "age");\
+      ASSERT_EQ(element.second.get_int(), 27);\
+      break;\
+    case 1:\
+      ASSERT_EQ(element.first, "name");\
+      ASSERT_EQ(element.second.get_string(), "peyman");\
+      break;\
+    case 2:\
+      ASSERT_EQ(element.first, "photo");\
+      ASSERT_EQ(element.second.is_null(), true);\
+      break;\
+  }
+  // get the reference.
+  auto index = 0;
+  for(auto element : object_container.get_object()) {
+    TRY_OBJECT_ITEM(element, index);
+    index++;
+  }
+
+  // const compatibility.
+  index = 0;
+  const T& const_object_container = object_container;
+  for(const auto& element : const_object_container.get_object()) {
+    TRY_OBJECT_ITEM(element, index);
     index++;
   }
 }
@@ -149,6 +186,14 @@ TEST(DefaultValue, ObjectValue) {
   value2.set("title", garlic::string{"c++ programmer"});
   value.set("job", value2);
   ASSERT_EQ(value.get("job")->get("title")->get_string(), "c++ programmer");
+}
+
+TEST(DefaultValue, ObjectValueIteratos) {
+  garlic::object value;
+  value.set("name", garlic::string{"peyman"});
+  value.set("age", garlic::integer{27});
+  value.set("photo", garlic::object::none);
+  test_object_iterations(value);
 }
 
 
