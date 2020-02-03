@@ -50,8 +50,33 @@ namespace garlic
     virtual ~base_value() = default;
 
     using store_type            = ptr<base_value>;
-    using const_list_iterator   = typename std::vector<store_type>::const_iterator;
     using const_object_iterator = typename std::map<std::string, store_type>::const_iterator;
+
+    class list_iterator : public std::iterator<std::forward_iterator_tag, base_value> {
+    private:
+      using it = typename std::vector<store_type>::iterator;
+      it iterator_;
+    public:
+      explicit list_iterator(it&& iterator) : iterator_(std::move(iterator)) {}
+      list_iterator& operator ++ () { iterator_++; return *this; }
+      list_iterator& operator ++ (int) { list_iterator old_it = *this; ++(*this); return old_it; }
+      bool operator == (const list_iterator& other) const { return other.iterator_ == this->iterator_; }
+      bool operator != (const list_iterator& other) const { return !(other == *this); }
+      base_value& operator * () const { return **iterator_; }
+    };
+
+    class const_list_iterator : public std::iterator<std::forward_iterator_tag, base_value> {
+    private:
+      using it = typename std::vector<store_type>::const_iterator;
+      it iterator_;
+    public:
+      explicit const_list_iterator(it&& iterator) : iterator_(std::move(iterator)) {}
+      const_list_iterator& operator ++ () { iterator_++; return *this; }
+      const_list_iterator& operator ++ (int) { const_list_iterator old_it = *this; ++(*this); return old_it; }
+      bool operator == (const const_list_iterator& other) const { return other.iterator_ == this->iterator_; }
+      bool operator != (const const_list_iterator& other) const { return !(other == *this); }
+      const base_value& operator * () const { return **iterator_; }
+    };
 
     static const base_value none;
 
@@ -70,8 +95,10 @@ namespace garlic
     virtual const bool& get_bool() const { throw TypeError(); }
 
     // list
-    virtual const_list_iterator begin_element() const { throw TypeError(); }
-    virtual const_list_iterator end_element() const   { throw TypeError(); }
+    virtual list_iterator begin_element() { throw TypeError(); }
+    virtual list_iterator end_element()   { throw TypeError(); }
+    virtual const_list_iterator cbegin_element() const { throw TypeError(); }
+    virtual const_list_iterator cend_element() const   { throw TypeError(); }
     virtual void append(const base_value& value)      { throw TypeError(); }
     virtual void append(base_value&& value)           { throw TypeError(); }
     virtual void remove(size_t index)                 { throw TypeError(); }
@@ -90,9 +117,15 @@ namespace garlic
 
   private:
     struct list_range {
+      base_value& self;
+      inline list_iterator begin() { return self.begin_element(); }
+      inline list_iterator end()   { return self.end_element(); }
+    };
+
+    struct const_list_range {
       const base_value& self;
-      inline const_list_iterator begin() { return self.begin_element(); }
-      inline const_list_iterator end()   { return self.end_element(); }
+      inline const_list_iterator begin() const { return self.cbegin_element(); }
+      inline const_list_iterator end() const { return self.cend_element(); }
     };
 
     struct object_range {
@@ -106,7 +139,8 @@ namespace garlic
     type_flag type_;
 
   public:
-    inline list_range get_list() const     { return list_range   { *this }; };
+    inline list_range get_list() { return list_range   { *this }; };
+    inline const_list_range get_list() const { return const_list_range   { *this }; };
     inline object_range get_object() const { return object_range { *this }; };
   };
 
@@ -235,8 +269,10 @@ namespace garlic
     }
     list(list&& other) : items_(std::move(other.items_)), value(type_flag::list_type) {}
 
-    const_list_iterator begin_element() const override { return items_.cbegin(); }
-    const_list_iterator end_element() const override { return items_.cend(); }
+    list_iterator begin_element() override { return list_iterator(items_.begin()); }
+    list_iterator end_element() override { return list_iterator(items_.end()); }
+    const_list_iterator cbegin_element() const override { return const_list_iterator(items_.begin()); }
+    const_list_iterator cend_element() const override { return const_list_iterator(items_.end()); }
     void append(const value& val) override { items_.push_back(val.clone()); }
     void append(value&& val) override { items_.push_back(val.move_clone()); }
     void remove(size_t index) override {

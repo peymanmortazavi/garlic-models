@@ -9,7 +9,9 @@
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
 
+#include <iostream>
 #include <map>
+#include <vector>
 
 
 void assert_no_list(garlic::value& val) {
@@ -26,6 +28,42 @@ void assert_no_object(garlic::value& val) {
   ASSERT_THROW(val.get("Peyman"), garlic::TypeError);
   ASSERT_THROW(val.get_object().begin(), garlic::TypeError);
   ASSERT_THROW(val.get_object().end(), garlic::TypeError);
+}
+
+#define LIST_ITERATOR_INNER_TEST(element, index) switch (index) {\
+      case 0:\
+        ASSERT_EQ(element.is_string(), true);\
+        ASSERT_EQ(element.get_string(), "a");\
+        break;\
+      case 1:\
+        ASSERT_EQ(element.is_null(), true);\
+        break;\
+      case 2:\
+        ASSERT_EQ(element.is_bool(), true);\
+        ASSERT_EQ(element.get_bool(), true);\
+        break;\
+    }
+
+/**
+ * Tests out a generic garlic list container.
+ * @param list_container it assumes this container has exactly three elements string "a", null and true.
+ */
+template<typename T>
+void test_list_iterations(T& list_container) {
+  // Reference Range Iteration
+  auto index = 0;
+  for(auto& element : list_container.get_list()) {
+    LIST_ITERATOR_INNER_TEST(element, index);
+    index++;
+  }
+
+  // Const Range Iteration
+  index = 0;
+  const T& list_container_ref = list_container;
+  for(const auto& element : list_container_ref.get_list()) {
+    //LIST_ITERATOR_INNER_TEST(element, index);
+    //index++;
+  }
 }
 
 
@@ -122,6 +160,15 @@ TEST(DefaultValue, ListValue) {
   ASSERT_EQ(value[0].get_string(), "peyman");
   ASSERT_EQ(value[1].is_null(), true);
   ASSERT_EQ(value[1].is_string(), false);
+  ASSERT_EQ(value[2].is_bool(), true);
   ASSERT_EQ(value[2].get_bool(), true);
   ASSERT_EQ(value[2].is_string(), false);
+}
+
+TEST(DefaultValue, ListValueIterators) {
+  garlic::list value;
+  value.append(garlic::string{"a"});
+  value.append(garlic::value::none);
+  value.append(garlic::boolean{true});
+  test_list_iterations(value);
 }
