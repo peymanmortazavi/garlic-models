@@ -173,22 +173,25 @@ namespace garlic
   };
 
   using value = base_value<std::unique_ptr>;
-  //using shareable_value = base_value<std::unique_ptr>;
+  using s_value = base_value<std::shared_ptr>;
 
   template<> const value value::none{type_flag::null};
-  //template<> const shareable_value shareable_value::none{type_flag::null};
+  template<> const s_value s_value::none{type_flag::null};
 
-  class string : public value
+  template<typename V>
+  class string_base : public V
   {
   public:
-    virtual ~string() = default;
-    string(const std::string& text="") : value_(text), value(type_flag::string_type) {}
-    string(std::string&& text) : value_(std::move(text)), value(type_flag::string_type) {}
-    string(const char* text) : value_(text), value(type_flag::string_type) {}
+    using store_type = typename V::store_type;
+
+    virtual ~string_base() = default;
+    string_base(const std::string& text="") : value_(text), V(type_flag::string_type) {}
+    string_base(std::string&& text) : value_(std::move(text)), V(type_flag::string_type) {}
+    string_base(const char* text) : value_(text), V(type_flag::string_type) {}
     const std::string& get_string() const override { return value_; }
 
-    store_type clone() const override { return store_type(new string(value_)); }
-    store_type move_clone() override { return store_type(new string(std::move(*this))); }
+    store_type clone() const override { return store_type(new string_base(value_)); }
+    store_type move_clone() override { return store_type(new string_base(std::move(*this))); }
 
     operator const char* () const { return value_.c_str(); }
     operator const std::string& () const { return value_; }
@@ -197,16 +200,21 @@ namespace garlic
     std::string value_;
   };
 
+  using string = string_base<value>;
+  using s_string = string_base<s_value>;
 
-  class integer : public value
+  template<typename V>
+  class integer_base : public V
   {
   public:
-    virtual ~integer() = default;
-    integer(int num=0) : value_(num), value(type_flag::integer_type) {}
+    using store_type = typename V::store_type;
+
+    virtual ~integer_base() = default;
+    integer_base(int num=0) : value_(num), V(type_flag::integer_type) {}
     const int& get_int() const override { return value_; }
 
-    store_type clone() const override { return store_type(new integer(value_)); }
-    store_type move_clone() override { return store_type(new integer(std::move(*this))); }
+    store_type clone() const override { return store_type(new integer_base(value_)); }
+    store_type move_clone() override { return store_type(new integer_base(std::move(*this))); }
 
     operator int() const { return value_; }
 
@@ -214,16 +222,22 @@ namespace garlic
     int value_;
   };
 
+  using integer = integer_base<value>;
+  using s_integer = integer_base<s_value>;
 
-  class float64 : public value
+
+  template<typename V>
+  class float64_base : public V
   {
   public:
-    virtual ~float64() = default;
-    float64(double num=0) : value_(num), value(type_flag::double_type) {}
+    using store_type = typename V::store_type;
+
+    virtual ~float64_base() = default;
+    float64_base(double num=0) : value_(num), V(type_flag::double_type) {}
     const double& get_double() const override { return value_; }
 
-    store_type clone() const override { return store_type(new float64(value_)); }
-    store_type move_clone() override { return store_type(new float64(std::move(*this))); }
+    store_type clone() const override { return store_type(new float64_base(value_)); }
+    store_type move_clone() override { return store_type(new float64_base(std::move(*this))); }
 
     operator const double& () const { return value_; }
 
@@ -231,16 +245,22 @@ namespace garlic
     double value_;
   };
 
+  using float64 = float64_base<value>;
+  using s_float64 = float64_base<s_value>;
 
-  class boolean : public value
+
+  template<typename V>
+  class boolean_base : public V
   {
   public:
-    virtual ~boolean() = default;
-    boolean(bool val=false) : value_(val), value(type_flag::boolean_type) {}
+    using store_type = typename V::store_type;
+
+    virtual ~boolean_base() = default;
+    boolean_base(bool val=false) : value_(val), V(type_flag::boolean_type) {}
     const bool& get_bool() const override { return value_; }
 
-    store_type clone() const override { return store_type(new boolean(value_)); }
-    store_type move_clone() override { return store_type(new boolean(std::move(*this))); }
+    store_type clone() const override { return store_type(new boolean_base(value_)); }
+    store_type move_clone() override { return store_type(new boolean_base(std::move(*this))); }
 
     operator bool () const { return value_; }
 
@@ -248,25 +268,39 @@ namespace garlic
     bool value_;
   };
 
+  using boolean = boolean_base<value>;
+  using s_boolean = boolean_base<s_value>;
 
-  class object : public value
+
+  template<typename V>
+  class object_base : public V
   {
   public:
-    virtual ~object() = default;
-    object() : value(type_flag::object_type) {}
-    object(const object& other) : value(type_flag::object_type) {
+    using store_type = typename V::store_type;
+
+    virtual ~object_base() = default;
+    object_base() : V(type_flag::object_type) {}
+    object_base(const object_base& other) : V(type_flag::object_type) {
       for(auto& pair : other.table_) {
         table_.emplace(pair.first, pair.second->clone());
       }
     }
-    object(object&& other) : table_(std::move(other.table_)), value(type_flag::object_type) {}
+    object_base(object_base&& other) : table_(std::move(other.table_)), V(type_flag::object_type) {}
 
-    const_object_iterator cbegin_member() const override { return const_object_iterator{table_.cbegin()}; }
-    const_object_iterator cend_member() const override { return const_object_iterator{table_.cend()}; }
-    object_iterator begin_member() override { return object_iterator{table_.begin()}; }
-    object_iterator end_member() override { return object_iterator{table_.end()}; }
-    void set(const std::string& key, const value& val) override { table_.emplace(key, val.clone()); }
-    void set(const std::string& key, value&& val) override { table_.emplace(key, val.move_clone()); }
+    typename V::const_object_iterator cbegin_member() const override {
+      return typename V::const_object_iterator{table_.cbegin()};
+    }
+    typename V::const_object_iterator cend_member() const override {
+      return typename V::const_object_iterator{table_.cend()};
+    }
+    typename V::object_iterator begin_member() override {
+      return typename V::object_iterator{table_.begin()};
+    }
+    typename V::object_iterator end_member() override {
+      return typename V::object_iterator{table_.end()};
+    }
+    void set(const std::string& key, const V& val) override { table_.emplace(key, val.clone()); }
+    void set(const std::string& key, V&& val) override { table_.emplace(key, val.move_clone()); }
     const value* get(const std::string& key) const override {
       auto it = table_.find(key);
       if (it != end(table_)) {
@@ -275,51 +309,68 @@ namespace garlic
       return nullptr;
     }
 
-    store_type clone() const override { return store_type(new object(*this)); }
-    store_type move_clone() override { return store_type(new object(std::move(*this))); }
+    store_type clone() const override { return store_type(new object_base(*this)); }
+    store_type move_clone() override { return store_type(new object_base(std::move(*this))); }
 
   private:
     std::map<std::string, store_type> table_;
   };
 
+  using object = object_base<value>;
+  using s_object = object_base<s_value>;
 
-  class list : public value
+
+  template<typename V>
+  class list_base : public V
   {
   public:
-    virtual ~list() = default;
-    list() : value(type_flag::list_type) {}
-    list(size_t capacity) : value(type_flag::list_type) {
+    using store_type = typename V::store_type;
+
+    virtual ~list_base() = default;
+    list_base() : V(type_flag::list_type) {}
+    list_base(size_t capacity) : V(type_flag::list_type) {
       items_.reserve(capacity);
     }
-    list(const list& other) : value(type_flag::list_type) {
+    list_base(const list_base& other) : V(type_flag::list_type) {
       items_.reserve(other.items_.size());
       for (auto& item : other.items_) {
         items_.push_back(item->clone());
       }
     }
-    list(list&& other) : items_(std::move(other.items_)), value(type_flag::list_type) {}
+    list_base(list_base&& other) : items_(std::move(other.items_)), value(type_flag::list_type) {}
 
-    list_iterator begin_element() override { return list_iterator(items_.begin()); }
-    list_iterator end_element() override { return list_iterator(items_.end()); }
-    const_list_iterator cbegin_element() const override { return const_list_iterator(items_.begin()); }
-    const_list_iterator cend_element() const override { return const_list_iterator(items_.end()); }
-    void append(const value& val) override { items_.push_back(val.clone()); }
-    void append(value&& val) override { items_.push_back(val.move_clone()); }
+    typename V::list_iterator begin_element() override {
+      return typename V::list_iterator(items_.begin());
+    }
+    typename V::list_iterator end_element() override {
+      return typename V::list_iterator(items_.end());
+    }
+    typename V::const_list_iterator cbegin_element() const override {
+      return typename V::const_list_iterator(items_.begin());
+    }
+    typename V::const_list_iterator cend_element() const override {
+      return typename V::const_list_iterator(items_.end());
+    }
+    void append(const V& val) override { items_.push_back(val.clone()); }
+    void append(V&& val) override { items_.push_back(val.move_clone()); }
     void remove(size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
       items_.erase(begin(items_) + 1);
     }
-    value& operator[](size_t index) override {
+    V& operator[](size_t index) override {
       if (index >= items_.size()) throw std::out_of_range("requested index is out of range.");
       return **(items_.begin() + index);
     }
 
-    store_type clone() const override { return store_type(new list(*this)); }
-    store_type move_clone() override { return store_type(new list(std::move(*this))); }
+    store_type clone() const override { return store_type(new list_base(*this)); }
+    store_type move_clone() override { return store_type(new list_base(std::move(*this))); }
 
   private:
     std::vector<store_type> items_;
   };
+
+  using list = list_base<value>;
+  using s_list = list_base<s_value>;
 
 
   class validation_error : std::exception {
