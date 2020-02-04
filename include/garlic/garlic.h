@@ -301,7 +301,7 @@ namespace garlic
     }
     void set(const std::string& key, const V& val) override { table_.emplace(key, val.clone()); }
     void set(const std::string& key, V&& val) override { table_.emplace(key, val.move_clone()); }
-    const value* get(const std::string& key) const override {
+    const V* get(const std::string& key) const override {
       auto it = table_.find(key);
       if (it != end(table_)) {
         return it->second.get();
@@ -337,7 +337,7 @@ namespace garlic
         items_.push_back(item->clone());
       }
     }
-    list_base(list_base&& other) : items_(std::move(other.items_)), value(type_flag::list_type) {}
+    list_base(list_base&& other) : items_(std::move(other.items_)), V(type_flag::list_type) {}
 
     typename V::list_iterator begin_element() override {
       return typename V::list_iterator(items_.begin());
