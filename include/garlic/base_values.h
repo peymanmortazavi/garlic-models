@@ -167,9 +167,6 @@ namespace garlic {
   using value = base_value<std::unique_ptr>;
   using s_value = base_value<std::shared_ptr>;
 
-  template<> const value value::none{type_flag::null};
-  template<> const s_value s_value::none{type_flag::null};
-
   template<typename V>
   class string_base : public V
   {

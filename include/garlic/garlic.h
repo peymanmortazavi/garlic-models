@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "base_values.h"
+#include "json.h"
 
 namespace garlic
 {
