@@ -46,7 +46,12 @@ namespace garlic {
     list_iterator end_element() { return list_iterator{document_.End()}; }
     const_list_iterator cbegin_element() const { return const_list_iterator{document_.Begin()}; }
     const_list_iterator cend_element() const { return const_list_iterator{document_.End()}; }
-    //void append(const std::string& value) { document_.PushBack(value, document_.GetAllocator()); }
+    void append(const std::string& value) {
+      document_.PushBack(
+        rapidjson::Value().SetString(value.c_str(), document_.GetAllocator()),
+        document_.GetAllocator()
+      );
+    }
 
     struct list_range {
       rapidjson_wrapper& self;
