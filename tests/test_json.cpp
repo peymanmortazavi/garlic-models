@@ -14,6 +14,8 @@
 #include <rapidjson/istreamwrapper.h>
 #include <garlic/garlic.h>
 
+#include "test_protocol.h"
+
 using namespace std;
 
 using namespace garlic;
@@ -72,4 +74,10 @@ TEST(DocumentTests, TypeMatching) {
 TEST(DocumentTests, ListIterator) {
   //auto d = get_test_document();
   //auto root = rapidjson_wrapper(d);
+}
+
+
+TEST(DocumentTests, ProtocolTest) {
+  auto element = rapidjson_wrapper(get_test_document());
+  test_object_string_capabilities(element);
 }
