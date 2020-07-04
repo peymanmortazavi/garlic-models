@@ -51,8 +51,8 @@ Document get_test_document() {
 
 
 TEST(DocumentTests, TypeMatching) {
-  auto wrapper = rapidjson_wrapper(get_test_document());
-  ASSERT_TRUE(wrapper.is_object());
+  //auto wrapper = rapidjson_wrapper(get_test_document());
+  //ASSERT_TRUE(wrapper.is_object());
   //ASSERT_TRUE(wrapper.get("name")->is_string());
 
   //rapidjson_wrapper wrapper{d["values"]};
@@ -78,6 +78,15 @@ TEST(DocumentTests, ListIterator) {
 
 
 TEST(DocumentTests, ProtocolTest) {
-  auto element = rapidjson_wrapper(get_test_document());
-  test_object_string_capabilities(element);
+  Document doc = get_test_document();
+
+  // test happy path values for keys that do actually exist.
+  test_readonly_string_value(garlic::rapidjson_readonly_layer(doc["name"]), "Peyman");
+  test_readonly_int_value(garlic::rapidjson_readonly_layer(doc["age"]), 28);
+  test_readonly_double_value(garlic::rapidjson_readonly_layer(doc["h"]), 12.123);
+  test_readonly_bool_value(garlic::rapidjson_readonly_layer(doc["ready"]), true);
+  test_readonly_null_value(garlic::rapidjson_readonly_layer(doc["career"]));
+
+  //auto element = rapidjson_wrapper(get_test_document());
+  //test_object_string_capabilities(element);
 }

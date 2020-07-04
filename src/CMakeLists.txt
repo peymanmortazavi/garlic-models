@@ -9,7 +9,7 @@ target_include_directories(GarlicModel
   PRIVATE "src include"
 )
 
-target_compile_features(GarlicModel PUBLIC cxx_std_17)
+target_compile_features(GarlicModel PUBLIC cxx_std_20)
 
 # For IDEs to put this in a nice folder.
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
