@@ -6,9 +6,13 @@
 * Description:      Test methods for assuring an object viewer supports all the required functions.
 *****************************************************************************/
 
+#include "garlic/json.h"
+#include "garlic/layer.h"
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
 
+#include <algorithm>
+#include <iterator>
 #include <string>
 #include <map>
 #include <vector>
@@ -36,7 +40,7 @@ void assert_no_object(T& value) {
 
 
 template<garlic::ReadableLayer LayerType>
-void test_readonly_string_value(const LayerType& value, std::string text) {
+void test_readonly_string_value(const LayerType& value, const std::string& text) {
   ASSERT_TRUE(value.is_string());
   //assert_no_object(value);
   //assert_no_list(value);
@@ -44,7 +48,9 @@ void test_readonly_string_value(const LayerType& value, std::string text) {
   std::string std_string = value.get_string();
   const char* c_str = value.get_cstr();
   std::string_view std_string_view = value.get_string_view();
-  //ASSERT_STREQ(std_string, text);
+  ASSERT_STREQ(std_string.c_str(), text.c_str());
+  ASSERT_STREQ(c_str, text.c_str());
+  ASSERT_TRUE(std_string_view == text);
 }
 
 template<garlic::ReadableLayer LayerType>

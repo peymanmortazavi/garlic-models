@@ -4,5 +4,5 @@
   "career": null,
   "h": 12.123,
   "ready": true,
-  "values": [1.1, "Test", true, null]
+  "values": [1.1, 25, "Test", true, null]
 }

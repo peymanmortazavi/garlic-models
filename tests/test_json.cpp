@@ -14,6 +14,7 @@
 #include <rapidjson/istreamwrapper.h>
 #include <garlic/garlic.h>
 
+#include "garlic/json.h"
 #include "test_protocol.h"
 
 using namespace std;
@@ -81,12 +82,21 @@ TEST(DocumentTests, ProtocolTest) {
   Document doc = get_test_document();
 
   // test happy path values for keys that do actually exist.
-  test_readonly_string_value(garlic::rapidjson_readonly_layer(doc["name"]), "Peyman");
-  test_readonly_int_value(garlic::rapidjson_readonly_layer(doc["age"]), 28);
-  test_readonly_double_value(garlic::rapidjson_readonly_layer(doc["h"]), 12.123);
-  test_readonly_bool_value(garlic::rapidjson_readonly_layer(doc["ready"]), true);
-  test_readonly_null_value(garlic::rapidjson_readonly_layer(doc["career"]));
+  test_readonly_string_value(rapidjson_readonly_layer(doc["name"]), "Peyman");
+  test_readonly_int_value(rapidjson_readonly_layer(doc["age"]), 28);
+  test_readonly_double_value(rapidjson_readonly_layer(doc["h"]), 12.123);
+  test_readonly_bool_value(rapidjson_readonly_layer(doc["ready"]), true);
+  test_readonly_null_value(rapidjson_readonly_layer(doc["career"]));
 
-  //auto element = rapidjson_wrapper(get_test_document());
-  //test_object_string_capabilities(element);
+  // test the list values.
+  auto list_value = rapidjson_readonly_layer(doc["values"]);
+  auto list_it = list_value.begin_list();
+  test_readonly_double_value(*list_it, 1.1); list_it++;
+  test_readonly_int_value(*list_it, 25); list_it++;
+  test_readonly_string_value(*list_it, "Test"); list_it++;
+  test_readonly_bool_value(*list_it, true); list_it++;
+  test_readonly_null_value(*list_it); list_it++;
+  ASSERT_EQ(list_it, list_value.end_list());
+
+  // test the object values.
 }

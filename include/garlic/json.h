@@ -1,6 +1,7 @@
 #ifndef JSON_H
 #define JSON_H
 
+#include <iterator>
 #include <string>
 #include <memory>
 
@@ -9,13 +10,34 @@
 
 namespace garlic {
 
+  template<typename ValueType, typename Iterator>
+  class IteratorWrapper {
+  public:
+    using difference_type = int;
+    using value_type = ValueType;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit IteratorWrapper() {}
+    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+
+    IteratorWrapper& operator ++ () { iterator_++; return *this; }
+    IteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
+
+    ValueType operator * () const { return ValueType{*iterator_}; }
+
+  private:
+    Iterator iterator_;
+  };
+
   class rapidjson_readonly_layer
   {
   public:
     using ValueType = rapidjson::Value;
+    using ConstValueIterator = IteratorWrapper<rapidjson_readonly_layer, typename rapidjson::Value::ConstValueIterator>;
 
     rapidjson_readonly_layer (const ValueType& value) : value_(value) {}
-    virtual ~rapidjson_readonly_layer () {};
 
     bool is_null() const { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
@@ -30,7 +52,10 @@ namespace garlic {
     std::string_view get_string_view() const noexcept { return std::string_view(value_.GetString()); }
     const char* get_cstr() const noexcept { return value_.GetString(); }
     double get_double() const noexcept { return value_.GetDouble(); }
-    double get_bool() const noexcept { return value_.GetBool(); }
+    bool get_bool() const noexcept { return value_.GetBool(); }
+
+    ConstValueIterator begin_list() const { return ConstValueIterator(value_.Begin()); }
+    ConstValueIterator end_list() const { return ConstValueIterator(value_.End()); }
   
   private:
     const ValueType& value_;
