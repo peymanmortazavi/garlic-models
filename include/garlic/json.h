@@ -11,19 +11,19 @@
 namespace garlic {
 
   template<typename ValueType, typename Iterator>
-  class IteratorWrapper {
+  class ValueIteratorWrapper {
   public:
     using difference_type = int;
     using value_type = ValueType;
     using iterator_category = std::forward_iterator_tag;
 
-    explicit IteratorWrapper() {}
-    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    explicit ValueIteratorWrapper() {}
+    explicit ValueIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
 
-    IteratorWrapper& operator ++ () { iterator_++; return *this; }
-    IteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
+    ValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
+    ValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const ValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const ValueIteratorWrapper& other) const { return !(other == *this); }
 
     ValueType operator * () const { return ValueType{*iterator_}; }
 
@@ -35,7 +35,7 @@ namespace garlic {
   {
   public:
     using ValueType = rapidjson::Value;
-    using ConstValueIterator = IteratorWrapper<rapidjson_readonly_layer, typename rapidjson::Value::ConstValueIterator>;
+    using ConstValueIterator = ValueIteratorWrapper<rapidjson_readonly_layer, typename rapidjson::Value::ConstValueIterator>;
 
     rapidjson_readonly_layer (const ValueType& value) : value_(value) {}
 
