@@ -74,8 +74,7 @@ namespace garlic {
     ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
   };
 
-  class rapidjson_readonly_layer
-  {
+  class rapidjson_readonly_layer {
   public:
     using ValueType = rapidjson::Value;
     using ConstValueIterator = ValueIteratorWrapper<rapidjson_readonly_layer, typename rapidjson::Value::ConstValueIterator>;
@@ -110,77 +109,25 @@ namespace garlic {
     const ValueType& value_;
   };
 
-  //class rapidjson_wrapper {
-  //public:
-  //  using AllocatorType = rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>;
+  class rapidjson_layer : public rapidjson_readonly_layer {
+  public:
+    using DocumentType = rapidjson::Document;
 
-    //  list_iterator begin_element() { return list_iterator{document_.Begin()}; }
-  //  list_iterator end_element() { return list_iterator{document_.End()}; }
-  //  const_list_iterator cbegin_element() const { return const_list_iterator{document_.Begin()}; }
-  //  const_list_iterator cend_element() const { return const_list_iterator{document_.End()}; }
-  //  template<typename T> void append(const T& value) {
-  //    document_.PushBack(get_json_value(value), allocator_);
-  //  }
-  //  void append(const char* value) { document_.PushBack(get_json_value(value), allocator_); }
+    rapidjson_layer(
+        ValueType& value,
+        DocumentType::AllocatorType& allocator
+    ) : rapidjson_readonly_layer(value), value_(value), allocator_(allocator) {}
 
-  //  object_iterator begin_member() { return object_iterator{document_.MemberBegin()}; }
-  //  object_iterator end_member() { return object_iterator{document_.MemberEnd()}; }
-  //  const_object_iterator cbegin_member() const { return const_object_iterator{document_.MemberBegin()}; }
-  //  const_object_iterator cend_member() const { return const_object_iterator{document_.MemberEnd()}; }
-  //  void set(const std::string& key, rapidjson::Value&& value) { document_.Set(std::move(value)); }
-  //  void set(const char* key, rapidjson::Value&& value) { document_.Set(std::move(value)); }
-  //  template<typename T> void set(const char* key, const T& value) { this->set(key, this->get_json_value(value)); }
-  //  template<typename T> void set(const std::string& key, const T& value) { this->set(key.c_str(), value); }
-  //  const rapidjson_wrapper get(const std::string& key) const {
-  //    auto& x = document_["asd"];
-  //    return rapidjson_wrapper{document_["aas"], allocator_};
-  //  }
-  //  rapidjson_wrapper operator[](const std::string& key) { }
+    rapidjson_layer(DocumentType& doc) : rapidjson_readonly_layer(doc), value_(doc), allocator_(doc.GetAllocator()) {}
 
+    void set_string(const char* value, size_t len) { value_.SetString(value, len, allocator_); }
+    void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
+    void set_string(const std::string_view& value) { value_.SetString(value.data(), value.length(), allocator_); }
 
-  //  struct list_range {
-  //    rapidjson_wrapper& self;
-  //    list_iterator begin() const { return self.begin_element(); }
-  //    list_iterator end() const   { return self.end_element(); }
-  //  };
-
-  //  struct const_list_range {
-  //    const rapidjson_wrapper& self;
-  //    const_list_iterator begin() const { return self.cbegin_element(); }
-  //    const_list_iterator end() const { return self.cend_element(); }
-  //  };
-
-  //  struct object_range {
-  //    rapidjson_wrapper& self;
-  //  };
-
-  //  struct const_object_range {
-  //    const rapidjson_wrapper& self;
-  //  };
-
-  //  list_range get_list() { return list_range{*this}; }
-  //  const_list_range get_list() const { return const_list_range{*this}; }
-
-  //private:
-  //  rapidjson::Value&& get_json_value(int value) {
-  //    return std::move(rapidjson::Value().SetInt(value));
-  //  }
-  //  rapidjson::Value&& get_json_value(const char* value) {
-  //    return std::move(rapidjson::Value().SetString(value, allocator_));
-  //  }
-  //  rapidjson::Value&& get_json_value(const std::string& value) {
-  //    return this->get_json_value(value.c_str());
-  //  }
-  //  rapidjson::Value&& get_json_value(const double& value) {
-  //    return std::move(rapidjson::Value().SetDouble(value));
-  //  }
-  //  rapidjson::Value&& get_json_value(bool value) {
-  //    return std::move(rapidjson::Value().SetBool(value));
-  //  }
-
-  //  AllocatorType& allocator_;
-  //  rapidjson::Value document_;
-  //};
+  private:
+    ValueType& value_;
+    DocumentType::AllocatorType& allocator_;
+  };
 
 }
 

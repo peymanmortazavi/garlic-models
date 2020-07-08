@@ -64,7 +64,6 @@ void test_readonly_list_range(const LayerType& value) {
   ASSERT_EQ(it, value.end_list());
 }
 
-
 template<garlic::ReadableLayer LayerType>
 void test_readonly_object_range(const LayerType& value) {
   ASSERT_TRUE(value.is_object());
@@ -74,4 +73,25 @@ void test_readonly_object_range(const LayerType& value) {
     ASSERT_TRUE(garlic::cmp_layers(item.value, (*it).value));
     std::advance(it, 1);
   }
+}
+
+// Tests for writing.
+
+template<garlic::ReadableLayer LayerType>
+void test_full_string_value(LayerType& value) {
+  std::string origin = "This is a very smoky test just to show if we have some string support.";
+  std::string_view view = std::string_view{origin};
+  value.set_string(origin);
+  test_readonly_string_value(value, origin);
+
+  value.set_string(view);
+  test_readonly_string_value(value, origin);
+
+  value.set_string(origin.c_str(), origin.length());
+  test_readonly_string_value(value, origin);
+}
+
+template<garlic::ReadableLayer LayerType>
+void test_full_layer(LayerType&& value) {
+  test_full_string_value(value);
 }

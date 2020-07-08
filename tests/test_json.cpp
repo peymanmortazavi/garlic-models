@@ -84,4 +84,7 @@ TEST(DocumentTests, ProtocolTest) {
 
   // test the object range
   test_readonly_object_range(garlic::rapidjson_readonly_layer(doc["objects"]));
+
+  // the writable object.
+  test_full_layer(garlic::rapidjson_layer{doc});
 }
