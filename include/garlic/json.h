@@ -26,6 +26,8 @@ namespace garlic {
     bool operator == (const ValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
     bool operator != (const ValueIteratorWrapper& other) const { return !(other == *this); }
 
+    Iterator& get_inner_iterator() { return iterator_; }
+
     ValueType operator * () const { return ValueType{*this->iterator_}; }
 
   private:
@@ -120,9 +122,30 @@ namespace garlic {
 
     rapidjson_layer(DocumentType& doc) : rapidjson_readonly_layer(doc), value_(doc), allocator_(doc.GetAllocator()) {}
 
-    void set_string(const char* value, size_t len) { value_.SetString(value, len, allocator_); }
+    void set_string(const char* value) { value_.SetString(value, allocator_); }
     void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
     void set_string(const std::string_view& value) { value_.SetString(value.data(), value.length(), allocator_); }
+    void set_int(int value) { value_.SetInt(value); }
+    void set_double(double value) { value_.SetDouble(value); }
+    void set_bool(bool value) { value_.SetBool(value); }
+    void set_null() { value_.SetNull(); }
+
+    void clear() { value_.Clear(); }
+    void push_back(const char* value) { value_.PushBack(ValueType().SetString(value, allocator_), allocator_); }
+    void push_back(const std::string& value) {
+      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
+    }
+    void push_back(const std::string_view& value) {
+      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
+    }
+    void push_back(int value) { value_.PushBack(ValueType(value).Move(), allocator_); }
+    void push_back(double value) { value_.PushBack(ValueType(value).Move(), allocator_); }
+    void push_back(bool value) { value_.PushBack(ValueType(value).Move(), allocator_); }
+    rapidjson_layer pop_back() { return rapidjson_layer{value_.PopBack(), allocator_}; }
+    void erase(ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
+    void erase(ConstValueIterator first, ConstValueIterator last) {
+      value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
+    }
 
   private:
     ValueType& value_;

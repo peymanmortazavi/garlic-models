@@ -77,7 +77,7 @@ void test_readonly_object_range(const LayerType& value) {
 
 // Tests for writing.
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::GarlicLayer LayerType>
 void test_full_string_value(LayerType& value) {
   std::string origin = "This is a very smoky test just to show if we have some string support.";
   std::string_view view = std::string_view{origin};
@@ -87,11 +87,42 @@ void test_full_string_value(LayerType& value) {
   value.set_string(view);
   test_readonly_string_value(value, origin);
 
-  value.set_string(origin.c_str(), origin.length());
+  value.set_string(origin.c_str());
   test_readonly_string_value(value, origin);
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::GarlicLayer LayerType>
+void test_full_int_value(LayerType& value) {
+  value.set_int(170);
+  test_readonly_int_value(value, 170);
+}
+
+template<garlic::GarlicLayer LayerType>
+void test_full_double_value(LayerType& value) {
+  value.set_double(170.189);
+  test_readonly_double_value(value, 170.189);
+}
+
+template<garlic::GarlicLayer LayerType>
+void test_full_bool_value(LayerType& value) {
+  value.set_bool(true);
+  test_readonly_bool_value(value, true);
+
+  value.set_bool(false);
+  test_readonly_bool_value(value, false);
+}
+
+template<garlic::GarlicLayer LayerType>
+void test_full_null_value(LayerType& value) {
+  value.set_null();
+  test_readonly_null_value(value);
+}
+
+template<garlic::GarlicLayer LayerType>
 void test_full_layer(LayerType&& value) {
   test_full_string_value(value);
+  test_full_double_value(value);
+  test_full_int_value(value);
+  test_full_bool_value(value);
+  test_full_null_value(value);
 }

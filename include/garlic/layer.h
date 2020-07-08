@@ -38,6 +38,15 @@ namespace garlic {
     { t.end_member() } -> std::forward_iterator;  // todo: same as above.
   };
 
+  template<typename T> concept GarlicLayer = ReadableLayer<T> && requires(T t) {
+    { t.set_string("") };
+    { t.set_string(std::string{"cstr"}) };
+    { t.set_string(std::string_view{"cstr"}) };
+    { t.set_bool(true) };
+    { t.set_int(25) };
+    { t.set_double(0.25) };
+  };
+
 }
 
 #endif /* end of include guard: LAYER_H */
