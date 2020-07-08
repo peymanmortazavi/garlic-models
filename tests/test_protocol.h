@@ -55,10 +55,23 @@ void test_readonly_null_value(const LayerType& value) {
 
 template<garlic::ReadableLayer LayerType>
 void test_readonly_list_range(const LayerType& value) {
+  ASSERT_TRUE(value.is_list());
   auto it = value.begin_list();
   for (const auto& item : value.get_list()) {
     ASSERT_TRUE(garlic::cmp_layers(*it, item));
-    it++;
+    std::advance(it, 1);
   }
   ASSERT_EQ(it, value.end_list());
+}
+
+
+template<garlic::ReadableLayer LayerType>
+void test_readonly_object_range(const LayerType& value) {
+  ASSERT_TRUE(value.is_object());
+  auto it = value.begin_member();
+  for(const auto& item : value.get_object()) {
+    ASSERT_TRUE(garlic::cmp_layers(item.key, (*it).key));
+    ASSERT_TRUE(garlic::cmp_layers(item.value, (*it).value));
+    std::advance(it, 1);
+  }
 }

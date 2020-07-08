@@ -126,4 +126,7 @@ TEST(DocumentTests, ProtocolTest) {
 
   // test the list range
   test_readonly_list_range(garlic::rapidjson_readonly_layer(doc["values"]));
+
+  // test the object range
+  test_readonly_object_range(garlic::rapidjson_readonly_layer(doc["objects"]));
 }
