@@ -23,57 +23,12 @@ using namespace garlic;
 using namespace rapidjson;
 
 
-#define TRY_LIST_ITEM(element, index) switch (index) {\
-  case 0:\
-    ASSERT_EQ(element.is_double(), true);\
-    ASSERT_EQ(element.get_double(), 1.1);\
-    break;\
-  case 1:\
-    ASSERT_EQ(element.is_string(), true);\
-    ASSERT_EQ(element.get_string(), "Test");\
-    break;\
-  case 2:\
-    ASSERT_EQ(element.is_bool(), true);\
-    ASSERT_EQ(element.get_bool(), true);\
-    break;\
-  case 3:\
-    ASSERT_EQ(element.is_null(), true);\
-    break;\
-}
-
-
 Document get_test_document() {
   ifstream ifs("data/test.json");
   IStreamWrapper isw(ifs);
   Document d;
   d.ParseStream(isw);
   return d;
-}
-
-
-TEST(DocumentTests, TypeMatching) {
-  //auto wrapper = rapidjson_wrapper(get_test_document());
-  //ASSERT_TRUE(wrapper.is_object());
-  //ASSERT_TRUE(wrapper.get("name")->is_string());
-
-  //rapidjson_wrapper wrapper{d["values"]};
-  //auto index = 0;
-  //for (auto it = wrapper.begin_list(); it != wrapper.end_list(); ++it) {
-  //  auto element = *it;
-  //  TRY_LIST_ITEM(element, index);
-  //  index++;
-  //}
-
-  //index = 0;
-  //for(const auto& it : wrapper.get_list()) {
-  //  TRY_LIST_ITEM(it, index);
-  //  index++;
-  //}
-}
-
-
-TEST(DocumentTests, ListIterator) {
-
 }
 
 
