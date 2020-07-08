@@ -73,8 +73,7 @@ TEST(DocumentTests, TypeMatching) {
 
 
 TEST(DocumentTests, ListIterator) {
-  //auto d = get_test_document();
-  //auto root = rapidjson_wrapper(d);
+
 }
 
 
@@ -124,4 +123,7 @@ TEST(DocumentTests, ProtocolTest) {
   ASSERT_EQ(third_item_it, third_item.value.end_list());
 
   ASSERT_EQ(object_it, object_value.end_member());
+
+  // test the list range
+  test_readonly_list_range(garlic::rapidjson_readonly_layer(doc["values"]));
 }

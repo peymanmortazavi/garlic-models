@@ -76,6 +76,16 @@ void test_readonly_null_value(const LayerType& value) {
   ASSERT_TRUE(value.is_null());
 }
 
+template<garlic::ReadableLayer LayerType>
+void test_readonly_list_range(const LayerType& value) {
+  auto it = value.begin_list();
+  for (const auto& item : value.get_list()) {
+    ASSERT_TRUE(garlic::cmp_layers(*it, item));
+    it++;
+  }
+  ASSERT_EQ(it, value.end_list());
+}
+
 /**
  * value must be an object with ability creating child elements.
  * testing that a string value would return cstr, std string and std string view.

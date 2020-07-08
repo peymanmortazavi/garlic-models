@@ -10,6 +10,7 @@
 //#include "base_values.h"
 #include "json.h"
 #include "layer.h"
+#include "utility.h"
 
 namespace garlic
 {
