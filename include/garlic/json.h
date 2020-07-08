@@ -106,6 +106,8 @@ namespace garlic {
     ConstMemberIterator begin_member() const { return ConstMemberIterator(value_.MemberBegin()); }
     ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
     auto get_object() const { return ConstMemberRange<rapidjson_readonly_layer>{*this}; }
+
+    const ValueType& get_inner_value() const { return value_; }
   
   private:
     const ValueType& value_;
@@ -129,8 +131,12 @@ namespace garlic {
     void set_double(double value) { value_.SetDouble(value); }
     void set_bool(bool value) { value_.SetBool(value); }
     void set_null() { value_.SetNull(); }
+    void set_list() { value_.SetArray(); }
 
     void clear() { value_.Clear(); }
+    void push_back(const rapidjson_readonly_layer& value) {
+      value_.PushBack(ValueType(value.get_inner_value(), allocator_), allocator_);
+    }
     void push_back(const char* value) { value_.PushBack(ValueType().SetString(value, allocator_), allocator_); }
     void push_back(const std::string& value) {
       value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);

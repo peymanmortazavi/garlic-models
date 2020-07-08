@@ -119,10 +119,43 @@ void test_full_null_value(LayerType& value) {
 }
 
 template<garlic::GarlicLayer LayerType>
+void test_full_list_value(LayerType& value) {
+  value.set_list();
+  value.push_back("string");
+  value.push_back(25);
+  value.push_back(1.4);
+  value.push_back(false);
+  
+  test_readonly_list_range(value);
+  auto it = value.begin_list();
+  ASSERT_STREQ((*it).get_cstr(), "string");
+  it++;
+  ASSERT_EQ((*it).get_int(), 25);
+  it++;
+  ASSERT_EQ((*it).get_double(), 1.4);
+  it++;
+  ASSERT_EQ((*it).get_bool(), false);
+  it++;
+  ASSERT_EQ(it, value.end_list());
+
+  it = value.begin_list();
+  value.erase(std::next(it, 1), std::next(it, 3));
+  value.erase(std::next(value.begin_list(), 1));
+  it = value.begin_list();
+  ASSERT_EQ((*it).get_string(), "string");
+  it++;
+  ASSERT_EQ(it, value.end_list());
+
+  value.clear();
+  ASSERT_EQ(value.begin_list(), value.end_list());
+}
+
+template<garlic::GarlicLayer LayerType>
 void test_full_layer(LayerType&& value) {
   test_full_string_value(value);
   test_full_double_value(value);
   test_full_int_value(value);
   test_full_bool_value(value);
   test_full_null_value(value);
+  test_full_list_value(value);
 }
