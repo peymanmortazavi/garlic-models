@@ -90,6 +90,7 @@ TEST(DocumentTests, ProtocolTest) {
 
   // test the list values.
   auto list_value = rapidjson_readonly_layer(doc["values"]);
+  ASSERT_TRUE(list_value.is_list());
   auto list_it = list_value.begin_list();
   test_readonly_double_value(*list_it, 1.1); list_it++;
   test_readonly_int_value(*list_it, 25); list_it++;
@@ -99,4 +100,28 @@ TEST(DocumentTests, ProtocolTest) {
   ASSERT_EQ(list_it, list_value.end_list());
 
   // test the object values.
+  auto object_value = rapidjson_readonly_layer(doc["objects"]);
+  auto object_it = object_value.begin_member();
+  auto first_item = *object_it; object_it++;
+  test_readonly_string_value(first_item.key, "ready");
+  test_readonly_bool_value(first_item.value, false);
+
+  auto second_item = *object_it; object_it++;
+  test_readonly_string_value(second_item.key, "composite");
+  ASSERT_TRUE(second_item.value.is_object());
+  auto second_item_it = second_item.value.begin_member();
+  test_readonly_string_value((*second_item_it).key, "greeting");
+  test_readonly_string_value((*second_item_it).value, "heya");
+  second_item_it++;
+  ASSERT_EQ(second_item_it, second_item.value.end_member());
+
+  auto third_item = *object_it; object_it++;
+  test_readonly_string_value(third_item.key, "list");
+  ASSERT_TRUE(third_item.value.is_list());
+  auto third_item_it = third_item.value.begin_list();
+  test_readonly_int_value(*third_item_it, 38); third_item_it++;
+  test_readonly_string_value(*third_item_it, "string"); third_item_it++;
+  ASSERT_EQ(third_item_it, third_item.value.end_list());
+
+  ASSERT_EQ(object_it, object_value.end_member());
 }

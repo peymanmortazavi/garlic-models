@@ -8,11 +8,13 @@
 
 namespace garlic {
 
-  template<typename T> using DataResult = const T*;
+
   template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
+  template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
 
   template<typename T> concept ReadableLayer = requires(const T& t) {
     typename ConstValueIterator<T>;
+    typename ConstMemberIterator<T>;
 
     { t.is_null() } -> std::convertible_to<bool>;
     { t.is_int() } -> std::convertible_to<bool>;
@@ -31,6 +33,9 @@ namespace garlic {
 
     { t.begin_list() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
     { t.end_list() } -> std::forward_iterator;  // todo: same as above.
+
+    { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
+    { t.end_member() } -> std::forward_iterator;  // todo: same as above.
   };
 
 }
