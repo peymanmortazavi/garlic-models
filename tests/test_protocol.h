@@ -125,6 +125,7 @@ void test_full_list_value(LayerType& value) {
   value.push_back(25);
   value.push_back(1.4);
   value.push_back(false);
+  value.push_back();
   
   test_readonly_list_range(value);
   auto it = value.begin_list();
@@ -136,11 +137,14 @@ void test_full_list_value(LayerType& value) {
   it++;
   ASSERT_EQ((*it).get_bool(), false);
   it++;
+  ASSERT_TRUE((*it).is_null());
+  it++;
   ASSERT_EQ(it, value.end_list());
 
   it = value.begin_list();
   value.erase(std::next(it, 1), std::next(it, 3));
   value.erase(std::next(value.begin_list(), 1));
+  value.pop_back();
   it = value.begin_list();
   ASSERT_EQ((*it).get_string(), "string");
   it++;
@@ -151,6 +155,35 @@ void test_full_list_value(LayerType& value) {
 }
 
 template<garlic::GarlicLayer LayerType>
+void test_full_object_value(LayerType& value) {
+  value.set_object();
+  value.add_member("null");
+  value.add_member("string", "string");
+  value.add_member("double", 1.1);
+  value.add_member("int", 25);
+  value.add_member("bool", false);
+
+  test_readonly_object_range(value);
+  auto it = value.begin_member();
+  ASSERT_STREQ((*it).key.get_cstr(), "null");
+  ASSERT_TRUE((*it).value.is_null());
+  it++;
+  ASSERT_STREQ((*it).key.get_cstr(), "string");
+  ASSERT_STREQ((*it).value.get_cstr(), "string");
+  it++;
+  ASSERT_STREQ((*it).key.get_cstr(), "double");
+  ASSERT_EQ((*it).value.get_double(), 1.1);
+  it++;
+  ASSERT_STREQ((*it).key.get_cstr(), "int");
+  ASSERT_EQ((*it).value.get_int(), 25);
+  it++;
+  ASSERT_STREQ((*it).key.get_cstr(), "bool");
+  ASSERT_EQ((*it).value.get_bool(), false);
+  it++;
+  ASSERT_EQ(it, value.end_member());
+}
+
+template<garlic::GarlicLayer LayerType>
 void test_full_layer(LayerType&& value) {
   test_full_string_value(value);
   test_full_double_value(value);
@@ -158,4 +191,5 @@ void test_full_layer(LayerType&& value) {
   test_full_bool_value(value);
   test_full_null_value(value);
   test_full_list_value(value);
+  test_full_object_value(value);
 }

@@ -36,14 +36,14 @@ TEST(DocumentTests, ProtocolTest) {
   Document doc = get_test_document();
 
   // test happy path values for keys that do actually exist.
-  test_readonly_string_value(rapidjson_readonly_layer(doc["name"]), "Peyman");
-  test_readonly_int_value(rapidjson_readonly_layer(doc["age"]), 28);
-  test_readonly_double_value(rapidjson_readonly_layer(doc["h"]), 12.123);
-  test_readonly_bool_value(rapidjson_readonly_layer(doc["ready"]), true);
-  test_readonly_null_value(rapidjson_readonly_layer(doc["career"]));
+  test_readonly_string_value(JsonView(doc["name"]), "Peyman");
+  test_readonly_int_value(JsonView(doc["age"]), 28);
+  test_readonly_double_value(JsonView(doc["h"]), 12.123);
+  test_readonly_bool_value(JsonView(doc["ready"]), true);
+  test_readonly_null_value(JsonView(doc["career"]));
 
   // test the list values.
-  auto list_value = rapidjson_readonly_layer(doc["values"]);
+  auto list_value = JsonView(doc["values"]);
   ASSERT_TRUE(list_value.is_list());
   auto list_it = list_value.begin_list();
   test_readonly_double_value(*list_it, 1.1); list_it++;
@@ -54,7 +54,7 @@ TEST(DocumentTests, ProtocolTest) {
   ASSERT_EQ(list_it, list_value.end_list());
 
   // test the object values.
-  auto object_value = rapidjson_readonly_layer(doc["objects"]);
+  auto object_value = JsonView(doc["objects"]);
   auto object_it = object_value.begin_member();
   auto first_item = *object_it; object_it++;
   test_readonly_string_value(first_item.key, "ready");
@@ -80,11 +80,11 @@ TEST(DocumentTests, ProtocolTest) {
   ASSERT_EQ(object_it, object_value.end_member());
 
   // test the list range
-  test_readonly_list_range(garlic::rapidjson_readonly_layer(doc["values"]));
+  test_readonly_list_range(garlic::JsonView(doc["values"]));
 
   // test the object range
-  test_readonly_object_range(garlic::rapidjson_readonly_layer(doc["objects"]));
+  test_readonly_object_range(garlic::JsonView(doc["objects"]));
 
   // the writable object.
-  test_full_layer(garlic::rapidjson_layer{doc});
+  test_full_layer(garlic::JsonRef{doc});
 }
