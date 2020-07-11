@@ -127,8 +127,8 @@ namespace garlic {
   struct ListRange {
     LayerType& layer;
 
-    ConstValueIterator<LayerType> begin() { return layer.begin_list(); }
-    ConstValueIterator<LayerType> end() { return layer.end_list(); }
+    ValueIterator<LayerType> begin() { return layer.begin_list(); }
+    ValueIterator<LayerType> end() { return layer.end_list(); }
   };
 
   template <typename LayerType>
@@ -143,8 +143,8 @@ namespace garlic {
   struct MemberRange {
     LayerType& layer;
 
-    ConstMemberIterator<LayerType> begin() { return layer.begin_member(); }
-    ConstMemberIterator<LayerType> end() { return layer.end_member(); }
+    MemberIterator<LayerType> begin() { return layer.begin_member(); }
+    MemberIterator<LayerType> end() { return layer.end_member(); }
   };
 
   class JsonView {

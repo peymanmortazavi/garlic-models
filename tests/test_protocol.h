@@ -181,6 +181,16 @@ void test_full_object_value(LayerType& value) {
   ASSERT_EQ((*it).value.get_bool(), false);
   it++;
   ASSERT_EQ(it, value.end_member());
+
+  for(auto item : value.get_object()) {
+    item.key.set_string("v2." + item.key.get_string());
+  }
+  it = std::find_if(
+      value.begin_member(),
+      value.end_member(),
+      [](auto item) { return item.key.get_string() == "v2.null"; }
+  );
+  ASSERT_TRUE((*it).value.is_null());
 }
 
 template<garlic::GarlicLayer LayerType>

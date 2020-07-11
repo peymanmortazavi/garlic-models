@@ -10,7 +10,9 @@ namespace garlic {
 
 
   template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
+  template<typename T> using ValueIterator = typename T::ValueIterator;
   template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
+  template<typename T> using MemberIterator = typename T::MemberIterator;
 
   template<typename T> concept ReadableLayer = requires(const T& t) {
     typename ConstValueIterator<T>;
