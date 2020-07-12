@@ -167,20 +167,26 @@ void test_full_object_value(LayerType& value) {
   auto it = value.begin_member();
   ASSERT_STREQ((*it).key.get_cstr(), "null");
   ASSERT_TRUE((*it).value.is_null());
+  ASSERT_EQ(value.find_member("null"), it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "string");
   ASSERT_STREQ((*it).value.get_cstr(), "string");
+  ASSERT_EQ(value.find_member("string"), it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "double");
   ASSERT_EQ((*it).value.get_double(), 1.1);
+  ASSERT_EQ(value.find_member("double"), it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "int");
   ASSERT_EQ((*it).value.get_int(), 25);
+  ASSERT_EQ(value.find_member("int"), it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "bool");
   ASSERT_EQ((*it).value.get_bool(), false);
+  ASSERT_EQ(value.find_member("bool"), it);
   it++;
   ASSERT_EQ(it, value.end_member());
+  ASSERT_EQ(value.find_member("missing key"), value.end_member());
 
   for(auto item : value.get_object()) {
     item.key.set_string("v2." + item.key.get_string());
@@ -191,6 +197,27 @@ void test_full_object_value(LayerType& value) {
       [](auto item) { return item.key.get_string() == "v2.null"; }
   );
   ASSERT_TRUE((*it).value.is_null());
+
+  const auto& readonly = value;
+  auto value_view = value.get_view();
+  it = value.find_member("v2.null");
+  ASSERT_NE(it, value.end_member());
+  (*it).value.set_double(12);
+  auto const_it = value_view.find_member("v2.null");
+  ASSERT_NE(const_it, value_view.end_member());
+  ASSERT_EQ((*const_it).value.get_double(), 12);
+}
+
+template<garlic::GarlicLayer LayerType>
+void test_full_basic_assignment(LayerType& value) {
+  value = 12.5;
+  test_readonly_double_value(value, 12.5);
+  value = 25;
+  test_readonly_int_value(value, 25);
+  value = "some string";
+  test_readonly_string_value(value, "some string");
+  value = false;
+  test_readonly_bool_value(value, false);
 }
 
 template<garlic::GarlicLayer LayerType>
@@ -202,4 +229,5 @@ void test_full_layer(LayerType&& value) {
   test_full_null_value(value);
   test_full_list_value(value);
   test_full_object_value(value);
+  test_full_basic_assignment(value);
 }

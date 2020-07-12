@@ -1,6 +1,7 @@
 #ifndef JSON_H
 #define JSON_H
 
+#include <iostream>
 #include <iterator>
 #include <string>
 #include <memory>
@@ -176,6 +177,8 @@ namespace garlic {
 
     ConstMemberIterator begin_member() const { return ConstMemberIterator(value_.MemberBegin()); }
     ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
+    ConstMemberIterator find_member(const char* key) const { return ConstMemberIterator{value_.FindMember(key)}; }
+    ConstMemberIterator find_member(const JsonView& value) const { return ConstMemberIterator{value_.FindMember(value.get_inner_value())}; }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
 
     const ValueType& get_inner_value() const { return value_; }
@@ -195,6 +198,7 @@ namespace garlic {
     using JsonView::end_list;
     using JsonView::begin_member;
     using JsonView::end_member;
+    using JsonView::find_member;
     using JsonView::get_list;
     using JsonView::get_object;
 
@@ -215,6 +219,13 @@ namespace garlic {
     void set_list() { value_.SetArray(); }
     void set_object() { value_.SetObject(); }
 
+    JsonRef& operator = (double value) { this->set_double(value); return *this; }
+    JsonRef& operator = (int value) { this->set_int(value); return *this; }
+    JsonRef& operator = (const char* value) { this->set_string(value); return *this; }
+    JsonRef& operator = (const std::string& value) { this->set_string(value); return *this; }
+    JsonRef& operator = (const std::string_view& value) { this->set_string(value); return *this; }
+    JsonRef& operator = (bool value) { this->set_bool(value); return *this; }
+
     ValueIterator begin_list() { return ValueIterator(value_.Begin(), allocator_); }
     ValueIterator end_list() { return ValueIterator(value_.End(), allocator_); }
     auto get_list() { return ListRange<JsonRef>{*this}; }
@@ -223,7 +234,7 @@ namespace garlic {
     MemberIterator end_member() { return MemberIterator(value_.MemberEnd(), allocator_); }
     auto get_object() { return MemberRange<JsonRef>{*this}; }
 
-    JsonRef get_reference() const { return JsonRef{value_, allocator_}; }
+    JsonRef get_reference() { return JsonRef{value_, allocator_}; }
 
     // list functions.
     void clear() { value_.Clear(); }
@@ -254,6 +265,8 @@ namespace garlic {
     }
 
     // member functions.
+    MemberIterator find_member(const char* key) { return MemberIterator{value_.FindMember(key), allocator_}; }
+    MemberIterator find_member(const JsonView& value) { return MemberIterator{value_.FindMember(value.get_inner_value()), allocator_}; }
     void add_member(const JsonView& key, const JsonView& value) {
       value_.AddMember(
         ValueType(key.get_inner_value(), allocator_),
@@ -302,6 +315,8 @@ namespace garlic {
     void remove_member(const char* key) { value_.RemoveMember(key); }
     void remove_member(const JsonView& key) { value_.RemoveMember(key.get_inner_value()); }
 
+    AllocatorType& get_allocator() { return allocator_; }
+
   private:
     ValueType& value_;
     AllocatorType& allocator_;
@@ -322,7 +337,7 @@ namespace garlic {
 
   class JsonValue : public JsonRef {
   public:
-    explicit JsonValue (JsonDocument doc) : JsonRef(doc) { }
+    explicit JsonValue (JsonDocument& doc) : JsonRef(value_, doc.get_allocator()) { }
     explicit JsonValue (
         ValueType&& value,
         AllocatorType& allocator

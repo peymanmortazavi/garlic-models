@@ -6,8 +6,10 @@
 * Description:      Testing the JSON support for garlic.
 *****************************************************************************/
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <deque>
 #include <string>
 #include <gtest/gtest.h>
 #include <rapidjson/document.h>
@@ -32,7 +34,31 @@ Document get_test_document() {
 }
 
 
-TEST(DocumentTests, ProtocolTest) {
+TEST(RapidJson, DocumentTest) {
+  garlic::JsonDocument root;
+  root.set_object();
+
+  std::deque<std::string> names;
+  names.push_back("a");
+  names.push_back("b");
+  names.push_back("c");
+
+  garlic::JsonValue nameElement{root};
+  nameElement.set_list();
+  std::for_each(names.begin(), names.end(), [&](auto item) { nameElement.push_back(item); });
+
+  root.add_member("names", nameElement);
+
+  for (auto item : nameElement.get_list()) {
+    ASSERT_STREQ(item.get_cstr(), names[0].c_str());
+    names.pop_front();
+  }
+  
+  test_full_layer(root.get_reference());
+}
+
+
+TEST(RapidJson, ProtocolTest) {
   Document doc = get_test_document();
 
   // test happy path values for keys that do actually exist.

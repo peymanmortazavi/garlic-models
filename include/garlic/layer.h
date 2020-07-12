@@ -35,18 +35,36 @@ namespace garlic {
 
     { t.begin_list() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
     { t.end_list() } -> std::forward_iterator;  // todo: same as above.
+    { t.get_list() } -> std::ranges::range;
 
     { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
     { t.end_member() } -> std::forward_iterator;  // todo: same as above.
+    { t.find_member("") } -> std::forward_iterator;
+    { t.get_object() } -> std::ranges::range;
   };
 
   template<typename T> concept GarlicLayer = ReadableLayer<T> && requires(T t) {
     { t.set_string("") };
-    { t.set_string(std::string{"cstr"}) };
-    { t.set_string(std::string_view{"cstr"}) };
+    { t.set_string(std::string{}) };
+    { t.set_string(std::string_view{""}) };
     { t.set_bool(true) };
     { t.set_int(25) };
     { t.set_double(0.25) };
+    { t = "" };
+    { t = std::string{} };
+    { t = std::string_view{""} };
+    { t = true };
+    { t = 25 };
+    { t = 0.25 };
+
+    { t.begin_list() } -> std::forward_iterator;
+    { t.end_list() } -> std::forward_iterator;
+    { t.get_list() } -> std::ranges::range;
+
+    { t.begin_member() } -> std::forward_iterator;
+    { t.end_member() } -> std::forward_iterator;
+    { t.find_member("") } -> std::forward_iterator;
+    { t.get_object() } -> std::ranges::range;
   };
 
 }
