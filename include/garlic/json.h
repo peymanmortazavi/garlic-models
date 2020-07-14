@@ -81,6 +81,9 @@ namespace garlic {
     bool operator == (const RefMemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
     bool operator != (const RefMemberIteratorWrapper& other) const { return !(other == *this); }
 
+    Iterator& get_inner_iterator() { return iterator_; }
+    const Iterator& get_inner_iterator() const { return iterator_; }
+
     MemberWrapper operator * () const {
       return MemberWrapper{KeyType{this->iterator_->name, *allocator_}, ValueType{this->iterator_->value, *allocator_}};
     }
@@ -314,6 +317,7 @@ namespace garlic {
 
     void remove_member(const char* key) { value_.RemoveMember(key); }
     void remove_member(const JsonView& key) { value_.RemoveMember(key.get_inner_value()); }
+    void erase_member(MemberIterator position) { value_.EraseMember(position.get_inner_iterator()); }
 
     AllocatorType& get_allocator() { return allocator_; }
 

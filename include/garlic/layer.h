@@ -44,6 +44,9 @@ namespace garlic {
   };
 
   template<typename T> concept GarlicLayer = ReadableLayer<T> && requires(T t) {
+    typename ValueIterator<T>;
+    typename MemberIterator<T>;
+
     { t.set_string("") };
     { t.set_string(std::string{}) };
     { t.set_string(std::string_view{""}) };
@@ -65,6 +68,24 @@ namespace garlic {
     { t.end_member() } -> std::forward_iterator;
     { t.find_member("") } -> std::forward_iterator;
     { t.get_object() } -> std::ranges::range;
+
+    { t.clear() };
+    { t.push_back() };
+    { t.push_back("") };
+    { t.push_back(true) };
+    { t.push_back(25) };
+    { t.push_back(0.25) };
+    { t.pop_back() };
+    { t.erase(t.begin_list()) };
+    { t.erase(t.begin_list(), t.end_list()) };
+
+    { t.add_member("") };
+    { t.add_member("", "") };
+    { t.add_member("", true) };
+    { t.add_member("", 25) };
+    { t.add_member("", 0.25) };
+    { t.remove_member("") };
+    { t.erase_member(t.begin_member()) };
   };
 
 }
