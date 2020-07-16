@@ -36,21 +36,23 @@ Document get_test_document() {
 
 
 TEST(RapidJson, DocumentTest) {
-  garlic::JsonDocument root;
-  root.set_object();
+  garlic::JsonDocument root{};
+  auto root_ref = root.get_reference();
+  root_ref.set_object();
 
   std::deque<std::string> names;
   names.push_back("a");
   names.push_back("b");
   names.push_back("c");
 
-  garlic::JsonValue nameElement{root};
-  nameElement.set_list();
-  std::for_each(names.begin(), names.end(), [&](auto item) { nameElement.push_back(item); });
+  garlic::JsonValue name_element{root};
+  auto name_element_ref = name_element.get_reference();
+  name_element_ref.set_list();
+  std::for_each(names.begin(), names.end(), [&](auto& item) { name_element_ref.push_back(item); });
 
-  root.add_member("names", nameElement);
+  root_ref.add_member("names", name_element_ref);
 
-  for (auto item : nameElement.get_list()) {
+  for (auto item : name_element_ref.get_list()) {
     ASSERT_STREQ(item.get_cstr(), names[0].c_str());
     names.pop_front();
   }

@@ -53,6 +53,9 @@ namespace garlic {
     { t.set_bool(true) };
     { t.set_int(25) };
     { t.set_double(0.25) };
+    { t.set_null() };
+    { t.set_list() };
+    { t.set_object() };
     { t = "" };
     { t = std::string{} };
     { t = std::string_view{""} };
@@ -86,6 +89,38 @@ namespace garlic {
     { t.add_member("", 0.25) };
     { t.remove_member("") };
     { t.erase_member(t.begin_member()) };
+  };
+
+  template <typename LayerType>
+  struct ConstListRange {
+    const LayerType& layer;
+
+    ConstValueIterator<LayerType> begin() const { return layer.begin_list(); }
+    ConstValueIterator<LayerType> end() const { return layer.end_list(); }
+  };
+
+  template <typename LayerType>
+  struct ListRange {
+    LayerType& layer;
+
+    ValueIterator<LayerType> begin() { return layer.begin_list(); }
+    ValueIterator<LayerType> end() { return layer.end_list(); }
+  };
+
+  template <typename LayerType>
+  struct ConstMemberRange {
+    const LayerType& layer;
+
+    ConstMemberIterator<LayerType> begin() const { return layer.begin_member(); }
+    ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
+  };
+
+  template <typename LayerType>
+  struct MemberRange {
+    LayerType& layer;
+
+    MemberIterator<LayerType> begin() { return layer.begin_member(); }
+    MemberIterator<LayerType> end() { return layer.end_member(); }
   };
 
 }

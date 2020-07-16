@@ -119,38 +119,6 @@ namespace garlic {
     Iterator iterator_;
   };
 
-  template <typename LayerType>
-  struct ConstListRange {
-    const LayerType& layer;
-
-    ConstValueIterator<LayerType> begin() const { return layer.begin_list(); }
-    ConstValueIterator<LayerType> end() const { return layer.end_list(); }
-  };
-
-  template <typename LayerType>
-  struct ListRange {
-    LayerType& layer;
-
-    ValueIterator<LayerType> begin() { return layer.begin_list(); }
-    ValueIterator<LayerType> end() { return layer.end_list(); }
-  };
-
-  template <typename LayerType>
-  struct ConstMemberRange {
-    const LayerType& layer;
-
-    ConstMemberIterator<LayerType> begin() const { return layer.begin_member(); }
-    ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
-  };
-
-  template <typename LayerType>
-  struct MemberRange {
-    LayerType& layer;
-
-    MemberIterator<LayerType> begin() { return layer.begin_member(); }
-    MemberIterator<LayerType> end() { return layer.end_member(); }
-  };
-
   class JsonView {
   public:
     using ValueType = rapidjson::Value;
@@ -158,6 +126,7 @@ namespace garlic {
     using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
+    JsonView(const JsonView& another) = delete;
 
     bool is_null() const { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
@@ -211,6 +180,7 @@ namespace garlic {
     ) : JsonView(value), value_(value), allocator_(allocator) {}
 
     JsonRef(DocumentType& doc) : JsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
+    JsonRef(const JsonRef& another) = delete;
 
     void set_string(const char* value) { value_.SetString(value, allocator_); }
     void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
@@ -326,29 +296,37 @@ namespace garlic {
     AllocatorType& allocator_;
   };
 
-  class JsonDocument : public JsonRef {
+  class JsonDocument {
   public:
-    explicit JsonDocument() : JsonRef(doc_) {}
-    explicit JsonDocument(DocumentType&& doc) : doc_(std::move(doc)), JsonRef(doc_) {}
+    explicit JsonDocument() {}
+    explicit JsonDocument(rapidjson::Document&& doc) : doc_(std::move(doc)) {}
 
-    DocumentType& get_inner_doc() { return doc_; }
-    const DocumentType& get_inner_doc() const { return doc_; }
+    JsonRef get_reference() { return JsonRef(doc_); }
+    JsonView get_view() const { return JsonView(doc_); }
+    rapidjson::Document& get_inner_doc() { return doc_; }
+    const rapidjson::Document& get_inner_doc() const { return doc_; }
 
   private:
-    DocumentType doc_;
+    rapidjson::Document doc_;
   };
 
 
-  class JsonValue : public JsonRef {
+  class JsonValue {
   public:
-    explicit JsonValue (JsonDocument& doc) : JsonRef(value_, doc.get_allocator()) { }
+    explicit JsonValue (JsonDocument& doc) : allocator_(doc.get_inner_doc().GetAllocator()) { }
+    explicit JsonValue (rapidjson::Document doc) : allocator_(doc.GetAllocator()) {}
     explicit JsonValue (
-        ValueType&& value,
-        AllocatorType& allocator
-      ) : value_(std::move(value)), JsonRef(value_, allocator) {}
+        rapidjson::Value&& value,
+        rapidjson::Document::AllocatorType& allocator
+      ) : value_(std::move(value)), allocator_(allocator) {}
+    explicit JsonValue (JsonRef ref) : allocator_(ref.get_allocator()) {}
+
+    JsonRef get_reference() { return JsonRef(value_, allocator_); }
+    JsonView get_view() const { return JsonView(value_); }
 
   private:
-    ValueType value_;
+    rapidjson::Value value_;
+    rapidjson::Document::AllocatorType& allocator_;
   };
 
 }
