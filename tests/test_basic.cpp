@@ -15,6 +15,7 @@ using namespace garlic;
 
 
 TEST(BasicValue, ProtocolTest) {
-  BasicValue<CAllocator> value{};
-  test_full_layer(std::move(value));
+  Data d;
+  CloveView v{d};
+  test_readonly_int_value(v, 2);
 } 

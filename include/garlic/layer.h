@@ -91,6 +91,33 @@ namespace garlic {
     { t.erase_member(t.begin_member()) };
   };
 
+  template<typename ValueType, typename Iterator>
+  class ValueIteratorWrapper {
+  public:
+    using difference_type = int;
+    using value_type = ValueType;
+    using reference = ValueType&;
+    using pointer = ValueType&;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit ValueIteratorWrapper() {}
+    explicit ValueIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
+    explicit ValueIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+
+    ValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
+    ValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const ValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const ValueIteratorWrapper& other) const { return !(other == *this); }
+
+    Iterator& get_inner_iterator() { return iterator_; }
+    const Iterator& get_inner_iterator() const { return iterator_; }
+
+    ValueType operator * () const { return ValueType{*this->iterator_}; }
+
+  private:
+    Iterator iterator_;
+  };
+
   template <typename LayerType>
   struct ConstListRange {
     const LayerType& layer;

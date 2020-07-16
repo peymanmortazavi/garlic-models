@@ -12,30 +12,6 @@
 
 namespace garlic {
 
-  template<typename ValueType, typename Iterator>
-  class ValueIteratorWrapper {
-  public:
-    using difference_type = int;
-    using value_type = ValueType;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit ValueIteratorWrapper() {}
-    explicit ValueIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-
-    ValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    ValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const ValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const ValueIteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    ValueType operator * () const { return ValueType{*this->iterator_}; }
-
-  private:
-    Iterator iterator_;
-  };
-
   template<typename ValueType, typename Iterator, typename AllocatorType>
   class RefValueIteratorWrapper {
   public:
@@ -60,6 +36,37 @@ namespace garlic {
     Iterator iterator_;
     AllocatorType* allocator_;
   };
+
+
+  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
+  class MemberIteratorWrapper {
+  public:
+    struct MemberWrapper {
+      KeyType key;
+      ValueType value;
+    };
+
+    using difference_type = int;
+    using value_type = MemberWrapper;
+    using reference = ValueType&;
+    using pointer = ValueType*;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit MemberIteratorWrapper() {}
+    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    explicit MemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
+
+    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
+    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
+
+    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->name}, ValueType{this->iterator_->value}}; }
+
+  private:
+    Iterator iterator_;
+  };
+
 
   template<typename ValueType, typename Iterator, typename AllocatorType, typename KeyType = ValueType>
   class RefMemberIteratorWrapper {
@@ -93,32 +100,6 @@ namespace garlic {
     AllocatorType* allocator_;
   };
 
-  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class MemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
-
-    using difference_type = int;
-    using value_type = MemberWrapper;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit MemberIteratorWrapper() {}
-    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-
-    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
-
-    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->name}, ValueType{this->iterator_->value}}; }
-
-  private:
-    Iterator iterator_;
-  };
-
   class JsonView {
   public:
     using ValueType = rapidjson::Value;
@@ -126,7 +107,7 @@ namespace garlic {
     using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
-    JsonView(const JsonView& another) = delete;
+    JsonView (const JsonView& another) = delete;
 
     bool is_null() const { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
