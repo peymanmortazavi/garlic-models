@@ -20,13 +20,13 @@ namespace garlic {
       return std::equal(
           layer1.begin_list(), layer1.end_list(),
           layer2.begin_list(), layer2.end_list(),
-          [](auto item1, auto item2) { return cmp_layers(item1, item2); }
+          [](const auto& item1, const auto& item2) { return cmp_layers(item1, item2); }
       );
     } else if (layer1.is_object() && layer2.is_object()) {
       return std::equal(
           layer1.begin_member(), layer1.end_member(),
           layer2.begin_member(), layer2.end_member(),
-          [](auto item1, auto item2) {
+          [](const auto& item1, const auto& item2) {
             return cmp_layers(item1.key, item2.key) && cmp_layers(item1.value, item2.value);
           }
       );
