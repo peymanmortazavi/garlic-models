@@ -19,8 +19,11 @@ namespace garlic {
   public:
     static const bool needs_free = true;
 
+    CAllocator() = default;
+    CAllocator(const CAllocator& another) = delete;
+
     void* allocate(size_t size) {
-      if (size) return std::malloc(size);
+      if (size > 0) return std::malloc(size);
       else return nullptr;
     }
 

@@ -12,32 +12,6 @@
 
 namespace garlic {
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class RefValueIteratorWrapper {
-  public:
-    using difference_type = int;
-    using value_type = ValueType;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit RefValueIteratorWrapper() {}
-    explicit RefValueIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
-
-    RefValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    RefValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const RefValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const RefValueIteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    ValueType operator * () const { return ValueType{*this->iterator_, *allocator_}; }
-
-  private:
-    Iterator iterator_;
-    AllocatorType* allocator_;
-  };
-
-
   template<typename ValueType, typename Iterator, typename KeyType = ValueType>
   class MemberIteratorWrapper {
   public:
