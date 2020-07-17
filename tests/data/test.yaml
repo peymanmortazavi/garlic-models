@@ -1,0 +1,15 @@
+name: 'Peyman'
+age: 28
+career: null
+ready: true
+values:
+    - 1.1
+    - 25
+    - 'Test'
+    - true
+    - null
+objects:
+    ready: false
+    composite:
+        greeting: 'heya'
+    list: [38, 'string']
