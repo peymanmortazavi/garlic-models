@@ -335,7 +335,7 @@ namespace garlic {
     }
     void erase(const ValueIterator& first, const ValueIterator& last) {
       std::for_each(first, last, [](auto item) { item.clean(); });
-      auto count = last.get_inner_iterator() - first.get_inner_iterator() + 1;
+      auto count = last.get_inner_iterator() - first.get_inner_iterator();
       std::memmove(
           static_cast<void*>(first.get_inner_iterator()),
           static_cast<void*>(last.get_inner_iterator()),
@@ -343,11 +343,13 @@ namespace garlic {
       );
       data_.list.length -= count;
     }
-    void erase(const ValueIterator& position) { auto next = position; next++; this->erase(position, next); }
+    void erase(const ValueIterator& position) { this->erase(position, std::next(position)); }
 
     // member functions
     MemberIterator find_member(const char* key) {
-      return MemberIterator(this->find_member(key).get_inner_iterator(), allocator_);
+      return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
+        return strcmp(item.key.get_cstr(), key) == 0;
+      });
     }
 
     void add_member(DataType&& key, DataType&& value) {
@@ -391,6 +393,8 @@ namespace garlic {
           static_cast<size_t>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(Member<DataType>)
       );
     }
+
+    GenericCloveRef get_reference() { return GenericCloveRef(data_, allocator_); }
 
   private:
     DataType& data_;
@@ -443,72 +447,53 @@ namespace garlic {
     }
   };
 
+
+  template<Allocator Allocator>
+  class GenericCloveDocument {
+  public:
+    using DataType = GenericData<Allocator>;
+    using ViewType = GenericCloveView<Allocator>;
+    using ReferenceType = GenericCloveRef<Allocator>;
+
+    explicit GenericCloveDocument(std::shared_ptr<Allocator> allocator) : allocator_(allocator) {}
+    GenericCloveDocument() { allocator_ = std::make_shared<Allocator>(); }
+    ~GenericCloveDocument() { this->get_reference().set_null(); }
+
+    ViewType get_view() { return ViewType{data_}; }
+    ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
+    Allocator& get_allocator() { return allocator_; }
+
+  private:
+    DataType data_;
+    std::shared_ptr<Allocator> allocator_;
+  };
+
+
+  template<Allocator Allocator>
+  class GenericCloveValue {
+  public:
+    using DataType = GenericData<Allocator>;
+    using ViewType = GenericCloveView<Allocator>;
+    using ReferenceType = GenericCloveRef<Allocator>;
+    using DocumentType = GenericCloveDocument<Allocator>;
+
+    explicit GenericCloveValue(DocumentType root) : allocator_(root.get_allocator()) {}
+    ~GenericCloveValue() { this->get_reference().set_null(); }
+
+    ViewType get_view() { return ViewType{data_}; }
+    ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
+
+  private:
+    DataType data_;
+    Allocator& allocator_;
+  };
+
+
   using CloveData = GenericData<CAllocator>;
   using CloveView = GenericCloveView<CAllocator>;
   using CloveRef = GenericCloveRef<CAllocator>;
-
-  //template<garlic::Allocator AllocatorType>
-  //class CloveView {
-  //public:
-
-  //  using MemberIterator = ArrayIterator<Member>;
-  //  using ConstMemberIterator = ArrayIterator<const Member>;
-
-  //  explicit CloveView() {}
-  //  explicit CloveView(const CloveView&) = delete;
-  //  ~CloveView() { this->clean(); }
-
-
-  //private:
-  //  Data data_;
-  //  AllocatorType allocator_;
-
-  //  void check_list() {
-  //    // make sure we have enough space for another item.
-  //    if (this->data_.l.length >= this->data_.l.capacity) {
-  //      this->data_.l.data = reinterpret_cast<CloveView*>(
-  //        allocator_.reallocate(this->data_.l.data, this->data_.l.capacity, this->data_.l.capacity * 2)
-  //      );
-  //    }
-  //  }
-
-  //  void check_members() {
-  //    // make sure we have enough space for another member.
-  //    if (this->data_.o.length >= this->data_.o.capacity) {
-  //      this->data_.o.data = reinterpret_cast<Member*>(
-  //        allocator_.reallocate(this->data_.o.data, this->data_.o.capacity, this->data_.o.capacity * 2)
-  //      );
-  //    }
-  //  }
-
-  //  void clean() {
-  //    if (AllocatorType::needs_free) return;
-  //    switch (data_.type) {
-  //    case DataType::String:
-  //      {
-  //        allocator_.free(const_cast<char*>(data_.s.str));
-  //      }
-  //      break;
-  //    case DataType::Object:
-  //      {
-  //        std::for_each(this->begin_member(), this->end_member(), [](auto& item) {
-  //          item.key.clean();
-  //          item.value.clean();
-  //        });
-  //        allocator_.free(data_.o.data);
-  //      }
-  //      break;
-  //    case DataType::List:
-  //      {
-  //        std::for_each(this->begin_list(), this->end_list(), [](auto& item) { item.clean(); });
-  //        allocator_.free(data_.l.data);
-  //      }
-  //      break;
-  //    default:
-  //      break;
-  //    }
-  //  }
-  //};
+  using CloveValue = GenericCloveValue<CAllocator>;
+  using CloveDocument = GenericCloveDocument<CAllocator>;
 
 }
 

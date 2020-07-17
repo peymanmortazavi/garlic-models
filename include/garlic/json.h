@@ -253,7 +253,7 @@ namespace garlic {
 
   class JsonDocument {
   public:
-    explicit JsonDocument() {}
+    JsonDocument() {}
     explicit JsonDocument(rapidjson::Document&& doc) : doc_(std::move(doc)) {}
 
     JsonRef get_reference() { return JsonRef(doc_); }
@@ -270,7 +270,7 @@ namespace garlic {
   public:
     explicit JsonValue (JsonDocument& doc) : allocator_(doc.get_inner_doc().GetAllocator()) { }
     explicit JsonValue (rapidjson::Document doc) : allocator_(doc.GetAllocator()) {}
-    explicit JsonValue (
+    JsonValue (
         rapidjson::Value&& value,
         rapidjson::Document::AllocatorType& allocator
       ) : value_(std::move(value)), allocator_(allocator) {}
