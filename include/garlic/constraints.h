@@ -11,7 +11,12 @@ namespace garlic {
 
   struct ConstraintResult {
     bool valid;
-    std::string invalid_reason;
+    std::string_view name;
+    std::string reason;
+    std::vector<ConstraintResult> details;
+    bool field = false;
+
+    bool is_scalar() const noexcept { return details.size() == 0; }
   };
 
 
@@ -32,14 +37,35 @@ namespace garlic {
 
     ConstraintResult test(const LayerType& value) const override {
       switch (flag_) {
-        case TypeFlag::Null: return {value.is_null(), "Expected null type."};
-        case TypeFlag::Boolean: return {value.is_bool(), "Expected boolean."};
-        case TypeFlag::Double: return {value.is_double(), "Expected double."};
-        case TypeFlag::Integer: return {value.is_int(), "Expected integer."};
-        case TypeFlag::String: return {value.is_string(), "Expected string."};
-        case TypeFlag::List: return {value.is_list(), "Expected list."};
-        case TypeFlag::Object: return {value.is_object(), "Expected object."};
-        default: return {false};
+        case TypeFlag::Null: {
+          if (value.is_null()) { return {true}; }
+          else return {false, this->get_name(), "Expected null."};
+        }
+        case TypeFlag::Boolean: {
+          if (value.is_bool()) { return {true}; }
+          else return {false, this->get_name(), "Expected boolean type."};
+        }
+        case TypeFlag::Double: {
+          if (value.is_double()) { return {true}; }
+          else return {false, this->get_name(), "Expected double type."};
+        }
+        case TypeFlag::Integer: {
+          if (value.is_int()) { return {true}; }
+          else return {false, this->get_name(), "Expected integer type."};
+        }
+        case TypeFlag::String: {
+          if (value.is_string()) { return {true}; }
+          else return {false, this->get_name(), "Expected string type."};
+        }
+        case TypeFlag::List: {
+          if (value.is_list()) { return {true}; }
+          else return {false, this->get_name(), "Expected a list."};
+        }
+        case TypeFlag::Object: {
+          if (value.is_object()) { return {true}; }
+          else return {false, this->get_name(), "Expected an object."};
+        }
+        default: return {true};
       }
     }
 
@@ -66,13 +92,13 @@ namespace garlic {
     ConstraintResult test(const LayerType& value) const override {
       if (value.is_string()) {
         auto length = value.get_string_view().size();
-        if (length > max_ || length < min_) return {false, "invalid string length."};
+        if (length > max_ || length < min_) return {false, this->get_name(), "invalid string length."};
         return {true};
       } else if (value.is_double()) {
-        if(!(min_ < value.get_double() < max_)) return {false, "invalid double length."};
+        if(!(min_ < value.get_double() < max_)) return {false, this->get_name(), "invalid double length."};
         return {true};
       } else if (value.is_int()) {
-        if(!(min_ < value.get_int() < max_)) return {false, "invalid int length."};
+        if(!(min_ < value.get_int() < max_)) return {false, this->get_name(), "invalid int length."};
         return {true};
       } else return {true};
     }
@@ -99,7 +125,7 @@ namespace garlic {
     ConstraintResult test(const LayerType& value) const override {
       if (!value.is_string()) return {true};
       if (std::regex_match(value.get_cstr(), pattern_)) { return {true}; }
-      else { return {false, "invalid value."}; }
+      else { return {false, this->get_name(), "invalid value."}; }
     }
 
     const std::string& get_name() const noexcept override { return name_; }

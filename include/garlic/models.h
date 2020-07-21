@@ -1,6 +1,7 @@
 #ifndef MODELS_H
 #define MODELS_H
 
+#include <iostream>
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -18,30 +19,19 @@ namespace garlic {
     using ConstraintType = Constraint<LayerType>;
     using ConstraintPtr = std::unique_ptr<ConstraintType>;
 
-    class ConstraintFailure {
-    public:
-      ConstraintFailure(const ConstraintType* ptr, ConstraintResult&& result) : ptr_(ptr), result_(std::move(result)) {}
-      const ConstraintType& get_constraint() const { return *ptr_; }
-      const ConstraintResult& get_result() const { return result_; }
-
-    private:
-      const ConstraintType* ptr_;
-      ConstraintResult result_;
-    };
-
     struct ValidationResult {
-      std::vector<ConstraintFailure> failures;
+      std::vector<ConstraintResult> failures;
       bool is_valid() { return !failures.size(); }
     };
 
     struct Properties {
       bool required;
       std::string name;
-      std::string description;
+      std::map<std::string, std::string> meta;
       std::vector<ConstraintPtr> constraints;
     };
     
-    Field(Properties properties) : properties_(properties) {}
+    Field(Properties&& properties) : properties_(std::move(properties)) {}
     Field(std::string&& name, bool required=true) {
       properties_.required = required;
       properties_.name = std::move(name);
@@ -60,12 +50,13 @@ namespace garlic {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    ValidationResult validate(const LayerType& value) {
+    ValidationResult test(const LayerType& value) const {
       ValidationResult result;
       for(auto& constraint : properties_.constraints) {
         auto test = constraint->test(value);
         if(!test.valid) {
-          result.failures.push_back(ConstraintFailure(constraint.get(), std::move(test)));
+          //result.failures.push_back(ConstraintFailure(constraint.get(), std::move(test)));
+          result.failures.push_back(std::move(test));
           if (constraint->skip_constraints()) break;
         }
       }
@@ -85,17 +76,83 @@ namespace garlic {
   class Model {
   public:
     using Layer = LayerType;
-    using ConstraintType = Constraint<LayerType>;
-    using ConstraintPtr = std::unique_ptr<ConstraintType>;
     using FieldType = Field<LayerType>;
+    using FieldPtr = std::shared_ptr<FieldType>;
 
     struct Properties {
-      bool required;
       std::string name;
-      std::string description;
-      std::vector<ConstraintPtr> constraints;
+      bool strict = false;
+      std::map<std::string, std::string> meta;
+      std::map<std::string, FieldPtr> field_map;
     };
 
+    Model(Properties properties) : properties_(properties) {}
+    Model(std::string&& name) {
+      properties_.name = std::move(name);
+    }
+    Model(const std::string& name) {
+      properties_.name = name;
+    }
+
+    void add_field(std::string&& name, FieldPtr field) {
+      if (field->is_required()) required_fields_.push_back(name);
+      properties_.field_map.emplace(std::move(name), std::move(field));
+    }
+
+    const Properties& get_properties() const { return properties_; }
+    const std::vector<std::string> get_required_fields() const { return required_fields_; }
+
+  protected:
+    Properties properties_;
+    std::vector<std::string> required_fields_;
+  };
+
+
+  // Model Constraint
+  template<ReadableLayer LayerType>
+  class ModelConstraint : public Constraint<LayerType> {
+  public:
+    using ModelType = Model<LayerType>;
+
+    ModelConstraint(ModelType&& model) : model_(std::move(model)) {
+      name_ = model.get_properties().name;
+    }
+
+    ModelConstraint(
+        ModelType&& model,
+        std::string&& name
+    ) : model_(std::move(model)), name_(std::move(name)) {}
+
+    ConstraintResult test(const LayerType& value) const override {
+      ConstraintResult result;
+      const auto& properties = model_.get_properties();
+      auto required_fields = model_.get_required_fields();
+      if (value.is_object()) {
+        for (const auto& member : value.get_object()) {
+          auto it = properties.field_map.find(member.key.get_cstr());
+          if (it != properties.field_map.end()) {
+            auto test = it->second->test(member.value);
+            if (!test.is_valid()) {
+              result.valid = false;
+              result.details.push_back({false, member.key.get_cstr(), "find a summary of why this field value sucks.", std::move(test.failures), true});
+              //result.details.push_back({false, });
+            }
+          }
+        }
+      }
+      if (!result.valid) {
+        result.name = model_.get_properties().name;
+        result.reason = "This model is invalid";
+      }
+      return result;
+    }
+
+    const std::string& get_name() const noexcept override { return name_; }
+    bool skip_constraints() const noexcept override { return true; }
+
+  private:
+    ModelType model_;
+    std::string name_;
   };
 
 }
