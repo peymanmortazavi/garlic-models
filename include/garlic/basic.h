@@ -461,7 +461,7 @@ namespace garlic {
 
     ViewType get_view() { return ViewType{data_}; }
     ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
-    Allocator& get_allocator() { return allocator_; }
+    Allocator& get_allocator() { return *allocator_; }
 
   private:
     DataType data_;
