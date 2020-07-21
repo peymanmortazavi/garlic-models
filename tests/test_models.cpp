@@ -4,9 +4,23 @@
 #include <garlic/garlic.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/istreamwrapper.h>
+#include <fstream>
+#include <iostream>
 
 using namespace garlic;
+using namespace rapidjson;
+using namespace std;
 
+
+Document get_test_document() {
+  ifstream ifs("data/models.json");
+  IStreamWrapper isw(ifs);
+  Document d;
+  d.ParseStream(isw);
+  return d;
+}
 
 void print_result(const ConstraintResult& result, int level=0) {
   if (result.valid) {
@@ -33,14 +47,13 @@ TEST(GarlicModel, FieldValidation) {
   auto field2 = std::make_shared<Field<CloveView>>("IP Address");
   field2->add_constraint<RegexConstraint>("\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}");
 
-  auto user_model = Model<CloveView>("User");
-  user_model.add_field("name", field);
-  user_model.add_field("location", field2);
+  auto user_model = std::make_shared<Model<CloveView>>("User");
+  user_model->add_field("name", field);
+  user_model->add_field("location", field2);
 
-  std::cout << user_model.get_properties().name << std::endl;
+  std::cout << user_model->get_properties().name << std::endl;
 
-  auto root = ModelConstraint<CloveView>(std::move(user_model));
-
+  auto root = ModelConstraint<CloveView>(user_model);
 
   CloveDocument v;
   auto ref = v.get_reference();
@@ -50,13 +63,28 @@ TEST(GarlicModel, FieldValidation) {
 
   auto result = root.test(v.get_view());
   print_result(result);
+}
 
-  //auto result = field.validate(v.get_view());
-  //if (result.is_valid()) {
-  //  std::cout << "Valid Model" << std::endl;
-  //} else {
-  //  for(const auto& failure : result.failures) {
-  //    std::cout << failure.get_constraint().get_name() << ": " << failure.get_result().invalid_reason << std::endl;
-  //  }
-  //}
+
+TEST(GarlicModel, JsonParser) {
+  auto document = get_test_document();
+  auto value = JsonView{document};
+  auto definitions = ModelContainer<JsonView, CloveView>();
+  definitions.parse(value);
+  auto model = definitions.get_model("User");
+  std::cout << "Model Name: " << model->get_properties().name << std::endl;
+  std::cout << "Meta: " << std::endl;
+  for (const auto& item : model->get_properties().meta) {
+    std::cout << "  - " << item.first << " : " << item.second << std::endl;
+  }
+
+  auto root = ModelConstraint<CloveView>(model);
+
+  CloveDocument v;
+  auto ref = v.get_reference();
+  ref.set_object();
+  ref.add_member("first_name", 25);
+
+  auto result = root.test(v.get_view());
+  print_result(result);
 }

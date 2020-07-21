@@ -72,7 +72,7 @@ namespace garlic {
   };
 
 
-  template<garlic::ReadableLayer LayerType>
+  template<ReadableLayer LayerType>
   class Model {
   public:
     using Layer = LayerType;
@@ -86,6 +86,7 @@ namespace garlic {
       std::map<std::string, FieldPtr> field_map;
     };
 
+    Model() {}
     Model(Properties properties) : properties_(properties) {}
     Model(std::string&& name) {
       properties_.name = std::move(name);
@@ -114,19 +115,14 @@ namespace garlic {
   public:
     using ModelType = Model<LayerType>;
 
-    ModelConstraint(ModelType&& model) : model_(std::move(model)) {
-      name_ = model.get_properties().name;
+    ModelConstraint(std::shared_ptr<ModelType> model) : model_(std::move(model)) {
+      //name_ = model->get_properties().name;
     }
-
-    ModelConstraint(
-        ModelType&& model,
-        std::string&& name
-    ) : model_(std::move(model)), name_(std::move(name)) {}
 
     ConstraintResult test(const LayerType& value) const override {
       ConstraintResult result;
-      const auto& properties = model_.get_properties();
-      auto required_fields = model_.get_required_fields();
+      const auto& properties = model_->get_properties();
+      auto required_fields = model_->get_required_fields();
       if (value.is_object()) {
         for (const auto& member : value.get_object()) {
           auto it = properties.field_map.find(member.key.get_cstr());
@@ -141,18 +137,117 @@ namespace garlic {
         }
       }
       if (!result.valid) {
-        result.name = model_.get_properties().name;
+        result.name = model_->get_properties().name;
         result.reason = "This model is invalid";
       }
       return result;
     }
 
-    const std::string& get_name() const noexcept override { return name_; }
+    const std::string& get_name() const noexcept override { return model_->get_properties().name; }
     bool skip_constraints() const noexcept override { return true; }
 
   private:
-    ModelType model_;
-    std::string name_;
+    std::shared_ptr<ModelType> model_;
+  };
+
+
+  /**
+   * A container provides a description of all fields and models agnostic to the layer type.
+   */
+  class Container {
+  public:
+    using Map = std::map<std::string, std::string>;
+
+    struct FieldDefinition {
+      std::string name;
+      Map inputs;
+      Map meta;
+    };
+
+    struct ModelDefinition {
+    };
+  };
+
+
+  // Model Parsing From ReadableLayer
+  template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
+
+  template<ReadableLayer Source, ReadableLayer Destination = Source>
+  class ModelContainer {
+  public:
+    template <typename T> using MapOf = std::map<std::string, T>;
+    using ModelType = Model<Destination>;
+    using ModelPtr = std::shared_ptr<ModelType>;
+    using FieldType = Field<Destination>;
+    using FieldPtr = std::shared_ptr<FieldType>;
+    using ModelMap = MapOf<ModelPtr>;
+    using FieldMap = MapOf<FieldPtr>;
+
+    struct ParsingResult {
+      bool valid;
+    };
+
+    ModelContainer() {
+      auto field = std::make_shared<FieldType>("StringField");
+      field->template add_constraint<TypeConstraint>(TypeFlag::String);
+      fields_.emplace("string", std::move(field));
+    }
+
+    ParsingResult parse(const Source& value) {
+      if (!value.is_object()) return {false};
+      auto it = value.find_member("models");
+      if (it != value.end_member()) {
+        std::for_each((*it).value.begin_member(), (*it).value.end_member(), [&](const auto& member) {
+          // parse properties
+          auto properties = this->create_model_properties(member.key.get_cstr(), member.value);
+          models_.emplace(member.key.get_cstr(), std::make_shared<ModelType>(std::move(properties)));
+        });
+      }
+      return {true};
+    }
+
+    ModelPtr get_model(const std::string& name) { return models_[name]; }
+
+  private:
+    ModelPropertiesOf<Destination> create_model_properties(std::string&& name, const Source& value) {
+      ModelPropertiesOf<Destination> props;
+      props.name = std::move(name);
+
+      this->get_member(value, "description", [&](const auto& item) {
+        props.meta.emplace("description", item.get_cstr());
+      });
+
+      this->get_member(value, "meta", [&](const auto& item) {
+        std::for_each(item.begin_member(), item.end_member(), [&](const auto& meta_member) {
+          props.meta.emplace(meta_member.key.get_cstr(), meta_member.value.get_cstr());
+        });
+      });
+
+      this->get_member(value, "fields", [&](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [&](const auto& field_value) {
+          // parse the field reference.
+          if (field_value.value.is_string()) {
+            auto it = this->fields_.find(field_value.value.get_cstr());
+            if (it == this->fields_.end()) {
+              // raise a parsing error.
+            }
+            props.field_map.emplace(field_value.key.get_cstr(), it->second);
+          } else if (field_value.value.is_object()) {
+          }
+        });
+      });
+
+      return props;
+    }
+
+    template<typename T>
+    void get_member(const Source& value, const char* key, T&& callback) {
+      auto it = value.find_member(key);
+      if (it != value.end_member()) callback((*it).value);
+    }
+
+    ModelMap models_;
+    FieldMap fields_;
   };
 
 }
