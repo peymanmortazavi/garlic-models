@@ -256,6 +256,7 @@ namespace garlic {
           allocator_.allocate(256 * sizeof(DataType))
       );
       this->data_.list.length = 0;
+      this->data_.list.capacity = 256;
     }
     void set_object() {
       if (this->is_object()) return;
@@ -265,6 +266,7 @@ namespace garlic {
           allocator_.allocate(128 * sizeof(Member<DataType>))
       );
       this->data_.object.length = 0;
+      this->data_.object.capacity = 128;
     }
 
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
@@ -406,6 +408,7 @@ namespace garlic {
         this->data_.list.data = reinterpret_cast<typename DataType::List::Container>(
           allocator_.reallocate(this->data_.list.data, this->data_.list.capacity, this->data_.list.capacity * 2)
         );
+        this->data_.list.capacity *= 2;
       }
     }
 
@@ -415,6 +418,7 @@ namespace garlic {
         this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
           allocator_.reallocate(this->data_.object.data, this->data_.object.capacity, this->data_.object.capacity * 2)
         );
+        this->data_.object.capacity *= 2;
       }
     }
 
