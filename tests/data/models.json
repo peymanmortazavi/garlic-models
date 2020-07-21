@@ -1,0 +1,22 @@
+{
+    "models": {
+        "User": {
+            "description": "A banking user.",
+            "fields": {
+                "first_name": "string",
+                "last_name": {
+                    "label": "Last Name",
+                    "type": "string"
+                },
+                "zip_code": {
+                    "label": "Zip Code",
+                    "description": "Location of the user.",
+                    "constraints": [
+                        {"type": "regex", "pattern": "\\d{5,13}"}
+                    ]
+                }
+            }
+        }
+    },
+    "root": "User"
+}

@@ -15,9 +15,8 @@ namespace garlic {
   template<garlic::ReadableLayer LayerType>
   class Field {
   public:
-    using Layer = LayerType;
     using ConstraintType = Constraint<LayerType>;
-    using ConstraintPtr = std::unique_ptr<ConstraintType>;
+    using ConstraintPtr = std::shared_ptr<ConstraintType>;
 
     struct ValidationResult {
       std::vector<ConstraintResult> failures;
@@ -25,25 +24,18 @@ namespace garlic {
     };
 
     struct Properties {
-      bool required;
       std::string name;
       std::map<std::string, std::string> meta;
       std::vector<ConstraintPtr> constraints;
     };
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
-    Field(std::string&& name, bool required=true) {
-      properties_.required = required;
-      properties_.name = std::move(name);
-    }
-    Field(const std::string& name, bool required=true) {
-      properties_.name = name;
-      properties_.required = required;
-    }
+    Field(std::string&& name) { properties_.name = std::move(name); }
+    Field(const std::string& name) { properties_.name = name; }
 
     template<template <typename> typename T, typename... Args>
     void add_constraint(Args&&... args) {
-      this->add_constraint(std::make_unique<T<LayerType>>(std::forward<Args>(args)...));
+      this->add_constraint(std::make_shared<T<LayerType>>(std::forward<Args>(args)...));
     }
 
     void add_constraint(ConstraintPtr&& constraint) {
@@ -55,7 +47,6 @@ namespace garlic {
       for(auto& constraint : properties_.constraints) {
         auto test = constraint->test(value);
         if(!test.valid) {
-          //result.failures.push_back(ConstraintFailure(constraint.get(), std::move(test)));
           result.failures.push_back(std::move(test));
           if (constraint->skip_constraints()) break;
         }
@@ -64,8 +55,6 @@ namespace garlic {
     }
 
   const std::string& get_name() const noexcept { return properties_.name; }
-  const std::string& get_description() const noexcept { return properties_.description; }
-  bool is_required() const noexcept { return properties_.required; }
 
   protected:
     Properties properties_;
@@ -96,7 +85,7 @@ namespace garlic {
     }
 
     void add_field(std::string&& name, FieldPtr field) {
-      if (field->is_required()) required_fields_.push_back(name);
+      //if (field->is_required()) required_fields_.push_back(name);
       properties_.field_map.emplace(std::move(name), std::move(field));
     }
 
@@ -115,9 +104,7 @@ namespace garlic {
   public:
     using ModelType = Model<LayerType>;
 
-    ModelConstraint(std::shared_ptr<ModelType> model) : model_(std::move(model)) {
-      //name_ = model->get_properties().name;
-    }
+    ModelConstraint(std::shared_ptr<ModelType> model) : model_(std::move(model)) {}
 
     ConstraintResult test(const LayerType& value) const override {
       ConstraintResult result;
@@ -171,8 +158,9 @@ namespace garlic {
 
   // Model Parsing From ReadableLayer
   template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
+  template<typename T> using FieldPropertiesOf = typename Field<T>::Properties;
 
-  template<ReadableLayer Source, ReadableLayer Destination = Source>
+  template<ReadableLayer Destination>
   class ModelContainer {
   public:
     template <typename T> using MapOf = std::map<std::string, T>;
@@ -188,11 +176,20 @@ namespace garlic {
     };
 
     ModelContainer() {
-      auto field = std::make_shared<FieldType>("StringField");
-      field->template add_constraint<TypeConstraint>(TypeFlag::String);
-      fields_.emplace("string", std::move(field));
+      static std::map<std::string, FieldPtr> static_map = {
+        {"string", this->make_field<TypeConstraint>("StringField", TypeFlag::String)},
+        {"integer", this->make_field<TypeConstraint>("IntegerField", TypeFlag::Integer)},
+        {"double", this->make_field<TypeConstraint>("DoubleField", TypeFlag::Double)},
+        {"list", this->make_field<TypeConstraint>("ListField", TypeFlag::List)},
+        {"object", this->make_field<TypeConstraint>("ObjectField", TypeFlag::Object)},
+        {"bool", this->make_field<TypeConstraint>("BooleanField", TypeFlag::Boolean)},
+      };
+      std::for_each(static_map.begin(), static_map.end(), [this](const auto& item) {
+        fields_.emplace(item.first, item.second);
+      });
     }
 
+    template<ReadableLayer Source>
     ParsingResult parse(const Source& value) {
       if (!value.is_object()) return {false};
       auto it = value.find_member("models");
@@ -209,7 +206,8 @@ namespace garlic {
     ModelPtr get_model(const std::string& name) { return models_[name]; }
 
   private:
-    ModelPropertiesOf<Destination> create_model_properties(std::string&& name, const Source& value) {
+    template<ReadableLayer Source>
+    auto create_model_properties(std::string&& name, const Source& value) -> ModelPropertiesOf<Destination> {
       ModelPropertiesOf<Destination> props;
       props.name = std::move(name);
 
@@ -230,8 +228,9 @@ namespace garlic {
             auto it = this->fields_.find(field_value.value.get_cstr());
             if (it == this->fields_.end()) {
               // raise a parsing error.
+            } else {
+              props.field_map.emplace(field_value.key.get_cstr(), it->second);
             }
-            props.field_map.emplace(field_value.key.get_cstr(), it->second);
           } else if (field_value.value.is_object()) {
           }
         });
@@ -240,10 +239,20 @@ namespace garlic {
       return props;
     }
 
-    template<typename T>
-    void get_member(const Source& value, const char* key, T&& callback) {
+    template<ReadableLayer Source, typename T>
+    void get_member(const Source& value, const char* key, const T& callback) {
       auto it = value.find_member(key);
       if (it != value.end_member()) callback((*it).value);
+    }
+
+    template<template<typename> typename ConstraintType, typename... Args>
+    FieldPtr make_field(std::string&& name, Args&&... args) {
+      FieldPropertiesOf<Destination> props {
+        std::move(name),
+        {},
+        {std::make_shared<ConstraintType<Destination>>(std::forward<Args>(args)...)}
+      };
+      return std::make_shared<FieldType>(std::move(props));
     }
 
     ModelMap models_;

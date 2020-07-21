@@ -69,7 +69,7 @@ TEST(GarlicModel, FieldValidation) {
 TEST(GarlicModel, JsonParser) {
   auto document = get_test_document();
   auto value = JsonView{document};
-  auto definitions = ModelContainer<JsonView, CloveView>();
+  auto definitions = ModelContainer<CloveView>();
   definitions.parse(value);
   auto model = definitions.get_model("User");
   std::cout << "Model Name: " << model->get_properties().name << std::endl;
