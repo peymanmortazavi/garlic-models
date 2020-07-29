@@ -195,20 +195,26 @@ namespace garlic {
       fields_ = static_map;
     }
 
-    ParsingResult parse(const ReadableLayer auto& value) {
+    ParsingResult parse(const ReadableLayer auto& value) noexcept {
       if (!value.is_object()) return {false};
-      auto it = value.find_member("models");
-      if (it != value.end_member()) {
-        std::for_each((*it).value.begin_member(), (*it).value.end_member(), [&](const auto& member) {
+      get_member(value, "fields", [this](const auto& fields) {
+        std::for_each(fields.begin_member(), fields.end_member(), [this](const auto& field) {
+          this->parse_field(field.value, [this,&field](auto ptr) {
+            fields_.emplace(field.key.get_cstr(), std::move(ptr));
+          });
+        });
+      });
+      get_member(value, "models", [this](const auto& models) {
+        std::for_each(models.begin_member(), models.end_member(), [this](const auto& member) {
           // parse properties
           auto properties = this->create_model_properties(member.key.get_cstr(), member.value);
           models_.emplace(member.key.get_cstr(), std::make_shared<ModelType>(std::move(properties)));
         });
-      }
+      });
       return {true};
     }
 
-    ModelPtr get_model(const std::string& name) { return models_[name]; }
+    ModelPtr get_model(const std::string& name) noexcept { return models_[name]; }
 
   private:
     auto create_model_properties(std::string&& name, const ReadableLayer auto& value) -> ModelPropertiesOf<Destination> {

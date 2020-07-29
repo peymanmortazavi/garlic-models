@@ -94,6 +94,7 @@ TEST(GarlicModel, JsonParser) {
   ref.add_member("last_name", "Mortazavi");
   ref.add_member("zip_code", "123");
   ref.add_member("age", 18);
+  ref.add_member("birthdate", "1/4/1993");
 
   auto result = root.test(v.get_view());
   print_result(result);

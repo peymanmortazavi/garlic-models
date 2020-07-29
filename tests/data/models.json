@@ -1,4 +1,14 @@
 {
+    "fields": {
+        "DateTime": {
+            "meta": {
+                "hint": "this is for the django form hints."
+            },
+            "constraints": [
+                {"type": "regex", "pattern": "[01]?[012][/]\\d{2}[/]\\d{4}"}
+            ]
+        }
+    },
     "models": {
         "User": {
             "description": "A banking user.",
@@ -20,7 +30,8 @@
                     "constraints": [
                         {"type": "range", "min": 21, "max": 150}
                     ]
-                }
+                },
+                "birthdate": "DateTime"
             }
         }
     },
