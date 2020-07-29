@@ -78,12 +78,22 @@ TEST(GarlicModel, JsonParser) {
     std::cout << "  - " << item.first << " : " << item.second << std::endl;
   }
 
+  std::cout << "Fields: " << std::endl;
+  for (const auto& item : model->get_properties().field_map) {
+    std::cout << item.first << " (" << item.second->get_properties().constraints.size() << " constraints)" << std::endl;
+  }
+
+  std::cout << std::endl;
+
   auto root = ModelConstraint<CloveView>(model);
 
   CloveDocument v;
   auto ref = v.get_reference();
   ref.set_object();
-  ref.add_member("first_name", 25);
+  ref.add_member("first_name", "Peyman");
+  ref.add_member("last_name", "Mortazavi");
+  ref.add_member("zip_code", "123");
+  ref.add_member("age", 18);
 
   auto result = root.test(v.get_view());
   print_result(result);

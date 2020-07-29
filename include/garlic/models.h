@@ -55,6 +55,7 @@ namespace garlic {
     }
 
   const std::string& get_name() const noexcept { return properties_.name; }
+  const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
     Properties properties_;
@@ -106,7 +107,7 @@ namespace garlic {
 
     ModelConstraint(std::shared_ptr<ModelType> model) : model_(std::move(model)) {}
 
-    ConstraintResult test(const LayerType& value) const override {
+    ConstraintResult test(const LayerType& value) const noexcept override {
       ConstraintResult result;
       const auto& properties = model_->get_properties();
       auto required_fields = model_->get_required_fields();
@@ -118,7 +119,6 @@ namespace garlic {
             if (!test.is_valid()) {
               result.valid = false;
               result.details.push_back({false, member.key.get_cstr(), "find a summary of why this field value sucks.", std::move(test.failures), true});
-              //result.details.push_back({false, });
             }
           }
         }
@@ -138,22 +138,28 @@ namespace garlic {
   };
 
 
-  /**
-   * A container provides a description of all fields and models agnostic to the layer type.
-   */
-  class Container {
-  public:
-    using Map = std::map<std::string, std::string>;
+  // ConstraintParsers
+  //template<ReadableLayer LayerType>
+  //class ConstraintParser {
+  //public:
+  //  using ConstraintType = Constraint<LayerType>;
+  //  using ConstraintPtr = std::shared_ptr<ConstraintType>;
 
-    struct FieldDefinition {
-      std::string name;
-      Map inputs;
-      Map meta;
-    };
+  //  virtual ConstraintPtr parse(const LayerType& value) const noexcept = 0;
+  //  virtual const ConstraintType& get_input_constraint() const noexcept = 0;
+  //};
 
-    struct ModelDefinition {
-    };
-  };
+  //template<ReadableLayer LayerType>
+  //class RegexConstraintParser : public ConstraintParser<LayerType> {
+  //public:
+  //  using Super = ConstraintParser<LayerType>;
+  //  typename Super::ConstraintPtr parse(const LayerType& value) const noexcept override {
+  //    return std::shared_ptr<RegexConstraint<LayerType>>((*value.find_member("pattern")).get_cstr());
+  //  }
+  //  const typename Super::ConstraintType& get_input_constraint() const noexcept override {
+  //    static Model<LayerType> model;
+  //  }
+  //};
 
 
   // Model Parsing From ReadableLayer
@@ -170,6 +176,8 @@ namespace garlic {
     using FieldPtr = std::shared_ptr<FieldType>;
     using ModelMap = MapOf<ModelPtr>;
     using FieldMap = MapOf<FieldPtr>;
+    using ConstraintType = Constraint<Destination>;
+    using ConstraintPtr = std::shared_ptr<ConstraintType>;
 
     struct ParsingResult {
       bool valid;
@@ -184,13 +192,10 @@ namespace garlic {
         {"object", this->make_field<TypeConstraint>("ObjectField", TypeFlag::Object)},
         {"bool", this->make_field<TypeConstraint>("BooleanField", TypeFlag::Boolean)},
       };
-      std::for_each(static_map.begin(), static_map.end(), [this](const auto& item) {
-        fields_.emplace(item.first, item.second);
-      });
+      fields_ = static_map;
     }
 
-    template<ReadableLayer Source>
-    ParsingResult parse(const Source& value) {
+    ParsingResult parse(const ReadableLayer auto& value) {
       if (!value.is_object()) return {false};
       auto it = value.find_member("models");
       if (it != value.end_member()) {
@@ -206,43 +211,90 @@ namespace garlic {
     ModelPtr get_model(const std::string& name) { return models_[name]; }
 
   private:
-    template<ReadableLayer Source>
-    auto create_model_properties(std::string&& name, const Source& value) -> ModelPropertiesOf<Destination> {
+    auto create_model_properties(std::string&& name, const ReadableLayer auto& value) -> ModelPropertiesOf<Destination> {
       ModelPropertiesOf<Destination> props;
       props.name = std::move(name);
 
-      this->get_member(value, "description", [&](const auto& item) {
+      get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", item.get_cstr());
       });
 
-      this->get_member(value, "meta", [&](const auto& item) {
+      get_member(value, "meta", [&props](const auto& item) {
         std::for_each(item.begin_member(), item.end_member(), [&](const auto& meta_member) {
           props.meta.emplace(meta_member.key.get_cstr(), meta_member.value.get_cstr());
         });
       });
 
-      this->get_member(value, "fields", [&](const auto& value) {
-        std::for_each(value.begin_member(), value.end_member(), [&](const auto& field_value) {
-          // parse the field reference.
-          if (field_value.value.is_string()) {
-            auto it = this->fields_.find(field_value.value.get_cstr());
-            if (it == this->fields_.end()) {
-              // raise a parsing error.
-            } else {
-              props.field_map.emplace(field_value.key.get_cstr(), it->second);
-            }
-          } else if (field_value.value.is_object()) {
-          }
+      get_member(value, "fields", [this,&props](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [this,&props](const auto& field_value) {
+          this->parse_field(field_value.value, [&props, &field_value](auto ptr) {
+            props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
+          });
         });
       });
 
       return props;
     }
 
-    template<ReadableLayer Source, typename T>
-    void get_member(const Source& value, const char* key, const T& callback) {
-      auto it = value.find_member(key);
-      if (it != value.end_member()) callback((*it).value);
+    template<typename Callable>
+    void parse_field(const ReadableLayer auto& value, const Callable& cb) {
+      // parse the field reference.
+      if (value.is_string()) {
+        if (auto it = this->fields_.find(value.get_cstr()); it != this->fields_.end()) {
+          cb(it->second);
+        } else {
+          // raise a parsing error.
+        }
+      } else if (value.is_object()) {
+        FieldPropertiesOf<Destination> props;
+        get_member(value, "type", [this, &props](const auto& item) {
+          if (auto it = this->fields_.find(item.get_cstr()); it != this->fields_.end()) {
+            props.constraints = it->second->get_properties().constraints;
+          } else {
+            // parsing error.
+          }
+        });
+        get_member(value, "meta", [this,&props](const auto& item) {
+          for (const auto& member : item.get_object()) {
+            props.meta.emplace(member.key.get_cstr(), member.value.get_cstr());
+          }
+        });
+        get_member(value, "label", [this,&props](const auto& item) {
+          props.meta.emplace("label", item.get_cstr());
+        });
+        get_member(value, "description", [this,&props](const auto& item) {
+          props.meta.emplace("description", item.get_cstr());
+        });
+        get_member(value, "constraints", [this,&props](const auto& item) {
+          for (const auto& constraint_info : item.get_list()) {
+            this->parse_constraint(constraint_info, [&props](auto&& ptr) {
+              props.constraints.emplace_back(std::move(ptr));
+            });
+          }
+        });
+        // if the type is available but the constraints is not, just use the field constraints in a new field and
+        // if constraints exist, then copy the field constraints and add the constraints to the end of it.
+        // if the order matters, people can use a field constraint that basically forwards field constraint result.
+        // if the constraints are defined, then create an anonymous field with the defined constraints.
+        cb(std::make_shared<FieldType>(std::move(props)));
+      }
+    }
+
+    template<ReadableLayer Source, typename Callable>
+    void parse_constraint(const Source& value, const Callable& cb) const noexcept {
+      typedef ConstraintPtr (*ConstraintInitializer)(const Source&);
+      static std::map<std::string, ConstraintInitializer> ctors = {
+        {"regex", &RegexConstraint<Destination>::parse},
+        {"range", &RangeConstraint<Destination>::parse},
+      };
+
+      get_member(value, "type", [&value,&cb](const auto& item) {
+        if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
+          cb(it->second(value));
+        } else {
+          // report parsing error.
+        }
+      });
     }
 
     template<template<typename> typename ConstraintType, typename... Args>

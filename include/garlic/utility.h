@@ -34,6 +34,10 @@ namespace garlic {
     return false;
   }
 
+  template<typename Callable>
+  void get_member(const ReadableLayer auto& value, const char* key, const Callable& cb) noexcept {
+    if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
+  }
 
 }
 

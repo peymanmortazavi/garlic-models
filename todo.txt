@@ -1,0 +1,30 @@
+Fix the library installation:
+  - move installation part from the root CMakeLists.txt to the src/CMakeLists.txt
+  - make the tests work.
+  - make sure public headers work fine while DRY (no duplication of includes).
+
+Future improvement:
+  - add back inserter and shit like that.
+
+Nice Improvements:
+  - separate different parts of header files from garlic.h
+  - lower memory footprint of GenericCloveData by utilizing pointers for arrays and maps.
+  - explore using an actual hash table for the GenericCloveData
+  - explore using a linked list for GenericCloveData
+  - use build system to enable/disable JSON.
+
+IMPORTANT:
+	* one way we could maybe try to reduce the complexity of this code is to
+	  have one readable and one writable protocol. write tests for these and make sure
+		they work properly and then have one config manager that would OPTIONALLY use shared pointers
+		to reduce CPU performance but reduce memory foot print. the existence of that shared pointer
+		would allow the object to get merged properly.
+
+
+P 0:
+    * really learn about the STL iterators and make a tutorial video out of it.
+
+P 1:
+    - build constraints from the ReadableLayer [almost complete]
+    - use a private parse method to assume valid and a public parse that uses an internal model to first validate the
+      schema.

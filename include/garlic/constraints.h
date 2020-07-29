@@ -2,6 +2,7 @@
 #define CONSTRAINTS_H
 
 #include "layer.h"
+#include "utility.h"
 #include "basic.h"
 #include <cstring>
 #include <regex>
@@ -23,7 +24,7 @@ namespace garlic {
   template<garlic::ReadableLayer LayerType>
   class Constraint {
   public:
-    virtual ConstraintResult test(const LayerType& value) const = 0;
+    virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
     virtual const std::string& get_name() const noexcept = 0;
     virtual bool skip_constraints() const noexcept = 0;
   };
@@ -35,7 +36,7 @@ namespace garlic {
 
     TypeConstraint(TypeFlag required_type, std::string&& name="type_constraint") : flag_(required_type), name_(std::move(name)) {}
 
-    ConstraintResult test(const LayerType& value) const override {
+    ConstraintResult test(const LayerType& value) const noexcept override {
       switch (flag_) {
         case TypeFlag::Null: {
           if (value.is_null()) { return {true}; }
@@ -89,22 +90,37 @@ namespace garlic {
         std::string&& name="range_constraint"
     ) : min_(min), max_(max), name_(std::move(name)) {}
 
-    ConstraintResult test(const LayerType& value) const override {
+    ConstraintResult test(const LayerType& value) const noexcept override {
       if (value.is_string()) {
         auto length = value.get_string_view().size();
         if (length > max_ || length < min_) return {false, this->get_name(), "invalid string length."};
         return {true};
       } else if (value.is_double()) {
-        if(!(min_ < value.get_double() < max_)) return {false, this->get_name(), "invalid double length."};
+        auto dvalue = value.get_double();
+        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "invalid double length."};
         return {true};
       } else if (value.is_int()) {
-        if(!(min_ < value.get_int() < max_)) return {false, this->get_name(), "invalid int length."};
+        auto ivalue = value.get_int();
+        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "invalid int length."};
         return {true};
       } else return {true};
     }
 
     const std::string& get_name() const noexcept override { return name_; }
     bool skip_constraints() const noexcept override { return true; }
+
+    template<ReadableLayer T>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+      SizeType min;
+      SizeType max;
+      get_member(value, "min", [&min](const auto& v) {
+        if (v.is_double()) min = v.get_double(); else min = v.get_int();
+      });
+      get_member(value, "max", [&max](const auto& v) {
+        if (v.is_double()) max = v.get_double(); else max = v.get_int();
+      });
+      return std::make_shared<RangeConstraint<LayerType>>(min, max);
+    }
 
   private:
     SizeType min_;
@@ -122,7 +138,7 @@ namespace garlic {
         std::string&& name="regex_constraint"
     ) : pattern_(std::move(pattern)), name_(std::move(name)) {}
 
-    ConstraintResult test(const LayerType& value) const override {
+    ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_string()) return {true};
       if (std::regex_match(value.get_cstr(), pattern_)) { return {true}; }
       else { return {false, this->get_name(), "invalid value."}; }
@@ -130,6 +146,13 @@ namespace garlic {
 
     const std::string& get_name() const noexcept override { return name_; }
     bool skip_constraints() const noexcept override { return true; }
+
+    template<ReadableLayer T>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+      std::string name;
+      get_member(value, "pattern", [&name](const auto& v) { name = v.get_string(); });
+      return std::make_shared<RegexConstraint<LayerType>>(std::move(name));
+    }
 
   private:
     std::regex pattern_;
