@@ -184,7 +184,7 @@ namespace garlic {
     };
 
     ModelContainer() {
-      static std::map<std::string, FieldPtr> static_map = {
+      static const std::map<std::string, FieldPtr> static_map = {
         {"string", this->make_field<TypeConstraint>("StringField", TypeFlag::String)},
         {"integer", this->make_field<TypeConstraint>("IntegerField", TypeFlag::Integer)},
         {"double", this->make_field<TypeConstraint>("DoubleField", TypeFlag::Double)},
@@ -278,10 +278,7 @@ namespace garlic {
             });
           }
         });
-        // if the type is available but the constraints is not, just use the field constraints in a new field and
-        // if constraints exist, then copy the field constraints and add the constraints to the end of it.
         // if the order matters, people can use a field constraint that basically forwards field constraint result.
-        // if the constraints are defined, then create an anonymous field with the defined constraints.
         cb(std::make_shared<FieldType>(std::move(props)));
       }
     }
@@ -289,7 +286,7 @@ namespace garlic {
     template<ReadableLayer Source, typename Callable>
     void parse_constraint(const Source& value, const Callable& cb) const noexcept {
       typedef ConstraintPtr (*ConstraintInitializer)(const Source&);
-      static std::map<std::string, ConstraintInitializer> ctors = {
+      static const std::map<std::string, ConstraintInitializer> ctors = {
         {"regex", &RegexConstraint<Destination>::parse},
         {"range", &RangeConstraint<Destination>::parse},
       };
