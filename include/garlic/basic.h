@@ -485,7 +485,8 @@ namespace garlic {
     ~GenericCloveValue() { this->get_reference().set_null(); }
 
     ViewType get_view() { return ViewType{data_}; }
-    ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
+    ReferenceType get_reference() { return ReferenceType{data_, allocator_}; }
+    DataType&& move_data() { return std::move(data_); }
 
   private:
     DataType data_;

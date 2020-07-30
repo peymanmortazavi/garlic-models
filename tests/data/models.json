@@ -10,6 +10,12 @@
         }
     },
     "models": {
+        "Company": {
+            "fields": {
+                "name": "string",
+                "founded_on": "DateTime"
+            }
+        },
         "User": {
             "description": "A banking user.",
             "fields": {
@@ -31,7 +37,8 @@
                         {"type": "range", "min": 21, "max": 150}
                     ]
                 },
-                "birthdate": "DateTime"
+                "birthdate": "DateTime",
+                "company": "Company"
             }
         }
     },

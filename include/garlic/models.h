@@ -243,21 +243,29 @@ namespace garlic {
     }
 
     template<typename Callable>
-    void parse_field(const ReadableLayer auto& value, const Callable& cb) {
+    void parse_field(const ReadableLayer auto& value, const Callable& cb) noexcept {
       // parse the field reference.
       if (value.is_string()) {
         if (auto it = this->fields_.find(value.get_cstr()); it != this->fields_.end()) {
           cb(it->second);
         } else {
-          // raise a parsing error.
+          // now search the models for this field name.
+          if (!this->try_create_model_field(value.get_cstr(), cb)) {
+            // raise a parsing error.
+          }
         }
       } else if (value.is_object()) {
         FieldPropertiesOf<Destination> props;
-        get_member(value, "type", [this, &props](const auto& item) {
+        get_member(value, "type", [this, &props, &value](const auto& item) {
           if (auto it = this->fields_.find(item.get_cstr()); it != this->fields_.end()) {
             props.constraints = it->second->get_properties().constraints;
           } else {
-            // parsing error.
+            auto found = this->try_create_model_field(item.get_cstr(), [&props](const auto& field) {
+              props.constraints = field->get_properties().constraints;
+            });
+            if (!found) {
+              // parsing error.
+            }
           }
         });
         get_member(value, "meta", [this,&props](const auto& item) {
@@ -298,6 +306,20 @@ namespace garlic {
           // report parsing error.
         }
       });
+    }
+
+    /**
+     * Search the existing models, if found, create and save a field matching that model.
+     */
+    template<typename Callable>
+    bool try_create_model_field(const char* name, const Callable& cb) noexcept {
+      if (auto it = this->models_.find(name); it != this->models_.end()) {
+        auto model_field = this->make_field<ModelConstraint>(name, it->second);
+        this->fields_.emplace(name, model_field);
+        cb(std::move(model_field));
+        return true;
+      }
+      return false;
     }
 
     template<template<typename> typename ConstraintType, typename... Args>

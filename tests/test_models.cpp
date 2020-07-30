@@ -39,6 +39,17 @@ void print_result(const ConstraintResult& result, int level=0) {
 }
 
 
+template<ReadableLayer LayerType>
+void print_constraints(const FieldPropertiesOf<LayerType>& props) {
+  bool first = true;
+  for (const auto& c : props.constraints) {
+    if (first) cout << c->get_name();
+    else cout << ", " << c->get_name();
+    first = false;
+  }
+}
+
+
 TEST(GarlicModel, FieldValidation) {
   auto field = std::make_shared<Field<CloveView>>("Name");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
@@ -80,7 +91,9 @@ TEST(GarlicModel, JsonParser) {
 
   std::cout << "Fields: " << std::endl;
   for (const auto& item : model->get_properties().field_map) {
-    std::cout << item.first << " (" << item.second->get_properties().constraints.size() << " constraints)" << std::endl;
+    std::cout << item.first << " (";
+    print_constraints<CloveView>(item.second->get_properties());
+    cout << ")" << std::endl;
   }
 
   std::cout << std::endl;
@@ -95,6 +108,14 @@ TEST(GarlicModel, JsonParser) {
   ref.add_member("zip_code", "123");
   ref.add_member("age", 18);
   ref.add_member("birthdate", "1/4/1993");
+
+  CloveValue company{v};
+  auto cref = company.get_reference();
+  cref.set_object();
+  cref.add_member("name", "Microsoft");
+  cref.add_member("founded_on", "a");
+
+  ref.add_member("company", company.move_data());
 
   auto result = root.test(v.get_view());
   print_result(result);
