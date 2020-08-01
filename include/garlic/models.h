@@ -197,17 +197,21 @@ namespace garlic {
 
     ParsingResult parse(const ReadableLayer auto& value) noexcept {
       if (!value.is_object()) return {false};
-      get_member(value, "fields", [this](const auto& fields) {
-        std::for_each(fields.begin_member(), fields.end_member(), [this](const auto& field) {
-          this->parse_field(field.value, [this,&field](auto ptr) {
+      
+      parsing_context context;
+
+      get_member(value, "fields", [this, &context](const auto& fields) {
+        std::for_each(fields.begin_member(), fields.end_member(), [this,&context](const auto& field) {
+          this->parse_field(field.value, context, [this,&field](auto ptr) {
             fields_.emplace(field.key.get_cstr(), std::move(ptr));
           });
         });
       });
-      get_member(value, "models", [this](const auto& models) {
-        std::for_each(models.begin_member(), models.end_member(), [this](const auto& member) {
+
+      get_member(value, "models", [this,&context](const auto& models) {
+        std::for_each(models.begin_member(), models.end_member(), [this,&context](const auto& member) {
           // parse properties
-          this->parse_model(member.key.get_cstr(), member.value, [this,&member](auto&& ptr) {
+          this->parse_model(member.key.get_cstr(), member.value, context, [this,&member](auto&& ptr) {
             models_.emplace(member.key.get_cstr(), std::move(ptr));
           });
         });
@@ -230,7 +234,7 @@ namespace garlic {
     };
 
     template<typename Callable>
-    auto parse_model(std::string&& name, const ReadableLayer auto& value, const Callable& cb) {
+    auto parse_model(std::string&& name, const ReadableLayer auto& value, parsing_context& context, const Callable& cb) {
       ModelPropertiesOf<Destination> props;
       props.name = std::move(name);
 
@@ -244,9 +248,9 @@ namespace garlic {
         });
       });
 
-      get_member(value, "fields", [this,&props](const auto& value) {
-        std::for_each(value.begin_member(), value.end_member(), [this,&props](const auto& field_value) {
-          this->parse_field(field_value.value, [&props, &field_value](auto ptr) {
+      get_member(value, "fields", [this,&props,&context](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [this,&props,&context](const auto& field_value) {
+          this->parse_field(field_value.value, context, [&props, &field_value](auto ptr) {
             props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
           });
         });
@@ -256,30 +260,28 @@ namespace garlic {
     }
 
     template<typename Callable>
-    void parse_field(const ReadableLayer auto& value, const Callable& cb) noexcept {
+    void parse_reference(const char* name, parsing_context& context, const Callable& cb) {
+      if (auto it = this->fields_.find(name); it != this->fields_.end()) {
+        cb(it->second);
+      } else {
+        // now search the models for this field name.
+        if (!this->try_create_model_field(name, cb)) {
+          // raise a parsing error.
+        }
+      }
+    }
+
+    template<typename Callable>
+    void parse_field(const ReadableLayer auto& value, parsing_context& context, const Callable& cb) noexcept {
       // parse the field reference.
       if (value.is_string()) {
-        if (auto it = this->fields_.find(value.get_cstr()); it != this->fields_.end()) {
-          cb(it->second);
-        } else {
-          // now search the models for this field name.
-          if (!this->try_create_model_field(value.get_cstr(), cb)) {
-            // raise a parsing error.
-          }
-        }
+        this->parse_reference(value.get_cstr(), context, cb);
       } else if (value.is_object()) {
         FieldPropertiesOf<Destination> props;
-        get_member(value, "type", [this, &props, &value](const auto& item) {
-          if (auto it = this->fields_.find(item.get_cstr()); it != this->fields_.end()) {
-            props.constraints = it->second->get_properties().constraints;
-          } else {
-            auto found = this->try_create_model_field(item.get_cstr(), [&props](const auto& field) {
-              props.constraints = field->get_properties().constraints;
-            });
-            if (!found) {
-              // parsing error.
-            }
-          }
+        get_member(value, "type", [this, &props, &value, &context](const auto& item) {
+          this->parse_reference(item.get_cstr(), context, [&props](const auto& field) {
+            props.constraints = field->get_properties().constraints;
+          });
         });
         get_member(value, "meta", [this,&props](const auto& item) {
           for (const auto& member : item.get_object()) {
