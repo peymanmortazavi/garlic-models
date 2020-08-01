@@ -207,8 +207,9 @@ namespace garlic {
       get_member(value, "models", [this](const auto& models) {
         std::for_each(models.begin_member(), models.end_member(), [this](const auto& member) {
           // parse properties
-          auto properties = this->create_model_properties(member.key.get_cstr(), member.value);
-          models_.emplace(member.key.get_cstr(), std::make_shared<ModelType>(std::move(properties)));
+          this->parse_model(member.key.get_cstr(), member.value, [this,&member](auto&& ptr) {
+            models_.emplace(member.key.get_cstr(), std::move(ptr));
+          });
         });
       });
       return {true};
@@ -217,7 +218,19 @@ namespace garlic {
     ModelPtr get_model(const std::string& name) noexcept { return models_[name]; }
 
   private:
-    auto create_model_properties(std::string&& name, const ReadableLayer auto& value) -> ModelPropertiesOf<Destination> {
+    template<typename ValueType>
+    struct parse_status {
+      bool completed;
+      ValueType value;
+    };
+
+    struct parsing_context {
+      MapOf<parse_status<FieldType>> fields;
+      MapOf<parse_status<ModelType>> models;
+    };
+
+    template<typename Callable>
+    auto parse_model(std::string&& name, const ReadableLayer auto& value, const Callable& cb) {
       ModelPropertiesOf<Destination> props;
       props.name = std::move(name);
 
@@ -239,7 +252,7 @@ namespace garlic {
         });
       });
 
-      return props;
+      cb(std::make_shared<ModelType>(std::move(props)));
     }
 
     template<typename Callable>
