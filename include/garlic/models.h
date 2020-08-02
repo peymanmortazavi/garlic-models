@@ -203,7 +203,7 @@ namespace garlic {
       get_member(value, "fields", [this, &context](const auto& fields) {
         std::for_each(fields.begin_member(), fields.end_member(), [this,&context](const auto& field) {
           this->parse_field(field.value, context, [this,&field](auto ptr) {
-            fields_.emplace(field.key.get_cstr(), std::move(ptr));
+            fields_.emplace(field.key.get_string(), std::move(ptr));
           });
         });
       });
@@ -211,8 +211,8 @@ namespace garlic {
       get_member(value, "models", [this,&context](const auto& models) {
         std::for_each(models.begin_member(), models.end_member(), [this,&context](const auto& member) {
           // parse properties
-          this->parse_model(member.key.get_cstr(), member.value, context, [this,&member](auto&& ptr) {
-            models_.emplace(member.key.get_cstr(), std::move(ptr));
+          this->parse_model(member.key.get_string(), member.value, context, [this,&member](auto&& ptr) {
+            models_.emplace(member.key.get_string(), std::move(ptr));
           });
         });
       });
@@ -229,8 +229,8 @@ namespace garlic {
     };
 
     struct parsing_context {
-      MapOf<parse_status<FieldType>> fields;
-      MapOf<parse_status<ModelType>> models;
+      MapOf<parse_status<FieldPtr>> fields;
+      MapOf<parse_status<ModelPtr>> models;
     };
 
     template<typename Callable>
@@ -256,7 +256,10 @@ namespace garlic {
         });
       });
 
-      cb(std::make_shared<ModelType>(std::move(props)));
+      auto ptr = std::make_shared<ModelType>(std::move(props));
+      auto model_field = this->make_field<ModelConstraint>(std::string{ptr->get_properties().name}, ptr);
+      this->fields_.emplace(ptr->get_properties().name, std::move(model_field));
+      cb(std::move(ptr));
     }
 
     template<typename Callable>
@@ -265,9 +268,14 @@ namespace garlic {
         cb(it->second);
       } else {
         // now search the models for this field name.
-        if (!this->try_create_model_field(name, cb)) {
-          // raise a parsing error.
-        }
+        //if (!this->try_create_model_field(name, cb)) {
+          // now search in the current parsing context.
+        //  if (auto it = context.fields.find(name); it != context.fields.end()) {
+        //    cb(it->second.value);
+        //  } else {
+        //    // now try to create a model field based on values in the context
+        //  }
+        //}
       }
     }
 
@@ -328,13 +336,14 @@ namespace garlic {
      */
     template<typename Callable>
     bool try_create_model_field(const char* name, const Callable& cb) noexcept {
-      if (auto it = this->models_.find(name); it != this->models_.end()) {
-        auto model_field = this->make_field<ModelConstraint>(name, it->second);
-        this->fields_.emplace(name, model_field);
-        cb(std::move(model_field));
-        return true;
-      }
       return false;
+      //if (auto it = this->models_.find(name); it != this->models_.end()) {
+      //  auto model_field = this->make_field<ModelConstraint>(name, it->second);
+      //  this->fields_.emplace(name, model_field);
+      //  cb(std::move(model_field));
+      //  return true;
+      //}
+      //return false;
     }
 
     template<template<typename> typename ConstraintType, typename... Args>
