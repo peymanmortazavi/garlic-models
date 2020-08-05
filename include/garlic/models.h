@@ -137,31 +137,6 @@ namespace garlic {
     std::shared_ptr<ModelType> model_;
   };
 
-
-  // ConstraintParsers
-  //template<ReadableLayer LayerType>
-  //class ConstraintParser {
-  //public:
-  //  using ConstraintType = Constraint<LayerType>;
-  //  using ConstraintPtr = std::shared_ptr<ConstraintType>;
-
-  //  virtual ConstraintPtr parse(const LayerType& value) const noexcept = 0;
-  //  virtual const ConstraintType& get_input_constraint() const noexcept = 0;
-  //};
-
-  //template<ReadableLayer LayerType>
-  //class RegexConstraintParser : public ConstraintParser<LayerType> {
-  //public:
-  //  using Super = ConstraintParser<LayerType>;
-  //  typename Super::ConstraintPtr parse(const LayerType& value) const noexcept override {
-  //    return std::shared_ptr<RegexConstraint<LayerType>>((*value.find_member("pattern")).get_cstr());
-  //  }
-  //  const typename Super::ConstraintType& get_input_constraint() const noexcept override {
-  //    static Model<LayerType> model;
-  //  }
-  //};
-
-
   // Model Parsing From ReadableLayer
   template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
   template<typename T> using FieldPropertiesOf = typename Field<T>::Properties;
@@ -251,7 +226,7 @@ namespace garlic {
       get_member(value, "fields", [this,&props,&context](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this,&props,&context](const auto& field_value) {
           this->parse_field(field_value.value, context, [&props, &field_value](auto ptr) {
-            props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
+           props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
           });
         });
       });
@@ -266,16 +241,13 @@ namespace garlic {
     void parse_reference(const char* name, parsing_context& context, const Callable& cb) {
       if (auto it = this->fields_.find(name); it != this->fields_.end()) {
         cb(it->second);
-      } else {
-        // now search the models for this field name.
-        //if (!this->try_create_model_field(name, cb)) {
-          // now search in the current parsing context.
-        //  if (auto it = context.fields.find(name); it != context.fields.end()) {
-        //    cb(it->second.value);
-        //  } else {
-        //    // now try to create a model field based on values in the context
-        //  }
-        //}
+      } else if (auto it = context.fields.find(name); it != context.fields.end()) {
+        // maybe add the current field to the dependencies so we can generate good errors.
+        cb(it->second.value);
+      } else {  // in case we don't have this available, add an nullptr and add it to the context.
+        //auto emptyPtr = FieldPtr{nullptr};
+        //context.fields.emplace(name, emptyPtr);
+        //cb(std::move(emptyPtr));
       }
     }
 
@@ -288,6 +260,7 @@ namespace garlic {
         FieldPropertiesOf<Destination> props;
         get_member(value, "type", [this, &props, &value, &context](const auto& item) {
           this->parse_reference(item.get_cstr(), context, [&props](const auto& field) {
+            //props.constraints.emplace_back(std::make_shared<FieldConstraint<Destination>>(field));
             props.constraints = field->get_properties().constraints;
           });
         });
@@ -329,21 +302,6 @@ namespace garlic {
           // report parsing error.
         }
       });
-    }
-
-    /**
-     * Search the existing models, if found, create and save a field matching that model.
-     */
-    template<typename Callable>
-    bool try_create_model_field(const char* name, const Callable& cb) noexcept {
-      return false;
-      //if (auto it = this->models_.find(name); it != this->models_.end()) {
-      //  auto model_field = this->make_field<ModelConstraint>(name, it->second);
-      //  this->fields_.emplace(name, model_field);
-      //  cb(std::move(model_field));
-      //  return true;
-      //}
-      //return false;
     }
 
     template<template<typename> typename ConstraintType, typename... Args>
