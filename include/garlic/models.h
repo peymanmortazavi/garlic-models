@@ -200,7 +200,25 @@ namespace garlic {
       return {context.fields.size() == 0};
     }
 
-    ModelPtr get_model(const std::string& name) noexcept { return models_[name]; }
+    ModelPtr get_model(const std::string& name) const noexcept {
+      if (auto it = models_.find(name); it != models_.end()) return it->second;
+      return nullptr;
+    }
+
+    template<typename Callable>
+    void get_model(const std::string& name, const Callable& cb) const noexcept {
+      if (auto it = models_.find(name); it != models_.end()) cb(it->second);
+    }
+
+    FieldPtr get_field(const std::string& name) const noexcept {
+      if (auto it = fields_.find(name); it != fields_.end()) return it->second;
+      return nullptr;
+    }
+
+    template<typename Callable>
+    void get_field(const std::string& name, const Callable& cb) const noexcept {
+      if (auto it = fields_.find(name); it != fields_.end()) cb(it->second);
+    }
 
   private:
     struct lazy_pair {
@@ -240,7 +258,7 @@ namespace garlic {
             ready = true;
             props.field_map.emplace(field.key.get_cstr(), std::move(ptr));
           });
-          if (!ready) {  // it must have been an referenced field. add a dependency.
+          if (!ready) {  // it must be a referenced field. add a dependency.
             context.fields[field.value.get_cstr()].models.emplace_back(lazy_pair{field.key.get_string(), ptr});
           }
         });
@@ -264,8 +282,7 @@ namespace garlic {
 
     template<typename Callable>
     void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
-      // parse the field reference.
-      if (value.is_string()) {
+      if (value.is_string()) {  // parse the field reference.
         auto ready = this->parse_reference(value.get_cstr(), context, [&cb](const auto& ptr){ cb(ptr, true); });
         if (!ready && !name.empty()) {
           context.fields[value.get_cstr()].fields.emplace_back(std::move(name));
@@ -310,38 +327,42 @@ namespace garlic {
       }
     }
 
-    void resolve_field(const char* key, parse_context& context, const FieldPtr& ptr) {
+    void resolve_field(const std::string& key, parse_context& context, const FieldPtr& ptr) {
       if (auto it = context.fields.find(key); it != context.fields.end()) {
-        // update all fields that depend on this field.
+        // apply the constraints to the fields that inherited from this field.
         const auto& src_constraints = ptr->properties_.constraints;
-        for (auto& d : it->second.dependencies) {
-          auto& dst_constraints = d->properties_.constraints;
+        for (auto& field : it->second.dependencies) {
+          auto& dst_constraints = field->properties_.constraints;
           dst_constraints.insert(dst_constraints.begin(), src_constraints.begin(), src_constraints.end());
-          // recursively resolve on the fields that depend on this field.
-          if (!d->get_properties().name.empty()) {
-            this->resolve_field(d->get_properties().name.data(), context, ptr);
+          // if the field is a named one, it can be resolved as it is complete now.
+          // anonymous fields can be skipped.
+          if (!field->get_properties().name.empty()) {
+            this->resolve_field(field->get_properties().name, context, ptr);
           }
-          // if the dependency is a named field, then call resolve on it.
         }
-        // install on all the models.
-        for (auto& m : it->second.models) {
-          m.target->properties_.field_map.emplace(std::move(m.key), ptr);
+
+        // add the field to the depending models.
+        for (auto& member : it->second.models) {
+          member.target->properties_.field_map.emplace(std::move(member.key), ptr);
         }
-        // install all field aliases.
-        for (auto& f : it->second.fields) {
-          this->add_field(f.data(), context, FieldPtr{ptr}, true);
+
+        // register all the field aliases.
+        for (auto& alias : it->second.fields) {
+          this->add_field(alias.data(), context, ptr, true);
         }
+
+        // remove it from the context.
         context.fields.erase(it);
       }
     }
 
-    void add_field(const char* key, parse_context& context, FieldPtr&& ptr, bool complete) {
+    void add_field(std::string key, parse_context& context, FieldPtr ptr, bool complete) noexcept {
       if (complete) {
         this->resolve_field(key, context, ptr);  // resolve all the dependencies.
       } else {
         context.fields[key];  // create a record so it would be deemed as incomplete.
       }
-      fields_.emplace(key, std::move(ptr));
+      fields_.emplace(std::move(key), std::move(ptr));  // register the field.
     }
 
     template<ReadableLayer Source, typename Callable>
@@ -362,7 +383,7 @@ namespace garlic {
     }
 
     template<template<typename> typename ConstraintType, typename... Args>
-    FieldPtr make_field(std::string&& name, Args&&... args) {
+    FieldPtr make_field(std::string&& name, Args&&... args) const noexcept {
       FieldPropertiesOf<Destination> props {
         std::move(name),
         {},
