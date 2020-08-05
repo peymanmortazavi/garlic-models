@@ -182,9 +182,12 @@ namespace garlic {
       get_member(value, "fields", [this, &context](const auto& fields) {
         std::for_each(fields.begin_member(), fields.end_member(), [this, &context](const auto& field) {
           // parse field definition.
-          this->parse_field(field.key.get_cstr(), field.value, context, [this, &context, &field](auto ptr, auto complete) {
-            this->add_field(field.key.get_cstr(), context, std::move(ptr), complete);
-          });
+          this->parse_field(
+            field.key.get_string(), field.value, context,
+            [this, &context, &field](auto ptr, auto complete) {
+              this->add_field(field.key.get_string(), context, std::move(ptr), complete);
+            }
+          );
         });
       });
 
