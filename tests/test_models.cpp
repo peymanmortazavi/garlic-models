@@ -51,29 +51,20 @@ void print_constraints(const FieldPropertiesOf<LayerType>& props) {
 
 
 TEST(GarlicModel, FieldValidation) {
-  auto field = make_field<CloveView>("Name");
+  auto field = make_field<CloveView>("HTTPHeader");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
-  field->add_constraint<RegexConstraint>("Name:\\s?\\d{1,3}");
-
-  auto field2 = make_field<CloveView>("IP Address");
-  field2->add_constraint<RegexConstraint>("\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}");
-
-  auto user_model = make_model<CloveView>("User");
-  user_model->add_field("name", field);
-  user_model->add_field("location", field2);
-
-  std::cout << user_model->get_properties().name << std::endl;
-
-  auto root = ModelConstraint<CloveView>(user_model);
+  field->add_constraint<RegexConstraint>("[a-zA-Z0-9-_]+:\\s?[a-zA-Z0-9-_\\/]+");
 
   CloveDocument v;
-  auto ref = v.get_reference();
-  ref.set_object();
-  ref.add_member("name", "1");
-  ref.add_member("location", "192.1.2");
+  v.get_reference().set_string("Content-Type: application/garlic");
 
-  auto result = root.test(v.get_view());
-  print_result(result);
+  auto result = field->test(v.get_view());
+  ASSERT_TRUE(result.is_valid());
+
+  v.get_reference().set_string("10.0.0.1");
+  result = field->test(v.get_view());
+  ASSERT_FALSE(result.is_valid());
+  ASSERT_EQ(result.failures.size(), 1);
 }
 
 
