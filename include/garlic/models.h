@@ -180,137 +180,166 @@ namespace garlic {
       parse_context context;
 
       get_member(value, "fields", [this, &context](const auto& fields) {
-        std::for_each(fields.begin_member(), fields.end_member(), [this,&context](const auto& field) {
-          this->parse_field(field.value, context, [this,&context,&field](auto ptr) {
-            this->add_field(field.key.get_cstr(), context, std::move(ptr));
+        std::for_each(fields.begin_member(), fields.end_member(), [this, &context](const auto& field) {
+          // parse field definition.
+          this->parse_field(field.key.get_cstr(), field.value, context, [this, &context, &field](auto ptr, auto complete) {
+            this->add_field(field.key.get_cstr(), context, std::move(ptr), complete);
           });
         });
       });
 
-      get_member(value, "models", [this,&context](const auto& models) {
-        std::for_each(models.begin_member(), models.end_member(), [this,&context](const auto& member) {
-          // parse properties
-          this->parse_model(member.key.get_string(), member.value, context, [this,&member](auto&& ptr) {
+      get_member(value, "models", [this, &context](const auto& models) {
+        std::for_each(models.begin_member(), models.end_member(), [this, &context](const auto& member) {
+          // parse properties.
+          this->parse_model(member.key.get_string(), member.value, context, [this, &member](auto&& ptr) {
             models_.emplace(member.key.get_string(), std::move(ptr));
           });
         });
       });
 
-      return {true};
+      return {context.fields.size() == 0};
     }
 
     ModelPtr get_model(const std::string& name) noexcept { return models_[name]; }
 
   private:
-    struct forward_model_field {
+    struct lazy_pair {
       std::string key;
-      ModelPtr model;
+      ModelPtr target;
     };
 
-    struct forward_decleration {
-      std::vector<FieldPtr> dependencies;
-      std::vector<forward_model_field> model_fields;
+    struct field_dependency {
+      std::vector<FieldPtr> dependencies;  // field inheritence.
+      std::vector<lazy_pair> models;  // model field memberships.
+      std::vector<std::string> fields;  // field aliases.
     };
 
     struct parse_context {
-      MapOf<forward_decleration> fields;
+      MapOf<field_dependency> fields;
     };
 
     template<typename Callable>
     auto parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
-      auto ptr = std::make_shared<ModelType>(ModelPropertiesOf<Destination>{std::move(name)});
+      auto ptr = std::make_shared<ModelType>(std::move(name));
       auto& props = ptr->properties_;
 
       get_member(value, "description", [&props](const auto& item) {
-        props.meta.emplace("description", item.get_cstr());
+        props.meta.emplace("description", item.get_string());
       });
 
       get_member(value, "meta", [&props](const auto& item) {
-        std::for_each(item.begin_member(), item.end_member(), [&](const auto& meta_member) {
-          props.meta.emplace(meta_member.key.get_cstr(), meta_member.value.get_cstr());
+        std::for_each(item.begin_member(), item.end_member(), [&props](const auto& meta_member) {
+          props.meta.emplace(meta_member.key.get_string(), meta_member.value.get_string());
         });
       });
 
-      get_member(value, "fields", [this,&props,&context,&ptr](const auto& value) {
-        std::for_each(value.begin_member(), value.end_member(), [this,&props,&context,&ptr](const auto& field_value) {
-          auto found = false;
-          this->parse_field(field_value.value, context, [&props, &field_value, &found](auto ptr) {
-           props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
-           found = true;
+      get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
+          auto ready = false;
+          this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete) {
+            ready = true;
+            props.field_map.emplace(field.key.get_cstr(), std::move(ptr));
           });
-          if (!found) {
-            context.fields[field_value.value.get_cstr()].model_fields.emplace_back(forward_model_field{field_value.key.get_string(), ptr});
+          if (!ready) {  // it must have been an referenced field. add a dependency.
+            context.fields[field.value.get_cstr()].models.emplace_back(lazy_pair{field.key.get_string(), ptr});
           }
         });
       });
 
       auto model_field = this->make_field<ModelConstraint>(std::string{ptr->get_properties().name}, ptr);
-      this->add_field(ptr->get_properties().name.data(), context, std::move(model_field));
+      this->add_field(ptr->get_properties().name.data(), context, std::move(model_field), true);
       cb(std::move(ptr));
     }
 
     template<typename Callable>
-    void parse_reference(const char* name, const Callable& cb) {
+    bool parse_reference(const char* name, const parse_context& context, const Callable& cb) {
       if (auto it = this->fields_.find(name); it != this->fields_.end()) {
-        cb(it->second);
+        if (context.fields.find(name) == context.fields.end()) {
+          cb(it->second);
+          return true;
+        }
       } 
+      return false;
     }
 
     template<typename Callable>
-    void parse_field(const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
-      // this maybe shouldn't add fields to permanent when it depends on some forward declared type.
-      // maybe we should create a dependency graph to resolve the fields.
-      // a depends on c, b depends on a and c depends on nothing.
-      // when a field doesnt have forward declared values then back track its dependencies.
+    void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
       // parse the field reference.
       if (value.is_string()) {
-        this->parse_reference(value.get_cstr(), cb);
+        auto ready = this->parse_reference(value.get_cstr(), context, [&cb](const auto& ptr){ cb(ptr, true); });
+        if (!ready && !name.empty()) {
+          context.fields[value.get_cstr()].fields.emplace_back(std::move(name));
+        }
       } else if (value.is_object()) {
-        auto ptr = std::make_shared<FieldType>(FieldPropertiesOf<Destination>{});
+        auto ptr = std::make_shared<FieldType>(std::move(name));
         auto& props = ptr->properties_;
-        get_member(value, "type", [this, &props, &context, &ptr](const auto& item) {
-          auto is_forward = true;
-          this->parse_reference(item.get_cstr(), [&props, &is_forward](const auto& field) {
-            is_forward = false;
+        auto complete = true;
+
+        get_member(value, "type", [this, &props, &context, &ptr, &complete](const auto& item) {
+          complete = false;
+          this->parse_reference(item.get_cstr(), context, [&props, &complete](const auto& field) {
+            complete = true;
             props.constraints = field->get_properties().constraints;
           });
-          if (is_forward) context.fields[item.get_cstr()].dependencies.emplace_back(ptr);
+          if (!complete) context.fields[item.get_cstr()].dependencies.emplace_back(ptr);
         });
-        get_member(value, "meta", [this,&props](const auto& item) {
+
+        get_member(value, "meta", [this, &props](const auto& item) {
           for (const auto& member : item.get_object()) {
-            props.meta.emplace(member.key.get_cstr(), member.value.get_cstr());
+            props.meta.emplace(member.key.get_string(), member.value.get_string());
           }
         });
-        get_member(value, "label", [this,&props](const auto& item) {
-          props.meta.emplace("label", item.get_cstr());
+
+        get_member(value, "label", [this, &props](const auto& item) {
+          props.meta.emplace("label", item.get_string());
         });
-        get_member(value, "description", [this,&props](const auto& item) {
-          props.meta.emplace("description", item.get_cstr());
+
+        get_member(value, "description", [this, &props](const auto& item) {
+          props.meta.emplace("description", item.get_string());
         });
-        get_member(value, "constraints", [this,&props](const auto& item) {
+
+        get_member(value, "constraints", [this, &props](const auto& item) {
           for (const auto& constraint_info : item.get_list()) {
             this->parse_constraint(constraint_info, [&props](auto&& ptr) {
               props.constraints.emplace_back(std::move(ptr));
             });
           }
         });
-        cb(std::move(ptr));
+
+        cb(std::move(ptr), complete);
       }
     }
 
-    void add_field(const char* key, parse_context& context, FieldPtr&& ptr) {
+    void resolve_field(const char* key, parse_context& context, const FieldPtr& ptr) {
       if (auto it = context.fields.find(key); it != context.fields.end()) {
-        auto src_constraints = ptr->properties_.constraints;
+        // update all fields that depend on this field.
+        const auto& src_constraints = ptr->properties_.constraints;
         for (auto& d : it->second.dependencies) {
           auto& dst_constraints = d->properties_.constraints;
           dst_constraints.insert(dst_constraints.begin(), src_constraints.begin(), src_constraints.end());
+          // recursively resolve on the fields that depend on this field.
+          if (!d->get_properties().name.empty()) {
+            this->resolve_field(d->get_properties().name.data(), context, ptr);
+          }
+          // if the dependency is a named field, then call resolve on it.
         }
-        for (auto& m : it->second.model_fields) {
-          printf("updating the model field by its key : %s\n", m.key.c_str());
-          m.model->properties_.field_map.emplace(std::move(m.key), ptr);
+        // install on all the models.
+        for (auto& m : it->second.models) {
+          m.target->properties_.field_map.emplace(std::move(m.key), ptr);
+        }
+        // install all field aliases.
+        for (auto& f : it->second.fields) {
+          this->add_field(f.data(), context, FieldPtr{ptr}, true);
         }
         context.fields.erase(it);
-        // install it on all the dependencies.
+      }
+    }
+
+    void add_field(const char* key, parse_context& context, FieldPtr&& ptr, bool complete) {
+      if (complete) {
+        this->resolve_field(key, context, ptr);  // resolve all the dependencies.
+      } else {
+        context.fields[key];  // create a record so it would be deemed as incomplete.
       }
       fields_.emplace(key, std::move(ptr));
     }

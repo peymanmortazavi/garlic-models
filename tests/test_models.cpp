@@ -81,7 +81,8 @@ TEST(GarlicModel, JsonParser) {
   auto document = get_test_document();
   auto value = JsonView{document};
   auto definitions = ModelContainer<CloveView>();
-  definitions.parse(value);
+  auto parse_result = definitions.parse(value);
+  std::cout << parse_result.valid << std::endl;
   auto model = definitions.get_model("User");
   std::cout << "Model Name: " << model->get_properties().name << std::endl;
   std::cout << "Meta: " << std::endl;
