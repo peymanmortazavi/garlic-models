@@ -67,6 +67,8 @@ namespace garlic {
   template<ReadableLayer LayerType>
   class Model {
   public:
+    template<garlic::ReadableLayer> friend class ModelContainer;
+
     using Layer = LayerType;
     using FieldType = Field<LayerType>;
     using FieldPtr = std::shared_ptr<FieldType>;
@@ -200,8 +202,14 @@ namespace garlic {
     ModelPtr get_model(const std::string& name) noexcept { return models_[name]; }
 
   private:
+    struct forward_model_field {
+      std::string key;
+      ModelPtr model;
+    };
+
     struct forward_decleration {
       std::vector<FieldPtr> dependencies;
+      std::vector<forward_model_field> model_fields;
     };
 
     struct parse_context {
@@ -210,8 +218,8 @@ namespace garlic {
 
     template<typename Callable>
     auto parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
-      ModelPropertiesOf<Destination> props;
-      props.name = std::move(name);
+      auto ptr = std::make_shared<ModelType>(ModelPropertiesOf<Destination>{std::move(name)});
+      auto& props = ptr->properties_;
 
       get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", item.get_cstr());
@@ -223,15 +231,19 @@ namespace garlic {
         });
       });
 
-      get_member(value, "fields", [this,&props,&context](const auto& value) {
-        std::for_each(value.begin_member(), value.end_member(), [this,&props,&context](const auto& field_value) {
-          this->parse_field(field_value.value, context, [&props, &field_value](auto ptr) {
+      get_member(value, "fields", [this,&props,&context,&ptr](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [this,&props,&context,&ptr](const auto& field_value) {
+          auto found = false;
+          this->parse_field(field_value.value, context, [&props, &field_value, &found](auto ptr) {
            props.field_map.emplace(field_value.key.get_cstr(), std::move(ptr));
+           found = true;
           });
+          if (!found) {
+            context.fields[field_value.value.get_cstr()].model_fields.emplace_back(forward_model_field{field_value.key.get_string(), ptr});
+          }
         });
       });
 
-      auto ptr = std::make_shared<ModelType>(std::move(props));
       auto model_field = this->make_field<ModelConstraint>(std::string{ptr->get_properties().name}, ptr);
       this->add_field(ptr->get_properties().name.data(), context, std::move(model_field));
       cb(std::move(ptr));
@@ -246,6 +258,10 @@ namespace garlic {
 
     template<typename Callable>
     void parse_field(const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
+      // this maybe shouldn't add fields to permanent when it depends on some forward declared type.
+      // maybe we should create a dependency graph to resolve the fields.
+      // a depends on c, b depends on a and c depends on nothing.
+      // when a field doesnt have forward declared values then back track its dependencies.
       // parse the field reference.
       if (value.is_string()) {
         this->parse_reference(value.get_cstr(), cb);
@@ -278,8 +294,6 @@ namespace garlic {
             });
           }
         });
-        //auto ptr = std::make_shared<FieldType>(std::move(props));
-        //if (is_forward) context.fields[""].dependencies.emplace_back(ptr);
         cb(std::move(ptr));
       }
     }
@@ -290,6 +304,10 @@ namespace garlic {
         for (auto& d : it->second.dependencies) {
           auto& dst_constraints = d->properties_.constraints;
           dst_constraints.insert(dst_constraints.begin(), src_constraints.begin(), src_constraints.end());
+        }
+        for (auto& m : it->second.model_fields) {
+          printf("updating the model field by its key : %s\n", m.key.c_str());
+          m.model->properties_.field_map.emplace(std::move(m.key), ptr);
         }
         context.fields.erase(it);
         // install it on all the dependencies.
