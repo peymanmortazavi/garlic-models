@@ -51,14 +51,14 @@ void print_constraints(const FieldPropertiesOf<LayerType>& props) {
 
 
 TEST(GarlicModel, FieldValidation) {
-  auto field = std::make_shared<Field<CloveView>>("Name");
+  auto field = make_field<CloveView>("Name");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
   field->add_constraint<RegexConstraint>("Name:\\s?\\d{1,3}");
 
-  auto field2 = std::make_shared<Field<CloveView>>("IP Address");
+  auto field2 = make_field<CloveView>("IP Address");
   field2->add_constraint<RegexConstraint>("\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}");
 
-  auto user_model = std::make_shared<Model<CloveView>>("User");
+  auto user_model = make_model<CloveView>("User");
   user_model->add_field("name", field);
   user_model->add_field("location", field2);
 

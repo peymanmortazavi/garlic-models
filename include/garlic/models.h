@@ -144,6 +144,16 @@ namespace garlic {
   // Model Parsing From ReadableLayer
   template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
   template<typename T> using FieldPropertiesOf = typename Field<T>::Properties;
+  
+  template<ReadableLayer LayerType, typename...Args>
+  std::shared_ptr<Field<LayerType>> make_field(Args&&... args) {
+    return std::make_shared<Field<LayerType>>(std::forward<Args>(args)...);
+  }
+
+  template<ReadableLayer LayerType, typename...Args>
+  std::shared_ptr<Model<LayerType>> make_model(Args&&...args) {
+    return std::make_shared<Model<LayerType>>(std::forward<Args>(args)...);
+  }
 
   template<ReadableLayer Destination>
   class ModelContainer {
