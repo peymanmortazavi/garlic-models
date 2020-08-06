@@ -20,6 +20,17 @@ namespace garlic {
     bool is_scalar() const noexcept { return details.size() == 0; }
   };
 
+  struct ConstraintProperties {
+    bool fatal = false;  // should stop looking at other constraints.
+    std::string message;  // custom rejection reason.
+    std::string name;  // constraint name.
+  };
+
+  void set_constraint_properties(const ReadableLayer auto& value, ConstraintProperties& props) noexcept {
+    get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
+    get_member(value, "message", [&props](const auto& item) { props.message = item.get_string(); });
+    get_member(value, "name", [&props](const auto& item) { props.name = item.get_string(); });
+  }
 
   template<garlic::ReadableLayer LayerType>
   class Constraint {
@@ -134,30 +145,36 @@ namespace garlic {
   public:
 
     RegexConstraint(
-        std::string&& pattern,
-        std::string&& name="regex_constraint"
-    ) : pattern_(std::move(pattern)), name_(std::move(name)) {}
+        std::string pattern,
+        std::string name="regex_constraint"
+    ) : pattern_(std::move(pattern)), props_{false, "invalid value.", std::move(name)} {}
+
+    RegexConstraint(
+        std::string pattern,
+        ConstraintProperties props
+    ) : pattern_(std::move(pattern)), props_(std::move(props)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_string()) return {true};
       if (std::regex_match(value.get_cstr(), pattern_)) { return {true}; }
-      else { return {false, this->get_name(), "invalid value."}; }
+      else { return {false, props_.name, props_.message}; }
     }
 
-    const std::string& get_name() const noexcept override { return name_; }
-    bool skip_constraints() const noexcept override { return fatal_; }
+    const std::string& get_name() const noexcept override { return props_.name; }
+    bool skip_constraints() const noexcept override { return props_.fatal; }
 
     template<ReadableLayer T>
     static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
-      std::string name;
-      get_member(value, "pattern", [&name](const auto& v) { name = v.get_string(); });
-      return std::make_shared<RegexConstraint<LayerType>>(std::move(name));
+      std::string pattern;
+      ConstraintProperties props;
+      set_constraint_properties(value, props);
+      get_member(value, "pattern", [&pattern](const auto& v) { pattern = v.get_string(); });
+      return std::make_shared<RegexConstraint<LayerType>>(std::move(pattern), std::move(props));
     }
 
   private:
+    ConstraintProperties props_;
     std::regex pattern_;
-    std::string name_;
-    bool fatal_ = false;
   };
 
 }

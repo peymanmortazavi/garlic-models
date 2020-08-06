@@ -1,4 +1,5 @@
 #include "garlic/basic.h"
+#include "garlic/constraints.h"
 #include "garlic/models.h"
 #include <algorithm>
 #include <garlic/garlic.h>
@@ -50,6 +51,20 @@ void print_constraints(const FieldPropertiesOf<LayerType>& props) {
 }
 
 
+auto assert_field_constraint_result(const ConstraintResult& results, const char* name) {
+  ASSERT_FALSE(results.valid);
+  ASSERT_TRUE(results.field);
+  ASSERT_STREQ(results.name.data(), name);
+}
+
+
+auto assert_constraint_result(const ConstraintResult& results, const char* name, const char* message) {
+  ASSERT_FALSE(results.valid);
+  ASSERT_STREQ(results.name.data(), name);
+  ASSERT_STREQ(results.reason.data(), message);
+}
+
+
 TEST(FieldValidation, Basic) {
   auto field = make_field<CloveView>("HTTPHeader");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
@@ -85,8 +100,8 @@ TEST(FieldValidation, ConstraintSkipping) {
   result = field->test(v.get_view());
   ASSERT_FALSE(result.is_valid());
   ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
-  ASSERT_STREQ(result.failures[0].name.data(), "regex_constraint");
-  ASSERT_STREQ(result.failures[1].name.data(), "regex_constraint");
+  assert_constraint_result(result.failures[0], "regex_constraint", "invalid value.");
+  assert_constraint_result(result.failures[1], "regex_constraint", "invalid value.");
 }
 
 TEST(ModelParsing, Basic) {
@@ -120,6 +135,17 @@ TEST(ModelParsing, Basic) {
 
   auto results = root.test(v.get_view());
   ASSERT_TRUE(results.valid);
+
+  ref.add_member("birthdate", "no good date");
+  ref.add_member("registration_date", "empty");
+
+  results = root.test(v.get_view());
+  ASSERT_FALSE(results.valid);
+  ASSERT_EQ(results.details.size(), 2);
+  assert_field_constraint_result(results.details[0], "birthdate");
+  assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
+  assert_field_constraint_result(results.details[1], "registration_date");
+  assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
 }
 
 TEST(GarlicModel, JsonParser) {
