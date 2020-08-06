@@ -79,11 +79,14 @@ TEST(FieldValidation, ConstraintSkipping) {
   auto result = field->test(v.get_view());
   ASSERT_FALSE(result.is_valid());
   ASSERT_EQ(result.failures.size(), 1);  // since the first constraint is fatal, only one is expected.
+  ASSERT_STREQ(result.failures[0].name.data(), "type_constraint");
 
   v.get_reference().set_string("");
   result = field->test(v.get_view());
   ASSERT_FALSE(result.is_valid());
   ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
+  ASSERT_STREQ(result.failures[0].name.data(), "regex_constraint");
+  ASSERT_STREQ(result.failures[1].name.data(), "regex_constraint");
 }
 
 TEST(ModelParsing, Basic) {
