@@ -67,6 +67,25 @@ TEST(GarlicModel, FieldValidation) {
   ASSERT_EQ(result.failures.size(), 1);
 }
 
+TEST(GarlicModel, FieldValidation_ConstraintSkipping) {
+  auto field = make_field<CloveView>("HTTPHeader");
+  field->add_constraint<TypeConstraint>(TypeFlag::String);
+  field->add_constraint<RegexConstraint>("\\d{1,3}");
+  field->add_constraint<RegexConstraint>("\\w");
+
+  CloveDocument v;
+  v.get_reference().set_bool(true);
+
+  auto result = field->test(v.get_view());
+  ASSERT_FALSE(result.is_valid());
+  ASSERT_EQ(result.failures.size(), 1);  // since the first constraint is fatal, only one is expected.
+
+  v.get_reference().set_string("");
+  result = field->test(v.get_view());
+  ASSERT_FALSE(result.is_valid());
+  ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
+}
+
 
 TEST(GarlicModel, JsonParser) {
   auto document = get_test_document();

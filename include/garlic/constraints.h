@@ -145,7 +145,7 @@ namespace garlic {
     }
 
     const std::string& get_name() const noexcept override { return name_; }
-    bool skip_constraints() const noexcept override { return true; }
+    bool skip_constraints() const noexcept override { return fatal_; }
 
     template<ReadableLayer T>
     static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
@@ -157,6 +157,7 @@ namespace garlic {
   private:
     std::regex pattern_;
     std::string name_;
+    bool fatal_ = false;
   };
 
 }
