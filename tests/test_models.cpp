@@ -14,8 +14,8 @@ using namespace rapidjson;
 using namespace std;
 
 
-Document get_test_document() {
-  ifstream ifs("data/models.json");
+Document get_json_document(const std::string& name) {
+  ifstream ifs(name);
   IStreamWrapper isw(ifs);
   Document d;
   d.ParseStream(isw);
@@ -50,7 +50,7 @@ void print_constraints(const FieldPropertiesOf<LayerType>& props) {
 }
 
 
-TEST(GarlicModel, FieldValidation) {
+TEST(FieldValidation, Basic) {
   auto field = make_field<CloveView>("HTTPHeader");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
   field->add_constraint<RegexConstraint>("[a-zA-Z0-9-_]+:\\s?[a-zA-Z0-9-_\\/]+");
@@ -67,7 +67,7 @@ TEST(GarlicModel, FieldValidation) {
   ASSERT_EQ(result.failures.size(), 1);
 }
 
-TEST(GarlicModel, FieldValidation_ConstraintSkipping) {
+TEST(FieldValidation, ConstraintSkipping) {
   auto field = make_field<CloveView>("HTTPHeader");
   field->add_constraint<TypeConstraint>(TypeFlag::String);
   field->add_constraint<RegexConstraint>("\\d{1,3}");
@@ -86,9 +86,41 @@ TEST(GarlicModel, FieldValidation_ConstraintSkipping) {
   ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
 }
 
+TEST(ModelParsing, Basic) {
+  // load a very basic module without using more sophisticated features.
+  auto module = ModelContainer<CloveView>();
+
+  auto document = get_json_document("data/basic_module.json");
+  auto view = JsonView{document};
+
+  auto parse_result = module.parse(view);
+  ASSERT_TRUE(parse_result.valid);
+
+  auto date_field = module.get_field("DateTime");
+  ASSERT_NE(date_field, nullptr);
+  ASSERT_STREQ(date_field->get_properties().name.data(), "DateTime");  // named field.
+  ASSERT_EQ(date_field->get_properties().constraints.size(), 2);  // a type and regex constraint.
+
+  auto user_model = module.get_model("User");
+  ASSERT_NE(user_model, nullptr);
+  ASSERT_EQ(user_model->get_properties().field_map.size(), 4);
+
+  auto root = ModelConstraint<CloveView>(user_model);
+
+  CloveDocument v;
+  auto ref = v.get_reference();
+  ref.set_object();
+  ref.add_member("first_name", "Garlic");
+  ref.add_member("last_name", "Models");
+  ref.add_member("birthdate", "1/4/1993");
+  ref.add_member("registration_date", "1/4/21");
+
+  auto results = root.test(v.get_view());
+  ASSERT_TRUE(results.valid);
+}
 
 TEST(GarlicModel, JsonParser) {
-  auto document = get_test_document();
+  auto document = get_json_document("data/models.json");
   auto value = JsonView{document};
   auto definitions = ModelContainer<CloveView>();
   auto parse_result = definitions.parse(value);
