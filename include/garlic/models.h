@@ -109,7 +109,9 @@ namespace garlic {
   public:
     using ModelType = Model<LayerType>;
 
-    ModelConstraint(std::shared_ptr<ModelType> model) : model_(std::move(model)) {}
+    ModelConstraint(
+        std::shared_ptr<ModelType> model
+    ) : model_(std::move(model)), Constraint<LayerType>({true, model->get_properties().name}) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       ConstraintResult result;
@@ -133,9 +135,6 @@ namespace garlic {
       }
       return result;
     }
-
-    const std::string& get_name() const noexcept override { return model_->get_properties().name; }
-    bool skip_constraints() const noexcept override { return true; }
 
   private:
     std::shared_ptr<ModelType> model_;

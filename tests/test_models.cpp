@@ -163,7 +163,7 @@ TEST(GarlicModel, JsonParser) {
 
   std::cout << "Fields: " << std::endl;
   for (const auto& item : model->get_properties().field_map) {
-    std::cout << item.first << " (";
+    std::cout << item.first << " (" << item.second->get_properties().constraints.size() << ": ";
     print_constraints<CloveView>(item.second->get_properties());
     cout << ")" << std::endl;
   }
