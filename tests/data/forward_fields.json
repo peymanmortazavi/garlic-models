@@ -42,8 +42,7 @@
                 "anonymous_field": {
                     "type": "FutureField",
                     "constraints": [{"type": "regex", "name": "c5"}]
-                },
-                "anonymous_alias": "TestModel"
+                }
             }
         }
     }

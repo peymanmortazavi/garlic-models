@@ -184,6 +184,28 @@ TEST(ModelParsing, ForwardDeclarations) {
     ASSERT_NE(field_ptr, nullptr);
     assert_field_constraints(*field_ptr, item.second);
   }
+
+  auto model_ptr = module.get_model("FieldContainerModel");
+  ASSERT_NE(model_ptr, nullptr);
+
+  expectations = {
+    {"no_dependency_field", {"c0"}},
+    {"regular_dependency_field", {"c0", "c1"}},
+    {"regular_alias", {"c0", "c1"}},
+    {"forward_dependency_field", {"FieldContainerModel", "c4", "c2"}},
+    {"forward_dependency_alias_field", {"FieldContainerModel", "c4", "c3"}},
+    {"forward_alias", {"FieldContainerModel", "c4"}},
+    {"inner_model", {"FieldContainerModel"}},
+    {"future_field", {"FieldContainerModel", "c4"}},
+    {"anonymous_field", {"FieldContainerModel", "c4", "c5"}},
+  };
+  for(const auto& item : model_ptr->get_properties().field_map) {
+    if (auto it = expectations.find(item.first); it != expectations.end()) {
+      assert_field_constraints(*item.second, it->second);
+      expectations.erase(it);
+    }
+  }
+  ASSERT_TRUE(expectations.empty());
 }
 
 TEST(GarlicModel, JsonParser) {
