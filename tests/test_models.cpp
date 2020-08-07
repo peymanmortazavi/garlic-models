@@ -8,6 +8,7 @@
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/istreamwrapper.h>
 #include <fstream>
+#include <deque>
 #include <iostream>
 
 using namespace garlic;
@@ -62,6 +63,15 @@ auto assert_constraint_result(const ConstraintResult& results, const char* name,
   ASSERT_FALSE(results.valid);
   ASSERT_STREQ(results.name.data(), name);
   ASSERT_STREQ(results.reason.data(), message);
+}
+
+
+template<ReadableLayer LayerType>
+auto assert_field_constraints(const Field<LayerType>& field, deque<string> names) {
+  for(const auto& constraint : field.get_properties().constraints) {
+    ASSERT_STREQ(constraint->get_name().data(), names.front().data());
+    names.pop_front();
+  }
 }
 
 
@@ -146,6 +156,34 @@ TEST(ModelParsing, Basic) {
   assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
   assert_field_constraint_result(results.details[1], "registration_date");
   assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+}
+
+TEST(ModelParsing, ForwardDeclarations) {
+  // load a module full of forward dependencies to test and make sure all definitions get loaded properly.
+  auto module = ModelContainer<CloveView>();
+
+  auto document = get_json_document("data/forward_fields.json");
+  auto view = JsonView{document};
+
+  auto parse_result = module.parse(view);
+  ASSERT_TRUE(parse_result.valid);
+
+  map<string, deque<string>> expectations = {
+    {"NoDependencyField", {"c0"}},
+    {"RegularDependencyField", {"c0", "c1"}},
+    {"RegularAlias", {"c0", "c1"}},
+    {"ForwardDependencyField", {"FieldContainerModel", "c4", "c2"}},
+    {"ForwardDependencyAliasField", {"FieldContainerModel", "c4", "c3"}},
+    {"ForwardAlias", {"FieldContainerModel", "c4"}},
+    {"TestModel", {"FieldContainerModel"}},
+    {"FutureField", {"FieldContainerModel", "c4"}},
+  };
+
+  for (const auto& item : expectations) {
+    auto field_ptr = module.get_field(item.first);
+    ASSERT_NE(field_ptr, nullptr);
+    assert_field_constraints(*field_ptr, item.second);
+  }
 }
 
 TEST(GarlicModel, JsonParser) {

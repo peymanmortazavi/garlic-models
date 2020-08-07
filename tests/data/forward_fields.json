@@ -1,0 +1,50 @@
+{
+    "fields": {
+        "NoDependencyField": {
+            "description": "this field has no dependency what so ever.",
+            "constraints": [{"type": "regex", "name": "c0"}]
+        },
+        "RegularDependencyField": {
+            "type": "NoDependencyField",
+            "description": "this field builds on top of a currently defined field.",
+            "constraints": [{"type": "regex", "name": "c1"}]
+        },
+        "RegularAlias": "RegularDependencyField",
+        "ForwardDependencyField": {
+            "type": "FutureField",
+            "description": "this field builds on top of a field that does not exist yet.",
+            "constraints": [{"type": "regex", "name": "c2"}]
+        },
+        "ForwardDependencyAliasField": {
+            "type": "ForwardAlias",
+            "description": "this field builds on top of a future alias of a future field.",
+            "constraints": [{"type": "regex", "name": "c3"}]
+        },
+        "ForwardAlias": "FutureField",
+        "TestModel": "FieldContainerModel",
+        "FutureField": {
+            "type": "TestModel",
+            "description": "this field depends on an alias of a future model.",
+            "constraints": [{"type": "regex", "name": "c4"}]
+        }
+    },
+    "models": {
+        "FieldContainerModel": {
+            "fields": {
+                "no_dependency_field": "NoDependencyField",
+                "regular_dependency_field": "RegularDependencyField",
+                "regular_alias": "RegularAlias",
+                "forward_dependency_field": "ForwardDependencyField",
+                "forward_dependency_alias_field": "ForwardDependencyAliasField",
+                "forward_alias": "ForwardAlias",
+                "inner_model": "TestModel",
+                "future_field": "FutureField",
+                "anonymous_field": {
+                    "type": "FutureField",
+                    "constraints": [{"type": "regex", "name": "c5"}]
+                },
+                "anonymous_alias": "TestModel"
+            }
+        }
+    }
+}

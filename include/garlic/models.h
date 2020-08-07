@@ -349,7 +349,7 @@ namespace garlic {
           // if the field is a named one, it can be resolved as it is complete now.
           // anonymous fields can be skipped.
           if (!field->get_properties().name.empty()) {
-            this->resolve_field(field->get_properties().name, context, ptr);
+            this->resolve_field(field->get_properties().name, context, field);
           }
         }
 
