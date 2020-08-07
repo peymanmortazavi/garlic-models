@@ -169,14 +169,14 @@ TEST(ModelParsing, ForwardDeclarations) {
   ASSERT_TRUE(parse_result.valid);
 
   map<string, deque<string>> expectations = {
-    {"NoDependencyField", {"c0"}},
-    {"RegularDependencyField", {"c0", "c1"}},
-    {"RegularAlias", {"c0", "c1"}},
-    {"ForwardDependencyField", {"FieldContainerModel", "c4", "c2"}},
+    {"NoDependencyField",           {"c0"}},
+    {"RegularDependencyField",      {"c0", "c1"}},
+    {"RegularAlias",                {"c0", "c1"}},
+    {"ForwardDependencyField",      {"FieldContainerModel", "c4", "c2"}},
     {"ForwardDependencyAliasField", {"FieldContainerModel", "c4", "c3"}},
-    {"ForwardAlias", {"FieldContainerModel", "c4"}},
-    {"TestModel", {"FieldContainerModel"}},
-    {"FutureField", {"FieldContainerModel", "c4"}},
+    {"ForwardAlias",                {"FieldContainerModel", "c4"}},
+    {"TestModel",                   {"FieldContainerModel"}},
+    {"FutureField",                 {"FieldContainerModel", "c4"}},
   };
 
   for (const auto& item : expectations) {
