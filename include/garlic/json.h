@@ -1,5 +1,5 @@
-#ifndef JSON_H
-#define JSON_H
+#ifndef GARLIC_RAPIDJSON_H
+#define GARLIC_RAPIDJSON_H
 
 #include <iterator>
 #include <string>
