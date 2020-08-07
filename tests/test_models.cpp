@@ -3,9 +3,10 @@
 #include "garlic/models.h"
 #include <algorithm>
 #include <garlic/garlic.h>
+#include <garlic/providers/rapidjson.h>
 #include <gtest/gtest.h>
 #include <memory>
-#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <fstream>
 #include <deque>
