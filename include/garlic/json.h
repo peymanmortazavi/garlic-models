@@ -1,10 +1,8 @@
 #ifndef JSON_H
 #define JSON_H
 
-#include <iostream>
 #include <iterator>
 #include <string>
-#include <memory>
 
 #include "layer.h"
 #include "rapidjson/document.h"
