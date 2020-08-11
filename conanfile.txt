@@ -2,6 +2,7 @@
 gtest/1.8.1@bincrafters/stable
 rapidjson/1.1.0@bincrafters/stable
 libyaml/0.2.2@bincrafters/stable
+yaml-cpp/0.6.2@bincrafters/stable
 
 [generators]
 cmake

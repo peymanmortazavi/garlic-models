@@ -20,8 +20,8 @@ namespace garlic {
 
     using difference_type = int;
     using value_type = MemberWrapper;
-    using reference = ValueType&;
-    using pointer = ValueType*;
+    using reference = MemberWrapper&;
+    using pointer = MemberWrapper*;
     using iterator_category = std::forward_iterator_tag;
 
     explicit MemberIteratorWrapper() {}
@@ -81,7 +81,7 @@ namespace garlic {
     JsonView (const ValueType& value) : value_(value) {}
     JsonView (const JsonView& another) = delete;
 
-    bool is_null() const { return value_.IsNull(); }
+    bool is_null() const noexcept { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
     bool is_string() const noexcept { return value_.IsString(); }
     bool is_double() const noexcept { return value_.IsDouble(); }
