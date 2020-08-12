@@ -1,9 +1,12 @@
 #include "garlic/basic.h"
 #include "garlic/constraints.h"
 #include "garlic/models.h"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/node/parse.h"
 #include <algorithm>
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>
+#include <garlic/providers/yaml-cpp.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <rapidjson/document.h>
@@ -14,6 +17,7 @@
 
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
+using namespace garlic::providers::yamlcpp;
 using namespace rapidjson;
 using namespace std;
 
@@ -24,6 +28,10 @@ Document get_json_document(const std::string& name) {
   Document d;
   d.ParseStream(isw);
   return d;
+}
+
+YAML::Node get_yaml_document(const std::string& name) {
+  return YAML::LoadFile(name);
 }
 
 void print_result(const ConstraintResult& result, int level=0) {
@@ -118,46 +126,61 @@ TEST(FieldValidation, ConstraintSkipping) {
 
 TEST(ModelParsing, Basic) {
   // load a very basic module without using more sophisticated features.
+  
+  auto test_module = [](const ModelContainer<CloveView>& module) {
+    auto date_field = module.get_field("DateTime");
+    ASSERT_NE(date_field, nullptr);
+    ASSERT_STREQ(date_field->get_properties().name.data(), "DateTime");  // named field.
+    ASSERT_EQ(date_field->get_properties().constraints.size(), 2);  // a type and regex constraint.
+
+    auto user_model = module.get_model("User");
+    ASSERT_NE(user_model, nullptr);
+    ASSERT_EQ(user_model->get_properties().field_map.size(), 4);
+
+    auto root = ModelConstraint<CloveView>(user_model);
+
+    CloveDocument v;
+    auto ref = v.get_reference();
+    ref.set_object();
+    ref.add_member("first_name", "Garlic");
+    ref.add_member("last_name", "Models");
+    ref.add_member("birthdate", "1/4/1993");
+    ref.add_member("registration_date", "1/4/21");
+
+    auto results = root.test(v.get_view());
+    ASSERT_TRUE(results.valid);
+
+    ref.add_member("birthdate", "no good date");
+    ref.add_member("registration_date", "empty");
+
+    results = root.test(v.get_view());
+    ASSERT_FALSE(results.valid);
+    ASSERT_EQ(results.details.size(), 2);
+    assert_field_constraint_result(results.details[0], "birthdate");
+    assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
+    assert_field_constraint_result(results.details[1], "registration_date");
+    assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+  };
+
   auto module = ModelContainer<CloveView>();
 
-  auto document = get_json_document("data/basic_module.json");
-  auto view = JsonView{document};
+  // JSON module using rapidjson.
+  {
+    auto document = get_json_document("data/basic_module.json");
+    auto view = JsonView{document};
+    auto parse_result = module.parse(view);
+    ASSERT_TRUE(parse_result.valid);
+    test_module(module);
+  }
 
-  auto parse_result = module.parse(view);
-  ASSERT_TRUE(parse_result.valid);
-
-  auto date_field = module.get_field("DateTime");
-  ASSERT_NE(date_field, nullptr);
-  ASSERT_STREQ(date_field->get_properties().name.data(), "DateTime");  // named field.
-  ASSERT_EQ(date_field->get_properties().constraints.size(), 2);  // a type and regex constraint.
-
-  auto user_model = module.get_model("User");
-  ASSERT_NE(user_model, nullptr);
-  ASSERT_EQ(user_model->get_properties().field_map.size(), 4);
-
-  auto root = ModelConstraint<CloveView>(user_model);
-
-  CloveDocument v;
-  auto ref = v.get_reference();
-  ref.set_object();
-  ref.add_member("first_name", "Garlic");
-  ref.add_member("last_name", "Models");
-  ref.add_member("birthdate", "1/4/1993");
-  ref.add_member("registration_date", "1/4/21");
-
-  auto results = root.test(v.get_view());
-  ASSERT_TRUE(results.valid);
-
-  ref.add_member("birthdate", "no good date");
-  ref.add_member("registration_date", "empty");
-
-  results = root.test(v.get_view());
-  ASSERT_FALSE(results.valid);
-  ASSERT_EQ(results.details.size(), 2);
-  assert_field_constraint_result(results.details[0], "birthdate");
-  assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
-  assert_field_constraint_result(results.details[1], "registration_date");
-  assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+  // YAML module using yaml-cpp
+  {
+    auto node = get_yaml_document("data/basic_module.yaml");
+    auto view = YamlNode{node};
+    auto parse_result = module.parse(view);
+    ASSERT_TRUE(parse_result.valid);
+    test_module(module);
+  }
 }
 
 TEST(ModelParsing, ForwardDeclarations) {
@@ -208,4 +231,4 @@ TEST(ModelParsing, ForwardDeclarations) {
     }
   }
   ASSERT_TRUE(expectations.empty());
-}
+};
