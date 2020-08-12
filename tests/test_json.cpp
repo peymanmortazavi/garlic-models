@@ -22,6 +22,7 @@
 using namespace std;
 
 using namespace garlic;
+using namespace garlic::providers::rapidjson;
 using namespace rapidjson;
 
 
@@ -35,7 +36,7 @@ Document get_test_document() {
 
 
 TEST(RapidJson, DocumentTest) {
-  garlic::JsonDocument root{};
+  JsonDocument root{};
   auto root_ref = root.get_reference();
   root_ref.set_object();
 
@@ -44,7 +45,7 @@ TEST(RapidJson, DocumentTest) {
   names.push_back("b");
   names.push_back("c");
 
-  garlic::JsonValue name_element{root};
+  JsonValue name_element{root};
   auto name_element_ref = name_element.get_reference();
   name_element_ref.set_list();
   std::for_each(names.begin(), names.end(), [&](auto& item) { name_element_ref.push_back(item); });
@@ -108,11 +109,11 @@ TEST(RapidJson, ProtocolTest) {
   ASSERT_EQ(object_it, object_value.end_member());
 
   // test the list range
-  test_readonly_list_range(garlic::JsonView(doc["values"]));
+  test_readonly_list_range(JsonView(doc["values"]));
 
   // test the object range
-  test_readonly_object_range(garlic::JsonView(doc["objects"]));
+  test_readonly_object_range(JsonView(doc["objects"]));
 
   // the writable object.
-  test_full_layer(garlic::JsonRef{doc});
+  test_full_layer(JsonRef{doc});
 }

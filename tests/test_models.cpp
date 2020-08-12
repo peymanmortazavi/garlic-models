@@ -13,6 +13,7 @@
 #include <iostream>
 
 using namespace garlic;
+using namespace garlic::providers::rapidjson;
 using namespace rapidjson;
 using namespace std;
 

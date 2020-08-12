@@ -1,30 +1,27 @@
 Fix the library installation:
   - move installation part from the root CMakeLists.txt to the src/CMakeLists.txt
-  - make the tests work.
   - make sure public headers work fine while DRY (no duplication of includes).
 
 Future improvement:
   - add back inserter and shit like that.
+  - work on optimizing the clove data structure and use libyaml to parse into clove.
+  - use template structure to support adding decoders from ReadableLayer to any class typ
+  - provide an easy to use C library to use garlic library.
+  - provide some performance metrics to examine the performance of this library.
 
 Nice Improvements:
-  - separate different parts of header files from garlic.h
   - lower memory footprint of GenericCloveData by utilizing pointers for arrays and maps.
   - explore using an actual hash table for the GenericCloveData
   - explore using a linked list for GenericCloveData
   - use build system to enable/disable JSON.
-
-IMPORTANT:
-	* one way we could maybe try to reduce the complexity of this code is to
-	  have one readable and one writable protocol. write tests for these and make sure
-		they work properly and then have one config manager that would OPTIONALLY use shared pointers
-		to reduce CPU performance but reduce memory foot print. the existence of that shared pointer
-		would allow the object to get merged properly.
-
+  - provide more friendly tools for adding new providers, like a class that would take in
+    a convertor and then build out the rest of the functionality. Like provide the way to create
+    a string and then use that to automatically provide all the add_member methods.
 
 P 0:
     * really learn about the STL iterators and make a tutorial video out of it.
 
 P 1:
-    - build constraints from the ReadableLayer [almost complete]
     - use a private parse method to assume valid and a public parse that uses an internal model to first validate the
       schema.
+    - use a message pack like structure to store models in a memory-optimized way.

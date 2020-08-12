@@ -8,7 +8,7 @@
 #include "rapidjson/document.h"
 
 
-namespace garlic {
+namespace garlic::providers::rapidjson {
 
   template<typename ValueType, typename Iterator, typename KeyType = ValueType>
   class MemberIteratorWrapper {
@@ -74,9 +74,9 @@ namespace garlic {
 
   class JsonView {
   public:
-    using ValueType = rapidjson::Value;
-    using ConstValueIterator = ValueIteratorWrapper<JsonView, typename rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename rapidjson::Value::ConstMemberIterator>;
+    using ValueType = ::rapidjson::Value;
+    using ConstValueIterator = ValueIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstValueIterator>;
+    using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
     JsonView (const JsonView& another) = delete;
@@ -115,10 +115,10 @@ namespace garlic {
 
   class JsonRef : public JsonView {
   public:
-    using DocumentType = rapidjson::Document;
+    using DocumentType = ::rapidjson::Document;
     using AllocatorType = DocumentType::AllocatorType;
-    using ValueIterator = RefValueIteratorWrapper<JsonRef, typename rapidjson::Value::ValueIterator, AllocatorType>;
-    using MemberIterator = RefMemberIteratorWrapper<JsonRef, typename rapidjson::Value::MemberIterator, AllocatorType>;
+    using ValueIterator = RefValueIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
+    using MemberIterator = RefMemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
     using JsonView::begin_list;
     using JsonView::end_list;
     using JsonView::begin_member;
@@ -137,7 +137,7 @@ namespace garlic {
 
     void set_string(const char* value) { value_.SetString(value, allocator_); }
     void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
-    void set_string(const std::string_view& value) { value_.SetString(value.data(), value.length(), allocator_); }
+    void set_string(std::string_view value) { value_.SetString(value.data(), value.length(), allocator_); }
     void set_int(int value) { value_.SetInt(value); }
     void set_double(double value) { value_.SetDouble(value); }
     void set_bool(bool value) { value_.SetBool(value); }
@@ -149,7 +149,7 @@ namespace garlic {
     JsonRef& operator = (int value) { this->set_int(value); return *this; }
     JsonRef& operator = (const char* value) { this->set_string(value); return *this; }
     JsonRef& operator = (const std::string& value) { this->set_string(value); return *this; }
-    JsonRef& operator = (const std::string_view& value) { this->set_string(value); return *this; }
+    JsonRef& operator = (std::string_view value) { this->set_string(value); return *this; }
     JsonRef& operator = (bool value) { this->set_bool(value); return *this; }
 
     ValueIterator begin_list() { return ValueIterator(value_.Begin(), allocator_); }
@@ -174,19 +174,19 @@ namespace garlic {
     void push_back(const std::string& value) {
       value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
     }
-    void push_back(const std::string_view& value) {
+    void push_back(std::string_view value) {
       value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
     }
     void push_back(int value) { value_.PushBack(ValueType(value).Move(), allocator_); }
     void push_back(double value) { value_.PushBack(ValueType(value).Move(), allocator_); }
     void push_back(bool value) { value_.PushBack(ValueType(value).Move(), allocator_); }
     void pop_back() { value_.PopBack(); }
-    void erase(const ConstValueIterator& position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator& position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator& first, const ValueIterator& last) {
+    void erase(const ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
+    void erase(const ValueIterator position) { value_.Erase(position.get_inner_iterator()); }
+    void erase(const ValueIterator first, const ValueIterator last) {
       value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
     }
-    void erase(const ConstValueIterator& first, const ConstValueIterator& last) {
+    void erase(const ConstValueIterator first, const ConstValueIterator last) {
       value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
     }
 
@@ -222,7 +222,7 @@ namespace garlic {
           JsonRef{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
       );
     }
-    void add_member(const char* key, const std::string_view& value) {
+    void add_member(const char* key, std::string_view value) {
       this->add_member(
           key,
           JsonRef{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
@@ -252,25 +252,25 @@ namespace garlic {
   class JsonDocument {
   public:
     JsonDocument() {}
-    explicit JsonDocument(rapidjson::Document&& doc) : doc_(std::move(doc)) {}
+    explicit JsonDocument(::rapidjson::Document&& doc) : doc_(std::move(doc)) {}
 
     JsonRef get_reference() { return JsonRef(doc_); }
     JsonView get_view() const { return JsonView(doc_); }
-    rapidjson::Document& get_inner_doc() { return doc_; }
-    const rapidjson::Document& get_inner_doc() const { return doc_; }
+    ::rapidjson::Document& get_inner_doc() { return doc_; }
+    const ::rapidjson::Document& get_inner_doc() const { return doc_; }
 
   private:
-    rapidjson::Document doc_;
+    ::rapidjson::Document doc_;
   };
 
 
   class JsonValue {
   public:
     explicit JsonValue (JsonDocument& doc) : allocator_(doc.get_inner_doc().GetAllocator()) { }
-    explicit JsonValue (rapidjson::Document doc) : allocator_(doc.GetAllocator()) {}
+    explicit JsonValue (::rapidjson::Document doc) : allocator_(doc.GetAllocator()) {}
     JsonValue (
-        rapidjson::Value&& value,
-        rapidjson::Document::AllocatorType& allocator
+        ::rapidjson::Value&& value,
+        ::rapidjson::Document::AllocatorType& allocator
       ) : value_(std::move(value)), allocator_(allocator) {}
     explicit JsonValue (JsonRef ref) : allocator_(ref.get_allocator()) {}
 
@@ -278,8 +278,8 @@ namespace garlic {
     JsonView get_view() const { return JsonView(value_); }
 
   private:
-    rapidjson::Value value_;
-    rapidjson::Document::AllocatorType& allocator_;
+    ::rapidjson::Value value_;
+    ::rapidjson::Document::AllocatorType& allocator_;
   };
 
 }
