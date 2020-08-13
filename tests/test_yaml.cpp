@@ -10,7 +10,7 @@ using namespace garlic::providers::libyaml;
 
 void print_document(YamlView value, int level) {
   std::string prefix = "";
-  for(auto i = 0; i < level; i++) prefix += " ";
+  for(auto i = 0; i < level; i++) prefix += "....";
   if (value.is_bool()) {
     std::cout << prefix << "bool: " << (value.get_bool() ? "true" : "false") << std::endl;
   } else if (value.is_double()) {
@@ -19,7 +19,7 @@ void print_document(YamlView value, int level) {
     std::cout << prefix << "null" << std::endl;
   } else if (value.is_object()) {
     for(const auto& item : value.get_object()) {
-      std::cout << prefix << "Member" << std::endl;
+      std::cout << prefix << " + Member" << std::endl;
       print_document(item.key, level + 1);
       print_document(item.value, level + 1);
     }

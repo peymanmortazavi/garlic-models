@@ -3,10 +3,12 @@
 #include "garlic/models.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/node/parse.h"
+#include "yaml.h"
 #include <algorithm>
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>
 #include <garlic/providers/yaml-cpp.h>
+#include <garlic/providers/libyaml.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <rapidjson/document.h>
@@ -18,6 +20,7 @@
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
 using namespace garlic::providers::yamlcpp;
+using namespace garlic::providers::libyaml;
 using namespace rapidjson;
 using namespace std;
 
@@ -162,10 +165,9 @@ TEST(ModelParsing, Basic) {
     assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
   };
 
-  auto module = ModelContainer<CloveView>();
-
   // JSON module using rapidjson.
   {
+    auto module = ModelContainer<CloveView>();
     auto document = get_json_document("data/basic_module.json");
     auto view = JsonView{document};
     auto parse_result = module.parse(view);
@@ -175,11 +177,35 @@ TEST(ModelParsing, Basic) {
 
   // YAML module using yaml-cpp
   {
+    auto module = ModelContainer<CloveView>();
     auto node = get_yaml_document("data/basic_module.yaml");
     auto view = YamlNode{node};
     auto parse_result = module.parse(view);
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
+  }
+
+  // YAML module using libyaml
+  {
+    auto module = ModelContainer<CloveView>();
+
+    yaml_parser_t parser;
+    yaml_document_t document;
+
+    yaml_parser_initialize(&parser);
+    auto file_handle = fopen("data/basic_module.yaml", "r");
+    yaml_parser_set_input_file(&parser, file_handle);
+    yaml_parser_load(&parser, &document);
+
+    YamlView view {&document};
+    auto parse_result = module.parse(view);
+    ASSERT_TRUE(parse_result.valid);
+    test_module(module);
+
+    // clean up.
+    yaml_document_delete(&document);
+    yaml_parser_delete(&parser);
+    fclose(file_handle);
   }
 }
 
