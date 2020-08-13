@@ -11,7 +11,7 @@
 namespace garlic {
 
   struct ConstraintResult {
-    bool valid;
+    bool valid = true;
     std::string_view name;
     std::string reason;
     std::vector<ConstraintResult> details;
