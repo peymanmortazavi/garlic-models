@@ -48,5 +48,4 @@ TEST(YamlCpp, ProtocolTest) {
   auto node = yaml_document_get_root_node(&document);
 
   YamlView doc {&document};
-  print_document(doc, 0);
 }
