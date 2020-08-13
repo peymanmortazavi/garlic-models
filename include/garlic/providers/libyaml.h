@@ -3,6 +3,7 @@
 
 #include "yaml.h"
 #include <cstdlib>
+#include <cstring>
 #include <iterator>
 #include <string>
 #include "../layer.h"
@@ -82,20 +83,46 @@ namespace garlic::providers::libyaml {
     YamlView (const YamlView& another) : node_(another.node_), doc_(another.doc_) {}
 
     bool is_null() const { return node_->type == yaml_node_type_t::YAML_NO_NODE; }
-    bool is_int() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
+    bool is_int() const noexcept {
+      return (
+        node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
+        node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
+        (std::atoi(scalar_data()) != 0 || strcmp(scalar_data(), "0"))
+      );
+    }
     bool is_string() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
-    bool is_double() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
+    bool is_double() const noexcept {
+      return (
+        node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
+        node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
+        check_double(scalar_data(), [](auto){})
+      );
+    }
     bool is_object() const noexcept { return node_->type == yaml_node_type_t::YAML_MAPPING_NODE; }
     bool is_list() const noexcept { return node_->type == yaml_node_type_t::YAML_SEQUENCE_NODE; }
-    bool is_bool() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
+    bool is_bool() const noexcept {
+      return (
+        node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
+        node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
+        check_bool(scalar_data(), [](auto){})
+      );
+    }
 
     char* scalar_data() const noexcept { return (char*)node_->data.scalar.value; }
     int get_int() const noexcept { return std::atoi(scalar_data()); }
     std::string get_string() const noexcept { return std::string{scalar_data()}; }
     std::string_view get_string_view() const noexcept { return std::string_view{scalar_data()}; }
     const char* get_cstr() const noexcept { return scalar_data(); }
-    double get_double() const noexcept { return std::stod(scalar_data()); }
-    bool get_bool() const noexcept { return strcmp("true", scalar_data()) == 0; }
+    double get_double() const noexcept {
+      double result;
+      check_double(scalar_data(), [&result](auto r){result = r;});
+      return result;
+    }
+    bool get_bool() const noexcept {
+      bool result = false;
+      check_bool(scalar_data(), [&result](auto r) { result = r; });
+      return result;
+    }
 
     ConstValueIterator begin_list() const { return ConstValueIterator(doc_, node_->data.sequence.items.start); }
     ConstValueIterator end_list() const { return ConstValueIterator(doc_, node_->data.sequence.items.top); }
@@ -118,6 +145,35 @@ namespace garlic::providers::libyaml {
   private:
     yaml_document_t* doc_;
     yaml_node_t* node_;
+
+    template<typename Callable>
+    bool check_double(const char* input, const Callable& cb) const {
+      char* end;
+      double result = strtod(input, &end);
+      cb(result);
+      return !(end == input || *end != '\0');
+    }
+
+    template<typename Callable>
+    bool check_bool(const char* input, const Callable& cb) const {
+      struct pair {
+        const char* name;
+        bool value;
+      };
+      static const pair pairs[8] = {
+        {"y", true}, {"n", false},
+        {"true", true}, {"false", false},
+        {"on", true}, {"off", false},
+        {"yes", true}, {"no", false},
+      };
+      for(auto it = std::begin(pairs); it != std::end(pairs); it++) {
+        if (strcmp(it->name, input) == 0) {
+          cb(it->value);
+          return true;
+        }
+      }
+      return false;
+    }
   };
 
 }
