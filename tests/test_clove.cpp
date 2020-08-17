@@ -11,8 +11,6 @@
 #include <garlic/garlic.h>
 #include <iterator>
 #include <iostream>
-#include "garlic/allocators.h"
-#include "garlic/basic.h"
 #include "test_protocol.h"
 
 using namespace garlic;

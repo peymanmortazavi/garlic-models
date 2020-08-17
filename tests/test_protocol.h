@@ -6,7 +6,6 @@
 * Description:      Test methods for assuring an object viewer supports all the required functions.
 *****************************************************************************/
 
-#include "garlic/layer.h"
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
 

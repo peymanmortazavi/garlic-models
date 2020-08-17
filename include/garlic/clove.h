@@ -11,16 +11,6 @@
 
 namespace garlic {
 
-  enum TypeFlag : uint8_t {
-    Null    = 0x0     ,
-    Boolean = 0x1 << 0,
-    String  = 0x1 << 1,
-    Integer = 0x1 << 2,
-    Double  = 0x1 << 3,
-    Object  = 0x1 << 4,
-    List    = 0x1 << 5,
-  };
-
   struct String {
     size_t length;
     char* data;
