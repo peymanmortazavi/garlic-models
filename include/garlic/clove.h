@@ -2,6 +2,7 @@
 #define BASIC_H
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <iterator>
 #include <memory>
@@ -56,7 +57,7 @@ namespace garlic {
       ValueType value;
     };
 
-    using difference_type = int;
+    using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
     using reference = ValueType&;
     using pointer = ValueType*;
