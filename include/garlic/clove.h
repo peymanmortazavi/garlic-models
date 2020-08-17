@@ -346,13 +346,9 @@ namespace garlic {
     }
 
     void add_member(DataType&& key, DataType&& value) {
-      if (auto it = this->find_member(GenericCloveRef(key, allocator_).get_cstr()); it != this->end_member()) {
-        (*it).value.data_ = std::move(value);
-      } else {
-        this->check_members();
-        this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
-        this->data_.object.length++;
-      }
+      this->check_members();
+      this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
+      this->data_.object.length++;
     }
     void add_member(const char* key, DataType&& value) {
       DataType data; GenericCloveRef(data, allocator_).set_string(key);

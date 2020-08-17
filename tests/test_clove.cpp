@@ -20,4 +20,4 @@ using namespace std;
 TEST(BasicValue, ProtocolTest) {
   CloveDocument doc;
   test_full_layer(doc.get_reference());
-} 
+}
