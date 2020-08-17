@@ -2,6 +2,7 @@
 #define BASIC_H
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <iterator>
 #include <memory>
@@ -10,16 +11,6 @@
 #include "layer.h"
 
 namespace garlic {
-
-  enum TypeFlag : uint8_t {
-    Null    = 0x0     ,
-    Boolean = 0x1 << 0,
-    String  = 0x1 << 1,
-    Integer = 0x1 << 2,
-    Double  = 0x1 << 3,
-    Object  = 0x1 << 4,
-    List    = 0x1 << 5,
-  };
 
   struct String {
     size_t length;
@@ -66,7 +57,7 @@ namespace garlic {
       ValueType value;
     };
 
-    using difference_type = int;
+    using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
     using reference = ValueType&;
     using pointer = ValueType*;
@@ -355,13 +346,9 @@ namespace garlic {
     }
 
     void add_member(DataType&& key, DataType&& value) {
-      if (auto it = this->find_member(GenericCloveRef(key, allocator_).get_cstr()); it != this->end_member()) {
-        (*it).value.data_ = std::move(value);
-      } else {
-        this->check_members();
-        this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
-        this->data_.object.length++;
-      }
+      this->check_members();
+      this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
+      this->data_.object.length++;
     }
     void add_member(const char* key, DataType&& value) {
       DataType data; GenericCloveRef(data, allocator_).set_string(key);

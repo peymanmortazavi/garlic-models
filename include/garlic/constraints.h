@@ -3,7 +3,6 @@
 
 #include "layer.h"
 #include "utility.h"
-#include "basic.h"
 #include <cstring>
 #include <regex>
 

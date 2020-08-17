@@ -8,6 +8,15 @@
 
 namespace garlic {
 
+  enum TypeFlag : uint8_t {
+    Null    = 0x1 << 0,
+    Boolean = 0x1 << 1,
+    String  = 0x1 << 2,
+    Integer = 0x1 << 3,
+    Double  = 0x1 << 4,
+    Object  = 0x1 << 5,
+    List    = 0x1 << 6,
+  };
 
   template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
   template<typename T> using ValueIterator = typename T::ValueIterator;

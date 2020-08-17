@@ -1,7 +1,7 @@
 #ifndef GARLIC_H
 #define GARLIC_H
 
-#include "basic.h"
+#include "clove.h"
 #include "layer.h"
 #include "utility.h"
 #include "models.h"

@@ -6,7 +6,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 enable_testing()
 
-set(TEST_SOURCES test_json.cpp test_basic.cpp test_yaml.cpp test_models.cpp test_protocol.h)
+set(TEST_SOURCES test_json.cpp test_clove.cpp test_yaml.cpp test_models.cpp test_protocol.h)
 
 add_executable(GarlicModelTests ${TEST_SOURCES})
 target_link_libraries(GarlicModelTests GarlicModel yaml-cpp yaml Threads::Threads ${GTEST_BOTH_LIBRARIES})
