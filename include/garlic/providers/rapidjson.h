@@ -6,6 +6,7 @@
 
 #include "../layer.h"
 #include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
 
 
 namespace garlic::providers::rapidjson {
@@ -280,6 +281,24 @@ namespace garlic::providers::rapidjson {
   private:
     ::rapidjson::Value value_;
     ::rapidjson::Document::AllocatorType& allocator_;
+  };
+
+
+  class Json {
+  public:
+    JsonDocument load(const char* data) {
+      ::rapidjson::Document doc;
+      doc.Parse(data);
+      return JsonDocument{std::move(doc)};
+    }
+
+    JsonDocument load(FILE * file) {
+      char read_buffer[65536];
+      ::rapidjson::FileReadStream input_stream(file, read_buffer, sizeof(read_buffer));
+      ::rapidjson::Document doc;
+      doc.ParseStream(input_stream);
+      return JsonDocument{std::move(doc)};
+    }
   };
 
 }
