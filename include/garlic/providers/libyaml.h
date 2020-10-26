@@ -23,7 +23,7 @@ namespace garlic::providers::libyaml {
     MemberIterator(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), ptr_(ptr) {}
     MemberIterator(const MemberIterator& another) : ptr_(another.ptr_), doc_(another.doc_) {}
 
-    using difference_type = int;
+    using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
     using reference_type = MemberWrapper&;
     using pointer_type = MemberWrapper*;
