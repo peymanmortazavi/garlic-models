@@ -286,13 +286,13 @@ namespace garlic::providers::rapidjson {
 
   class Json {
   public:
-    JsonDocument load(const char* data) {
+    static JsonDocument load(const char* data) {
       ::rapidjson::Document doc;
       doc.Parse(data);
       return JsonDocument{std::move(doc)};
     }
 
-    JsonDocument load(FILE * file) {
+    static JsonDocument load(FILE * file) {
       char read_buffer[65536];
       ::rapidjson::FileReadStream input_stream(file, read_buffer, sizeof(read_buffer));
       ::rapidjson::Document doc;
