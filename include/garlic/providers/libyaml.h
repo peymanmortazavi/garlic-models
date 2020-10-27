@@ -23,7 +23,7 @@ namespace garlic::providers::libyaml {
     MemberIterator(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), ptr_(ptr) {}
     MemberIterator(const MemberIterator& another) : ptr_(another.ptr_), doc_(another.doc_) {}
 
-    using difference_type = int;
+    using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
     using reference_type = MemberWrapper&;
     using pointer_type = MemberWrapper*;
@@ -174,6 +174,47 @@ namespace garlic::providers::libyaml {
       }
       return false;
     }
+  };
+
+  class YamlDocument {
+  public:
+    ~YamlDocument() { yaml_document_delete(&doc_); }
+
+    YamlView get_view() {
+      return YamlView{&doc_};
+    }
+    yaml_document_t* get_inner_document() { return &doc_; }
+
+  protected:
+    yaml_document_t doc_;
+  };
+
+  class Yaml {
+  public:
+    static YamlDocument load(const unsigned char * data, size_t lenght) {
+      YamlDocument doc;
+      yaml_parser_t parser;
+      yaml_parser_initialize(&parser);
+      yaml_parser_set_input_string(&parser, data, lenght);
+      yaml_parser_load(&parser, doc.get_inner_document());
+      yaml_parser_delete(&parser);
+      return doc;
+    }
+
+    static YamlDocument load(const unsigned char * data) {
+      return Yaml::load(data, strlen((char*)data));
+    }
+
+    static YamlDocument load(FILE * file) {
+      YamlDocument doc;
+      yaml_parser_t parser;
+      yaml_parser_initialize(&parser);
+      yaml_parser_set_input_file(&parser, file);
+      yaml_parser_load(&parser, doc.get_inner_document());
+      yaml_parser_delete(&parser);
+      return doc;
+    }
+
   };
 
 }

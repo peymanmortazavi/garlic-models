@@ -4,11 +4,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <istream>
 #include <iterator>
 #include <string>
 
 #include "../layer.h"
+#include "../utility.h"
 #include "yaml-cpp/node/node.h"
+#include "yaml-cpp/node/parse.h"
 #include "yaml-cpp/node/type.h"
 #include "yaml-cpp/yaml.h"
 
@@ -22,7 +25,7 @@ namespace garlic::providers::yamlcpp {
       ValueType value;
     };
     
-    using difference_type = int;
+    using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
     using reference = MemberWrapper&;
     using pointer = MemberWrapper*;
@@ -156,6 +159,20 @@ namespace garlic::providers::yamlcpp {
 
   private:
     ValueType node_;
+  };
+
+
+  class Yaml {
+  public:
+    static YamlNode load(const char * data) {
+      return YamlNode{YAML::Load(data)};
+    }
+
+    static YamlNode load(FILE * file) {
+      auto buffer = FileStreamBuffer(file);
+      std::istream input_stream(&buffer);
+      return YamlNode{YAML::Load(input_stream)};
+    }
   };
 
 }
