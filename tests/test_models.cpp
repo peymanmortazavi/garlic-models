@@ -22,12 +22,28 @@ using namespace rapidjson;
 using namespace std;
 
 
-Document get_json_document(const std::string& name) {
-  ifstream ifs(name);
-  IStreamWrapper isw(ifs);
-  Document d;
-  d.ParseStream(isw);
-  return d;
+//Document get_json_document(const std::string& name) {
+//  ifstream ifs(name);
+//  IStreamWrapper isw(ifs);
+//  Document d;
+//  d.ParseStream(isw);
+//  return d;
+//}
+
+garlic::providers::libyaml::YamlDocument
+get_libyaml_document(const char * name) {
+  auto file = fopen(name, "r");
+  auto doc = garlic::providers::libyaml::Yaml::load(file);
+  fclose(file);
+  return doc;
+}
+
+garlic::providers::rapidjson::JsonDocument
+get_rapidjson_document(const char* name) {
+  auto file = fopen(name, "r");
+  auto doc = garlic::providers::rapidjson::Json::load(file);
+  fclose(file);
+  return doc;
 }
 
 YAML::Node get_yaml_document(const std::string& name) {
@@ -126,7 +142,7 @@ TEST(FieldValidation, ConstraintSkipping) {
 
 TEST(ModelParsing, Basic) {
   // load a very basic module without using more sophisticated features.
-  
+
   auto test_module = [](const ModelContainer<CloveView>& module) {
     auto date_field = module.get_field("DateTime");
     ASSERT_NE(date_field, nullptr);
@@ -165,8 +181,8 @@ TEST(ModelParsing, Basic) {
   // JSON module using rapidjson.
   {
     auto module = ModelContainer<CloveView>();
-    auto document = get_json_document("data/basic_module.json");
-    auto view = JsonView{document};
+    auto document = get_rapidjson_document("data/basic_module.json");
+    auto view = document.get_view();
     auto parse_result = module.parse(view);
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
@@ -185,24 +201,12 @@ TEST(ModelParsing, Basic) {
   // YAML module using libyaml
   {
     auto module = ModelContainer<CloveView>();
-
-    yaml_parser_t parser;
-    yaml_document_t document;
-
-    yaml_parser_initialize(&parser);
     auto file_handle = fopen("data/basic_module.yaml", "r");
-    yaml_parser_set_input_file(&parser, file_handle);
-    yaml_parser_load(&parser, &document);
-
-    YamlView view {&document};
+    auto doc = garlic::providers::libyaml::Yaml::load(file_handle);
+    YamlView view = doc.get_view();
     auto parse_result = module.parse(view);
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
-
-    // clean up.
-    yaml_document_delete(&document);
-    yaml_parser_delete(&parser);
-    fclose(file_handle);
   }
 }
 
@@ -210,8 +214,8 @@ TEST(ModelParsing, ForwardDeclarations) {
   // load a module full of forward dependencies to test and make sure all definitions get loaded properly.
   auto module = ModelContainer<CloveView>();
 
-  auto document = get_json_document("data/forward_fields.json");
-  auto view = JsonView{document};
+  auto document = get_rapidjson_document("data/forward_fields.json");
+  auto view = document.get_view();
 
   auto parse_result = module.parse(view);
   ASSERT_TRUE(parse_result.valid);

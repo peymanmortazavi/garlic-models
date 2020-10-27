@@ -34,9 +34,7 @@ void print_document(YamlView value, int level) {
 }
 
 TEST(YamlCpp, ProtocolTest) {
-
   yaml_parser_t parser;
-
   yaml_parser_initialize(&parser);
 
   auto file = fopen("data/test.yaml", "r");

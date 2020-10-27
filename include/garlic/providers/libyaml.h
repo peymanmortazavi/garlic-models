@@ -176,6 +176,47 @@ namespace garlic::providers::libyaml {
     }
   };
 
+  class YamlDocument {
+  public:
+    ~YamlDocument() { yaml_document_delete(&doc_); }
+
+    YamlView get_view() {
+      return YamlView{&doc_};
+    }
+    yaml_document_t* get_inner_document() { return &doc_; }
+
+  protected:
+    yaml_document_t doc_;
+  };
+
+  class Yaml {
+  public:
+    static YamlDocument load(const unsigned char * data, size_t lenght) {
+      YamlDocument doc;
+      yaml_parser_t parser;
+      yaml_parser_initialize(&parser);
+      yaml_parser_set_input_string(&parser, data, lenght);
+      yaml_parser_load(&parser, doc.get_inner_document());
+      yaml_parser_delete(&parser);
+      return doc;
+    }
+
+    static YamlDocument load(const unsigned char * data) {
+      return Yaml::load(data, strlen((char*)data));
+    }
+
+    static YamlDocument load(FILE * file) {
+      YamlDocument doc;
+      yaml_parser_t parser;
+      yaml_parser_initialize(&parser);
+      yaml_parser_set_input_file(&parser, file);
+      yaml_parser_load(&parser, doc.get_inner_document());
+      yaml_parser_delete(&parser);
+      return doc;
+    }
+
+  };
+
 }
 
 #endif /* end of include guard: GARLIC_LIBYAML_H */
