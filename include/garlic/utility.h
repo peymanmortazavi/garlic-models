@@ -1,9 +1,11 @@
+#ifndef UTILITY_H
+#define UTILITY_H
+
 #include "layer.h"
 #include <algorithm>
 #include <cstring>
+#include <streambuf>
 
-#ifndef UTILITY_H
-#define UTILITY_H
 
 namespace garlic {
 
@@ -34,10 +36,28 @@ namespace garlic {
     return false;
   }
 
+
   template<typename Callable>
   void get_member(const ReadableLayer auto& value, const char* key, const Callable& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
+
+
+  class FileStreamBuffer : public std::streambuf {
+  public:
+    FileStreamBuffer(FILE* file) : file_(file) {}
+
+    std::streambuf::int_type underflow() override {
+      auto length = fread(read_buffer_, 1, sizeof(read_buffer_), file_);
+      if (!length) return traits_type::eof();
+      setg(read_buffer_, read_buffer_, read_buffer_ + length);
+      return traits_type::to_int_type(*gptr());
+    }
+
+  private:
+    FILE* file_;
+    char read_buffer_[65536];
+  };
 
 }
 

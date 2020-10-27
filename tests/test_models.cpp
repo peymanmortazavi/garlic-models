@@ -22,14 +22,6 @@ using namespace rapidjson;
 using namespace std;
 
 
-//Document get_json_document(const std::string& name) {
-//  ifstream ifs(name);
-//  IStreamWrapper isw(ifs);
-//  Document d;
-//  d.ParseStream(isw);
-//  return d;
-//}
-
 garlic::providers::libyaml::YamlDocument
 get_libyaml_document(const char * name) {
   auto file = fopen(name, "r");
@@ -46,8 +38,12 @@ get_rapidjson_document(const char* name) {
   return doc;
 }
 
-YAML::Node get_yaml_document(const std::string& name) {
-  return YAML::LoadFile(name);
+garlic::providers::yamlcpp::YamlNode
+get_yamlcpp_node(const char* name) {
+  auto file = fopen(name, "r");
+  auto node = garlic::providers::yamlcpp::Yaml::load(file);
+  fclose(file);
+  return node;
 }
 
 void print_result(const ConstraintResult& result, int level=0) {
@@ -191,9 +187,8 @@ TEST(ModelParsing, Basic) {
   // YAML module using yaml-cpp
   {
     auto module = ModelContainer<CloveView>();
-    auto node = get_yaml_document("data/basic_module.yaml");
-    auto view = YamlNode{node};
-    auto parse_result = module.parse(view);
+    auto node = get_yamlcpp_node("data/basic_module.yaml");
+    auto parse_result = module.parse(node);
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
   }
