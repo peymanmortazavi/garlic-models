@@ -1,24 +1,16 @@
-#include "yaml-cpp/node/node.h"
-#include "yaml-cpp/node/parse.h"
-#include "yaml.h"
 #include <algorithm>
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>
 #include <garlic/providers/yaml-cpp.h>
 #include <garlic/providers/libyaml.h>
 #include <gtest/gtest.h>
-#include <memory>
-#include <rapidjson/document.h>
-#include <rapidjson/istreamwrapper.h>
 #include <fstream>
-#include <deque>
 #include <iostream>
 
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
 using namespace garlic::providers::yamlcpp;
 using namespace garlic::providers::libyaml;
-using namespace rapidjson;
 using namespace std;
 
 
