@@ -414,7 +414,7 @@ namespace garlic {
     }
 
     void clean() {
-      if (AllocatorType::needs_free) return;
+      if (!AllocatorType::needs_free) return;
       switch (data_.type) {
       case TypeFlag::String:
         {
