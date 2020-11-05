@@ -129,11 +129,11 @@ namespace garlic {
         return {true};
       } else if (value.is_double()) {
         auto dvalue = value.get_double();
-        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "out of range double value."};
+        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "out of range value."};
         return {true};
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "out of range int value."};
+        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "out of range value."};
         return {true};
       } else return {true};
     }
