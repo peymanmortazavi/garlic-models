@@ -177,6 +177,23 @@ namespace garlic {
       return false;
     }
 
+    void process_field_meta(FieldPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
+      get_member(value, "meta", [&props](const auto& item) {
+        for (const auto& member : item.get_object()) {
+          props.meta.emplace(member.key.get_string(), member.value.get_string());
+        }
+      });
+
+      auto add_meta_field = [&value, &props](const std::string& name) {
+        get_member(value, name, [&props, &name](const auto& item) {
+          props.meta.emplace(name, item.get_string());
+        });
+      };
+
+      add_meta_field("label");
+      add_meta_field("description");
+    }
+
     template<typename Callable>
     void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
       if (value.is_string()) {  // parse the field reference.
@@ -184,44 +201,32 @@ namespace garlic {
         if (!ready && !name.empty()) {
           context.fields[value.get_cstr()].fields.emplace_back(std::move(name));
         }
-      } else if (value.is_object()) {
-        auto ptr = std::make_shared<FieldType>(std::move(name));
-        auto& props = ptr->properties_;
-        auto complete = true;
-
-        get_member(value, "type", [this, &props, &context, &ptr, &complete](const auto& item) {
-          complete = false;
-          this->parse_reference(item.get_cstr(), context, [&props, &complete](const auto& field) {
-            complete = true;
-            props.constraints = field->get_properties().constraints;
-          });
-          if (!complete) context.fields[item.get_cstr()].dependencies.emplace_back(ptr);
-        });
-
-        get_member(value, "meta", [this, &props](const auto& item) {
-          for (const auto& member : item.get_object()) {
-            props.meta.emplace(member.key.get_string(), member.value.get_string());
-          }
-        });
-
-        get_member(value, "label", [this, &props](const auto& item) {
-          props.meta.emplace("label", item.get_string());
-        });
-
-        get_member(value, "description", [this, &props](const auto& item) {
-          props.meta.emplace("description", item.get_string());
-        });
-
-        get_member(value, "constraints", [this, &props, &context](const auto& item) {
-          for (const auto& constraint_info : item.get_list()) {
-            this->parse_constraint(constraint_info, context, [&props](auto&& ptr) {
-              props.constraints.emplace_back(std::move(ptr));
-            });
-          }
-        });
-
-        cb(std::move(ptr), complete);
+        return;
       }
+      auto ptr = std::make_shared<FieldType>(std::move(name));
+      auto& props = ptr->properties_;
+      auto complete = true;
+
+      get_member(value, "type", [this, &props, &context, &ptr, &complete](const auto& item) {
+        complete = false;
+        this->parse_reference(item.get_cstr(), context, [&props, &complete](const auto& field) {
+          complete = true;
+          props.constraints = field->get_properties().constraints;
+        });
+        if (!complete) context.fields[item.get_cstr()].dependencies.emplace_back(ptr);
+      });
+
+      this->process_field_meta(props, value);
+
+      get_member(value, "constraints", [this, &props, &context](const auto& item) {
+        for (const auto& constraint_info : item.get_list()) {
+          this->parse_constraint(constraint_info, context, [&props](auto&& ptr) {
+            props.constraints.emplace_back(std::move(ptr));
+          });
+        }
+      });
+
+      cb(std::move(ptr), complete);
     }
 
     void resolve_field(const std::string& key, parse_context& context, const FieldPtr& ptr) {
@@ -230,7 +235,10 @@ namespace garlic {
         const auto& src_constraints = ptr->properties_.constraints;
         for (auto& field : it->second.dependencies) {
           auto& dst_constraints = field->properties_.constraints;
-          dst_constraints.insert(dst_constraints.begin(), src_constraints.begin(), src_constraints.end());
+          dst_constraints.insert(
+              dst_constraints.begin(),
+              src_constraints.begin(), src_constraints.end()
+              );
           // if the field is a named one, it can be resolved as it is complete now.
           // anonymous fields can be skipped.
           if (!field->get_properties().name.empty()) {
@@ -277,11 +285,10 @@ namespace garlic {
       };
 
       if (value.is_string()) {
-        auto ready = this->parse_reference(
-            value.get_cstr(), context, [this, &cb](const auto& ptr) {
+        auto ready = this->parse_reference(value.get_cstr(), context,
+            [this, &cb](const auto& ptr) {
               cb(this->make_field_constraint(ptr));
-            }
-        );
+            });
         if (!ready) {
           auto constraint = this->make_field_constraint(nullptr);
           context.fields[value.get_cstr()].constraints.emplace_back(constraint);
@@ -295,8 +302,7 @@ namespace garlic {
               } else {
                 // report parsing error.
               }
-            }
-        );
+            });
       }
 
     }
