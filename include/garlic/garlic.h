@@ -7,6 +7,7 @@
 #include "models.h"
 #include "allocators.h"
 #include "constraints.h"
+#include "module.h"
 
 namespace garlic {
 
