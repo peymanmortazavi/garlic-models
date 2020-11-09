@@ -5,18 +5,20 @@ fields:
         constraints: [{type: range, min: 1, max: 1000000}]
 
     UserReference:
-        name: user_reference
-        message: Either a user id or a proper user object is expected.
         constraints:
             - type: any
               items: [UserId, User]
+              message: Either a user id or a proper user object is expected.
+              name: user_reference
 
 models:
     User:
-        id: UserId
-        username: string
-        first_name: string
-        last_name: string
+        fields:
+            id: UserId
+            username: string
+            first_name: string
+            last_name: string
 
     AnyTest:
-        user: UserReference
+        fields:
+            user: UserReference
