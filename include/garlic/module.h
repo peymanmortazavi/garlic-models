@@ -43,25 +43,27 @@ namespace garlic {
       
       parse_context context;
 
-      get_member(value, "fields", [this, &context](const auto& fields) {
-        std::for_each(fields.begin_member(), fields.end_member(), [this, &context](const auto& field) {
+      get_member(value, "fields", [this, &context](const auto &fields) {
+        for (const auto &field : fields.get_object()) {
           // parse field definition.
           this->parse_field(
-            field.key.get_string(), field.value, context,
-            [this, &context, &field](auto ptr, auto complete) {
-              this->add_field(field.key.get_string(), context, std::move(ptr), complete);
-            }
-          );
-        });
+              field.key.get_string(), field.value, context,
+              [this, &context, &field](auto ptr, auto complete) {
+                this->add_field(field.key.get_string(), context,
+                                std::move(ptr), complete);
+              });
+        }
       });
 
       get_member(value, "models", [this, &context](const auto& models) {
-        std::for_each(models.begin_member(), models.end_member(), [this, &context](const auto& member) {
+        for(const auto& model : models.get_object()) {
           // parse properties.
-          this->parse_model(member.key.get_string(), member.value, context, [this, &member](auto&& ptr) {
-            models_.emplace(member.key.get_string(), std::move(ptr));
-          });
-        });
+          this->parse_model(
+              model.key.get_string(), model.value, context,
+              [this, &model](auto&& ptr) {
+                models_.emplace(model.key.get_string(), std::move(ptr));
+              });
+        }
       });
 
       return {context.fields.size() == 0};
