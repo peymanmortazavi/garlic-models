@@ -184,8 +184,8 @@ namespace garlic {
         }
       });
 
-      auto add_meta_field = [&value, &props](const std::string& name) {
-        get_member(value, name, [&props, &name](const auto& item) {
+      auto add_meta_field = [&value, &props](const char* name) {
+        get_member(value, name, [&props, name](const auto& item) {
           props.meta.emplace(name, item.get_string());
         });
       };
