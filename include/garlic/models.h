@@ -435,8 +435,7 @@ namespace garlic {
 
       if (value.is_string()) {
         auto ready = this->parse_reference(
-            value.get_cstr(), context,
-            [this, &cb](const auto& ptr) {
+            value.get_cstr(), context, [this, &cb](const auto& ptr) {
               cb(this->make_field_constraint(ptr));
             }
         );
