@@ -193,6 +193,47 @@ namespace garlic {
     std::regex pattern_;
   };
 
+
+  template<ReadableLayer LayerType>
+  class AnyConstraint : public Constraint<LayerType> {
+  public:
+
+  AnyConstraint(
+      std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
+      ConstraintProperties props
+  ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+
+  ConstraintResult test(const LayerType& value) const noexcept override {
+    for(const auto& constraint : constraints_) {
+      auto result = constraint->test(value);
+      if (result.valid) return {true};
+    }
+    return this->fail("None of the constraints read this value.");
+  }
+
+  template<ReadableLayer Source, typename Parser>
+  static std::shared_ptr<Constraint<LayerType>>
+  parse(const Source& value, Parser parser) noexcept {
+    ConstraintProperties props {false};
+    set_constraint_properties(value, props);
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints;
+    get_member(
+        value, "items", [&value, &constraints, &parser](const auto& items) {
+          for(const auto& item : items.get_list()) {
+            parser.parse_constraint(item, [&constraints](auto&& constraint) {
+                constraints.emplace_back(std::move(constraint));
+            });
+          }
+        }
+    );
+    return std::make_shared<AnyConstraint>(
+        std::move(constraints), std::move(props)
+    );
+  }
+
+  private:
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+  };
 }
 
 #endif /* end of include guard: CONSTRAINTS_H */

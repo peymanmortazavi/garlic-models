@@ -477,6 +477,7 @@ namespace garlic {
         {"regex", &RegexConstraint<Destination>::parse},
         {"range", &RangeConstraint<Destination>::parse},
         {"field", &FieldConstraint<Destination>::parse},
+        {"any", &AnyConstraint<Destination>::parse},
       };
 
       if (value.is_string()) {
