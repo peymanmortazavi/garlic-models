@@ -1,5 +1,5 @@
-#ifndef MODELS_H
-#define MODELS_H
+#ifndef GARLIC_MODELS_H
+#define GARLIC_MODELS_H
 
 #include <iostream>
 #include <algorithm>
@@ -535,4 +535,4 @@ namespace garlic {
 }
 
 
-#endif /* end of include guard: MODELS_H */
+#endif /* end of include guard: GARLIC_MODELS_H */

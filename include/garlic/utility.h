@@ -1,5 +1,5 @@
-#ifndef UTILITY_H
-#define UTILITY_H
+#ifndef GARLIC_UTILITY_H
+#define GARLIC_UTILITY_H
 
 #include "layer.h"
 #include <algorithm>
@@ -61,4 +61,4 @@ namespace garlic {
 
 }
 
-#endif /* end of include guard: UTILITY_H */
+#endif /* end of include guard: GARLIC_UTILITY_H */

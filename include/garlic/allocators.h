@@ -1,5 +1,5 @@
-#ifndef ALLOCATORS_H
-#define ALLOCATORS_H
+#ifndef GARLIC_ALLOCATORS_H
+#define GARLIC_ALLOCATORS_H
 
 #include <concepts>
 #include <cstdlib>
@@ -40,4 +40,4 @@ namespace garlic {
 
 }
 
-#endif /* end of include guard: ALLOCATORS_H */
+#endif /* end of include guard: GARLIC_ALLOCATORS_H */

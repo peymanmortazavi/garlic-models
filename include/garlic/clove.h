@@ -1,5 +1,5 @@
-#ifndef BASIC_H
-#define BASIC_H
+#ifndef GARLIC_CLOVE_H
+#define GARLIC_CLOVE_H
 
 #include <algorithm>
 #include <cstddef>
@@ -493,4 +493,4 @@ namespace garlic {
 
 }
 
-#endif /* end of include guard: BASIC_H */
+#endif /* end of include guard: GARLIC_CLOVE_H */
