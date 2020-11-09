@@ -45,7 +45,7 @@ void print_result(const ConstraintResult& result, int level=0) {
     std::string space = "";
     for (auto i = 0; i < level; i++) { space += "  "; }
     if (result.field) {
-      std::cout << space << "Name: " << result.name << std::endl;
+      std::cout << space << "FielField: " << result.name << std::endl;
     } else {
       std::cout << space << "Constraint: " << result.name << std::endl;
     }
@@ -127,6 +127,7 @@ TEST(FieldValidation, ConstraintSkipping) {
   assert_constraint_result(result.failures[0], "regex_constraint", "invalid value.");
   assert_constraint_result(result.failures[1], "regex_constraint", "invalid value.");
 }
+
 
 TEST(ModelParsing, Basic) {
   // load a very basic module without using more sophisticated features.
@@ -246,3 +247,25 @@ TEST(ModelParsing, ForwardDeclarations) {
   }
   ASSERT_TRUE(expectations.empty());
 };
+
+
+TEST(ModelParsing, FieldConstraints) {
+  auto module = ModelContainer<JsonView>();
+
+  auto model_document = get_libyaml_document("data/field_constraint/module.yaml");
+  auto parse_results = module.parse(model_document.get_view());
+  ASSERT_TRUE(parse_results.valid);
+
+  auto model = module.get_model("Account");
+  auto root = ModelConstraint<JsonView>(model);
+
+  auto good_document = get_rapidjson_document("data/field_constraint/good.json");
+  auto result = root.test(good_document.get_view());
+  ASSERT_TRUE(result.valid);
+
+  auto bad_document = get_rapidjson_document("data/field_constraint/bad.json");
+  result = root.test(bad_document.get_view());
+  ASSERT_FALSE(result.valid);
+  print_result(result);
+}
+

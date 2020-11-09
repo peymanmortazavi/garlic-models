@@ -124,10 +124,23 @@ namespace garlic {
             auto test = it->second->test(member.value);
             if (!test.is_valid()) {
               result.valid = false;
-              result.details.push_back({false, member.key.get_cstr(), "find a summary of why this field value sucks.", std::move(test.failures), true});
+              result.details.push_back({
+                  false,
+                  member.key.get_cstr(),
+                  "find a summary of why this field value sucks.",
+                  std::move(test.failures),
+                  true
+              });
             }
           }
         }
+      } else {
+        result.valid = false; 
+        result.details.push_back({
+            false,
+            "type",
+            "Expected object."
+        });
       }
       if (!result.valid) {
         result.name = model_->get_properties().name;
@@ -154,6 +167,34 @@ namespace garlic {
     return std::make_shared<Model<LayerType>>(std::forward<Args>(args)...);
   }
 
+
+  template<ReadableLayer LayerType>
+  class FieldConstraint : public Constraint<LayerType> {
+  public:
+    using FieldPtr = std::shared_ptr<Field<LayerType>>;
+    using FieldReference = std::shared_ptr<FieldPtr>;
+
+    FieldConstraint(
+        FieldReference field,
+        ConstraintProperties&& props
+    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      auto result = (*field_)->test(value);
+      if (result.is_valid()) return {true};
+      return {
+        false, this->props_.name, this->props_.message,
+        std::move(result.failures), false
+      };
+    }
+
+    void set_field(FieldPtr field) { field_->swap(field); }
+
+  protected:
+    FieldReference field_;
+  };
+
+
   template<ReadableLayer Destination>
   class ModelContainer {
   public:
@@ -165,7 +206,9 @@ namespace garlic {
     using ModelMap = MapOf<ModelPtr>;
     using FieldMap = MapOf<FieldPtr>;
     using ConstraintType = Constraint<Destination>;
+    using FieldConstraintType = FieldConstraint<Destination>;
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
+    using FieldConstraintPtr = std::shared_ptr<FieldConstraintType>;
 
     struct ParsingResult {
       bool valid;
@@ -242,6 +285,7 @@ namespace garlic {
       std::vector<FieldPtr> dependencies;  // field inheritence.
       std::vector<lazy_pair> models;  // model field memberships.
       std::vector<std::string> fields;  // field aliases.
+      std::vector<std::shared_ptr<FieldConstraintType>> constraints;  // field constraints.
     };
 
     struct parse_context {
@@ -327,9 +371,9 @@ namespace garlic {
           props.meta.emplace("description", item.get_string());
         });
 
-        get_member(value, "constraints", [this, &props](const auto& item) {
+        get_member(value, "constraints", [this, &props, &context](const auto& item) {
           for (const auto& constraint_info : item.get_list()) {
-            this->parse_constraint(constraint_info, [&props](auto&& ptr) {
+            this->parse_constraint(constraint_info, context, [&props](auto&& ptr) {
               props.constraints.emplace_back(std::move(ptr));
             });
           }
@@ -363,6 +407,10 @@ namespace garlic {
           this->add_field(alias.data(), context, ptr, true);
         }
 
+        for(auto& constraint : it->second.constraints) {
+          constraint->set_field(ptr);
+        }
+
         // remove it from the context.
         context.fields.erase(it);
       }
@@ -378,20 +426,35 @@ namespace garlic {
     }
 
     template<ReadableLayer Source, typename Callable>
-    void parse_constraint(const Source& value, const Callable& cb) const noexcept {
+    void parse_constraint(const Source& value, parse_context& context, const Callable& cb) noexcept {
       typedef ConstraintPtr (*ConstraintInitializer)(const Source&);
       static const std::map<std::string, ConstraintInitializer> ctors = {
         {"regex", &RegexConstraint<Destination>::parse},
         {"range", &RangeConstraint<Destination>::parse},
       };
 
-      get_member(value, "type", [&value,&cb](const auto& item) {
-        if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
-          cb(it->second(value));
-        } else {
-          // report parsing error.
+      if (value.is_string()) {
+        auto ready = this->parse_reference(
+            value.get_cstr(), context,
+            [this, &cb](const auto& ptr) {
+              cb(this->make_field_constraint(ptr));
+            }
+        );
+        if (!ready) {
+          auto constraint = this->make_field_constraint(nullptr);
+          context.fields[value.get_cstr()].constraints.emplace_back(constraint);
+          cb(std::move(constraint));
         }
-      });
+      } else {
+        get_member(value, "type", [&value, &cb](const auto& item) {
+          if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
+            cb(it->second(value));
+          } else {
+            // report parsing error.
+          }
+        });
+      }
+
     }
 
     template<template<typename> typename ConstraintType, typename... Args>
@@ -402,6 +465,19 @@ namespace garlic {
         {std::make_shared<ConstraintType<Destination>>(std::forward<Args>(args)...)}
       };
       return std::make_shared<FieldType>(std::move(props));
+    }
+
+    FieldConstraintPtr make_field_constraint(const FieldPtr& ptr) {
+      if (ptr) {
+        return std::make_shared<FieldConstraintType>(
+            std::make_shared<FieldPtr>(ptr),
+            ConstraintProperties{}
+        );
+      }
+      return std::make_shared<FieldConstraintType>(
+          std::make_shared<FieldPtr>(nullptr),
+          ConstraintProperties{}
+      );
     }
 
     ModelMap models_;

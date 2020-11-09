@@ -1,0 +1,15 @@
+fields:
+    TestField:
+        constraints: [Account]
+
+
+models:
+    User:
+        fields:
+            id: integer
+            username: string
+
+    Account:
+        fields:
+            user: User
+            email: string

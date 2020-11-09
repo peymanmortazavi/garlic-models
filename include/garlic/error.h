@@ -31,7 +31,7 @@ namespace garlic {
 
 namespace std {
   template<>
-  struct std::is_error_code_enum<garlic::GarlicError> : true_type {};
+  struct is_error_code_enum<garlic::GarlicError> : true_type {};
 }
 
 std::error_code make_error_code(garlic::GarlicError error) {

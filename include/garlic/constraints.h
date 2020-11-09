@@ -46,7 +46,7 @@ namespace garlic {
 
     auto fail(const char* message) const noexcept -> ConstraintResult {
       if (!this->props_.message.empty()) {
-        return ConstraintResult{false, this->props_.name, std::move(props_.message)};
+        return ConstraintResult{false, this->props_.name, props_.message};
       } else {
         return ConstraintResult{false, this->props_.name, std::string{message}};
       }
