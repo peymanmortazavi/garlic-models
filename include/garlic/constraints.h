@@ -138,8 +138,8 @@ namespace garlic {
       } else return {true};
     }
 
-    template<ReadableLayer T>
-    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+    template<ReadableLayer T, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value, Parser parser) noexcept {
       SizeType min;
       SizeType max;
       get_member(value, "min", [&min](const auto& v) {
@@ -180,8 +180,8 @@ namespace garlic {
       else { return this->fail("invalid value."); }
     }
 
-    template<ReadableLayer T>
-    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+    template<ReadableLayer T, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value, Parser parser) noexcept {
       std::string pattern;
       ConstraintProperties props {false, "regex_constraint"};
       set_constraint_properties(value, props);

@@ -8,6 +8,7 @@
 #include <vector>
 #include "layer.h"
 #include "constraints.h"
+#include "utility.h"
 
 
 namespace garlic {
@@ -190,6 +191,23 @@ namespace garlic {
 
     void set_field(FieldPtr field) { field_->swap(field); }
 
+    template<ReadableLayer Source, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>> parse(const Source& value, Parser parser) noexcept {
+      ConstraintProperties props {true, "field_constraint"};
+      set_constraint_properties(value, props);
+      std::shared_ptr<FieldConstraint<LayerType>> result;
+      get_member(value, "field", [&parser, &result, &props](const auto& field) {
+          auto ptr = parser.resolve_field_reference(field.get_cstr());
+          result = std::make_shared<FieldConstraint<LayerType>>(
+              std::make_shared<FieldPtr>(ptr), std::move(props)
+          );
+          if (!ptr) {
+            parser.add_field_dependency(field.get_cstr(), result);
+          }
+      });
+      return result;
+    }
+
   protected:
     FieldReference field_;
   };
@@ -292,8 +310,35 @@ namespace garlic {
       MapOf<field_dependency> fields;
     };
 
+    struct parser {
+      parse_context& context;
+      ModelContainer& module;
+
+      parser(
+          parse_context& context,
+          ModelContainer& module
+      ) : context(context), module(module) {}
+
+      template<ReadableLayer Source, typename Callable>
+      void parse_constraint(const Source& value, const Callable& cb) {
+        module.parse_constraint(value, context, cb);
+      }
+
+      FieldPtr resolve_field_reference(const char* name) {
+        FieldPtr result = nullptr;
+        module.parse_reference(name, context, [&result](const auto& ptr) {
+            result = ptr;
+        });
+        return result;
+      }
+
+      void add_field_dependency(const char* name, FieldConstraintPtr constraint) {
+        context.fields[name].constraints.emplace_back(constraint);
+      }
+    };
+
     template<typename Callable>
-    auto parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
+    void parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
       auto ptr = std::make_shared<ModelType>(std::move(name));
       auto& props = ptr->properties_;
 
@@ -427,10 +472,11 @@ namespace garlic {
 
     template<ReadableLayer Source, typename Callable>
     void parse_constraint(const Source& value, parse_context& context, const Callable& cb) noexcept {
-      typedef ConstraintPtr (*ConstraintInitializer)(const Source&);
+      typedef ConstraintPtr (*ConstraintInitializer)(const Source&, parser);
       static const std::map<std::string, ConstraintInitializer> ctors = {
         {"regex", &RegexConstraint<Destination>::parse},
         {"range", &RangeConstraint<Destination>::parse},
+        {"field", &FieldConstraint<Destination>::parse},
       };
 
       if (value.is_string()) {
@@ -445,13 +491,15 @@ namespace garlic {
           cb(std::move(constraint));
         }
       } else {
-        get_member(value, "type", [&value, &cb](const auto& item) {
-          if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
-            cb(it->second(value));
-          } else {
-            // report parsing error.
-          }
-        });
+        get_member(value, "type",
+            [this, &value, &context, &cb](const auto& item) {
+              if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
+                cb(it->second(value, parser(context, *this)));
+              } else {
+                // report parsing error.
+              }
+            }
+        );
       }
 
     }
