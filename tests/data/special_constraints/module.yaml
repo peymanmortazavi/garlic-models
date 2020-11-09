@@ -1,0 +1,24 @@
+fields:
+    UserId:
+        name: user_id
+        type: integer
+        constraints: [{type: range, min: 1, max: 1000000}]
+
+    UserReference:
+        constraints:
+            - type: any
+              items: [UserId, User]
+              message: Either a user id or a proper user object is expected.
+              name: user_reference
+
+models:
+    User:
+        fields:
+            id: UserId
+            username: string
+            first_name: string
+            last_name: string
+
+    AnyTest:
+        fields:
+            user: UserReference

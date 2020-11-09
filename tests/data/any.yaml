@@ -1,0 +1,19 @@
+fields:
+    AuthenticationField:
+        constraints:
+            - type: any
+              items: [TokenAuthRequest, BasicAuthRequest]
+
+models:
+    TokenAuthRequest:
+        fields:
+            token: string
+
+    BasicAuthRequest:
+        fields:
+            username: string
+            password: string
+
+    LoginRequest:
+        save_session: bool
+        security: AuthenticationField

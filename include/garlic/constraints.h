@@ -46,7 +46,7 @@ namespace garlic {
 
     auto fail(const char* message) const noexcept -> ConstraintResult {
       if (!this->props_.message.empty()) {
-        return ConstraintResult{false, this->props_.name, std::move(props_.message)};
+        return ConstraintResult{false, this->props_.name, props_.message};
       } else {
         return ConstraintResult{false, this->props_.name, std::string{message}};
       }
@@ -129,17 +129,17 @@ namespace garlic {
         return {true};
       } else if (value.is_double()) {
         auto dvalue = value.get_double();
-        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "out of range double value."};
+        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "out of range value."};
         return {true};
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "out of range int value."};
+        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "out of range value."};
         return {true};
       } else return {true};
     }
 
-    template<ReadableLayer T>
-    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+    template<ReadableLayer T, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value, Parser parser) noexcept {
       SizeType min;
       SizeType max;
       get_member(value, "min", [&min](const auto& v) {
@@ -180,8 +180,8 @@ namespace garlic {
       else { return this->fail("invalid value."); }
     }
 
-    template<ReadableLayer T>
-    static std::shared_ptr<Constraint<LayerType>> parse(const T& value) noexcept {
+    template<ReadableLayer T, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>> parse(const T& value, Parser parser) noexcept {
       std::string pattern;
       ConstraintProperties props {false, "regex_constraint"};
       set_constraint_properties(value, props);
@@ -193,6 +193,47 @@ namespace garlic {
     std::regex pattern_;
   };
 
+
+  template<ReadableLayer LayerType>
+  class AnyConstraint : public Constraint<LayerType> {
+  public:
+
+  AnyConstraint(
+      std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
+      ConstraintProperties props
+  ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+
+  ConstraintResult test(const LayerType& value) const noexcept override {
+    for(const auto& constraint : constraints_) {
+      auto result = constraint->test(value);
+      if (result.valid) return {true};
+    }
+    return this->fail("None of the constraints read this value.");
+  }
+
+  template<ReadableLayer Source, typename Parser>
+  static std::shared_ptr<Constraint<LayerType>>
+  parse(const Source& value, Parser parser) noexcept {
+    ConstraintProperties props {false};
+    set_constraint_properties(value, props);
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints;
+    get_member(
+        value, "items", [&value, &constraints, &parser](const auto& items) {
+          for(const auto& item : items.get_list()) {
+            parser.parse_constraint(item, [&constraints](auto&& constraint) {
+                constraints.emplace_back(std::move(constraint));
+            });
+          }
+        }
+    );
+    return std::make_shared<AnyConstraint>(
+        std::move(constraints), std::move(props)
+    );
+  }
+
+  private:
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+  };
 }
 
 #endif /* end of include guard: CONSTRAINTS_H */
