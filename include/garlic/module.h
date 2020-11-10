@@ -163,6 +163,13 @@ namespace garlic {
             apply_inheritance(model_name.get_string());
           }
       });
+      get_member(value, "exclude_fields", [&props](const auto& excludes) {
+          for (const auto& field : excludes.get_list()) {
+            if (auto it = props.field_map.find(field.get_string()); it != props.field_map.end()) {
+              props.field_map.erase(it);
+            }
+          }
+      });
     }
 
     template<typename Callable>

@@ -318,5 +318,5 @@ TEST(ModelParsing, ModelInheritance) {
   assert_field_list("AdminUser", {"id", "username", "password", "is_super"});
   assert_field_list("MobileUser", {"id", "username", "password"});
   assert_field_list("BaseQuery", {"skip", "limit"});
-  assert_field_list("UserQuery", {"skip", "limit", "id", "username", "password"});
+  assert_field_list("UserQuery", {"skip", "limit", "id", "username"});
 }
