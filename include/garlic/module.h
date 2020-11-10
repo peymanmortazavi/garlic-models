@@ -8,7 +8,7 @@
 namespace garlic {
 
   template<ReadableLayer Destination>
-  class ModelContainer {
+  class Module {
   public:
     template <typename T> using MapOf = std::map<std::string, T>;
     using ModelType = Model<Destination>;
@@ -26,7 +26,7 @@ namespace garlic {
       bool valid;
     };
 
-    ModelContainer() {
+    Module() {
       static const std::map<std::string, FieldPtr> static_map = {
         {"string", this->make_field<TypeConstraint>("StringField", TypeFlag::String)},
         {"integer", this->make_field<TypeConstraint>("IntegerField", TypeFlag::Integer)},
@@ -108,11 +108,11 @@ namespace garlic {
 
     struct parser {
       parse_context& context;
-      ModelContainer& module;
+      Module& module;
 
       parser(
           parse_context& context,
-          ModelContainer& module
+          Module& module
       ) : context(context), module(module) {}
 
       template<ReadableLayer Source, typename Callable>
@@ -150,7 +150,7 @@ namespace garlic {
       auto ptr = std::make_shared<ModelType>(std::move(name));
       auto& props = ptr->properties_;
 
-      this->process_field_meta(props, value);
+      this->process_model_meta(props, value);
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {

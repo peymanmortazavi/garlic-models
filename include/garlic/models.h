@@ -16,7 +16,7 @@ namespace garlic {
   template<garlic::ReadableLayer LayerType>
   class Field {
   public:
-    template<garlic::ReadableLayer> friend class ModelContainer;
+    template<garlic::ReadableLayer> friend class Module;
 
     using ConstraintType = Constraint<LayerType>;
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
@@ -68,7 +68,7 @@ namespace garlic {
   template<ReadableLayer LayerType>
   class Model {
   public:
-    template<garlic::ReadableLayer> friend class ModelContainer;
+    template<garlic::ReadableLayer> friend class Module;
 
     using Layer = LayerType;
     using FieldType = Field<LayerType>;

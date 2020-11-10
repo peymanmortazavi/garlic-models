@@ -132,7 +132,7 @@ TEST(FieldValidation, ConstraintSkipping) {
 TEST(ModelParsing, Basic) {
   // load a very basic module without using more sophisticated features.
 
-  auto test_module = [](const ModelContainer<CloveView>& module) {
+  auto test_module = [](const Module<CloveView>& module) {
     auto date_field = module.get_field("DateTime");
     ASSERT_NE(date_field, nullptr);
     ASSERT_STREQ(date_field->get_properties().name.data(), "DateTime");  // named field.
@@ -169,7 +169,7 @@ TEST(ModelParsing, Basic) {
 
   // JSON module using rapidjson.
   {
-    auto module = ModelContainer<CloveView>();
+    auto module = Module<CloveView>();
     auto document = get_rapidjson_document("data/basic_module.json");
     auto view = document.get_view();
     auto parse_result = module.parse(view);
@@ -179,7 +179,7 @@ TEST(ModelParsing, Basic) {
 
   // YAML module using yaml-cpp
   {
-    auto module = ModelContainer<CloveView>();
+    auto module = Module<CloveView>();
     auto node = get_yamlcpp_node("data/basic_module.yaml");
     auto parse_result = module.parse(node);
     ASSERT_TRUE(parse_result.valid);
@@ -188,7 +188,7 @@ TEST(ModelParsing, Basic) {
 
   // YAML module using libyaml
   {
-    auto module = ModelContainer<CloveView>();
+    auto module = Module<CloveView>();
     auto file_handle = fopen("data/basic_module.yaml", "r");
     auto doc = garlic::providers::libyaml::Yaml::load(file_handle);
     YamlView view = doc.get_view();
@@ -200,7 +200,7 @@ TEST(ModelParsing, Basic) {
 
 TEST(ModelParsing, ForwardDeclarations) {
   // load a module full of forward dependencies to test and make sure all definitions get loaded properly.
-  auto module = ModelContainer<CloveView>();
+  auto module = Module<CloveView>();
 
   auto document = get_rapidjson_document("data/forward_fields.json");
   auto view = document.get_view();
@@ -250,7 +250,7 @@ TEST(ModelParsing, ForwardDeclarations) {
 
 
 TEST(ModelParsing, FieldConstraints) {
-  auto module = ModelContainer<JsonView>();
+  auto module = Module<JsonView>();
 
   auto model_document = get_libyaml_document("data/field_constraint/module.yaml");
   auto parse_results = module.parse(model_document.get_view());
@@ -270,7 +270,7 @@ TEST(ModelParsing, FieldConstraints) {
 }
 
 TEST(ModelParsing, AnyConstraint) {
-  auto module = ModelContainer<JsonView>();
+  auto module = Module<JsonView>();
 
   auto model_document = get_libyaml_document("data/special_constraints/module.yaml");
   auto parse_results = module.parse(model_document.get_view());
