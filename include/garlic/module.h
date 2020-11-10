@@ -146,15 +146,15 @@ namespace garlic {
     }
 
     void process_model_inheritance(ModelPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
-      get_member(value, "inherit", [this, &props](const auto& inherit) {
-          auto apply_inheritance = [this, &props](const auto& model_name) {
-            if (auto it = models_.find(model_name); it != models_.end()) {
-              auto& field_map = it->second->properties_.field_map;
-              props.field_map.insert(field_map.begin(), field_map.end());
-            } else {
-              // report parsing error.
-            }
-          };
+      auto apply_inheritance = [this, &props](const auto& model_name) {
+        if (auto it = models_.find(model_name); it != models_.end()) {
+          auto& field_map = it->second->properties_.field_map;
+          props.field_map.insert(field_map.begin(), field_map.end());
+        } else {
+          // report parsing error.
+        }
+      };
+      get_member(value, "inherit", [&apply_inheritance](const auto& inherit) {
           if (inherit.is_string()) {
             apply_inheritance(inherit.get_string());
             return;
