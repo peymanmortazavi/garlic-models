@@ -297,3 +297,26 @@ TEST(ModelParsing, AnyConstraint) {
   assert_good("AnyTest", "data/special_constraints/any_good2.json");
   assert_bad("AnyTest", "data/special_constraints/any_bad1.json");
 }
+
+TEST(ModelParsing, ModelInheritance) {
+  auto module = Module<JsonView>();
+
+  auto model_document = get_libyaml_document("data/model_inheritance/module.yaml");
+  auto parse_results = module.parse(model_document.get_view());
+  ASSERT_TRUE(parse_results.valid);
+
+  auto assert_field_list = [&module](const char* name, std::vector<std::string> fields) {
+    auto model = module.get_model(name);
+    auto field_map = model->get_properties().field_map;
+    for(const auto& field : fields) {
+      ASSERT_TRUE(field_map.find(field) != field_map.end());
+    }
+  };
+
+  assert_field_list("BaseUser", {"id", "username", "password"});
+  assert_field_list("AdminUser", {"id", "username", "password", "is_super"});
+  assert_field_list("AdminUser", {"id", "username", "password", "is_super"});
+  assert_field_list("MobileUser", {"id", "username", "password"});
+  assert_field_list("BaseQuery", {"skip", "limit"});
+  assert_field_list("UserQuery", {"skip", "limit", "id", "username", "password"});
+}
