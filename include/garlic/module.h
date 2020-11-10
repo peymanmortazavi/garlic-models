@@ -133,11 +133,7 @@ namespace garlic {
       }
     };
 
-    template<typename Callable>
-    void parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
-      auto ptr = std::make_shared<ModelType>(std::move(name));
-      auto& props = ptr->properties_;
-
+    void process_model_meta(ModelPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
       get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", item.get_string());
       });
@@ -147,6 +143,14 @@ namespace garlic {
           props.meta.emplace(meta_member.key.get_string(), meta_member.value.get_string());
         });
       });
+    }
+
+    template<typename Callable>
+    void parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
+      auto ptr = std::make_shared<ModelType>(std::move(name));
+      auto& props = ptr->properties_;
+
+      this->process_field_meta(props, value);
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
