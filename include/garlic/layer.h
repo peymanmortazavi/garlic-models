@@ -1,5 +1,5 @@
-#ifndef LAYER_H
-#define LAYER_H
+#ifndef GARLIC_LAYER_H
+#define GARLIC_LAYER_H
 
 #include <concepts>
 #include <string>
@@ -189,4 +189,4 @@ namespace garlic {
 
 }
 
-#endif /* end of include guard: LAYER_H */
+#endif /* end of include guard: GARLIC_LAYER_H */

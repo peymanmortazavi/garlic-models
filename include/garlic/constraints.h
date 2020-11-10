@@ -1,5 +1,5 @@
-#ifndef CONSTRAINTS_H
-#define CONSTRAINTS_H
+#ifndef GARLIC_CONSTRAINTS
+#define GARLIC_CONSTRAINTS
 
 #include "layer.h"
 #include "utility.h"
@@ -236,4 +236,4 @@ namespace garlic {
   };
 }
 
-#endif /* end of include guard: CONSTRAINTS_H */
+#endif /* end of include guard: GARLIC_CONSTRAINTS */
