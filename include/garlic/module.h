@@ -145,12 +145,33 @@ namespace garlic {
       });
     }
 
+    void process_model_inheritance(ModelPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
+      get_member(value, "inherit", [this, &props](const auto& inherit) {
+          auto apply_inheritance = [this, &props](const auto& model_name) {
+            if (auto it = models_.find(model_name); it != models_.end()) {
+              auto& field_map = it->second->properties_.field_map;
+              props.field_map.insert(field_map.begin(), field_map.end());
+            } else {
+              // report parsing error.
+            }
+          };
+          if (inherit.is_string()) {
+            apply_inheritance(inherit.get_string());
+            return;
+          }
+          for (const auto& model_name : inherit.get_list()) {
+            apply_inheritance(model_name.get_string());
+          }
+      });
+    }
+
     template<typename Callable>
     void parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
       auto ptr = std::make_shared<ModelType>(std::move(name));
       auto& props = ptr->properties_;
 
       this->process_model_meta(props, value);
+      this->process_model_inheritance(props, value);
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
