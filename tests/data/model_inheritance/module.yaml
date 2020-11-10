@@ -1,0 +1,40 @@
+fields:
+    StrictUserName:
+        type: string
+        constraints:
+            - type: regex
+              pattern: "[a-zA-Z_0-9]{5,12}"
+    
+    PasswordField:
+        type: string
+        constraints:
+            - type: range
+              min: 12
+              max: 36
+              message: Password needs to be between 12 to 36 chars.
+
+models:
+    BaseUser:
+        fields:
+            id: integer
+            username: string
+            password: PasswordField
+
+    AdminUser:
+        inherit: BaseUser
+        fields:
+            is_super: bool
+
+    MobileUser:
+        inherit: BaseUser
+        fields:
+            username: StrictUserName
+
+    BaseQuery:
+        fields:
+            skip: integer
+            limit: integer
+
+    UserQuery:
+        inherit: [BaseQuery, MobileUser]
+        exclude_fields: [password]
