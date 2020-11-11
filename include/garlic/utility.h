@@ -42,6 +42,11 @@ namespace garlic {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
+  template<typename Container, typename ValueType, typename Callable>
+  void get(const Container& container, const ValueType& value, const Callable& cb) {
+    if (auto it = container.find(value); it != container.end()) cb(*it);
+  }
+
 
   class FileStreamBuffer : public std::streambuf {
   public:

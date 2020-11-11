@@ -320,3 +320,26 @@ TEST(ModelParsing, ModelInheritance) {
   assert_field_list("BaseQuery", {"skip", "limit"});
   assert_field_list("UserQuery", {"skip", "limit", "id", "username"});
 }
+
+TEST(ModelParsing, ModelInheritanceLazy) {
+  auto module = Module<JsonView>();
+
+  auto model_document = get_libyaml_document("data/model_inheritance/lazy_load.yaml");
+  auto parse_results = module.parse(model_document.get_view());
+  ASSERT_TRUE(parse_results.valid);
+
+  auto assert_field_list = [&module](const char* name, std::vector<std::string> fields) {
+    auto model = module.get_model(name);
+    auto field_map = model->get_properties().field_map;
+    for(const auto& field : fields) {
+      ASSERT_TRUE(field_map.find(field) != field_map.end());
+    }
+  };
+
+  assert_field_list("Model1", {"model3", "model4"});
+  assert_field_list("Model2", {"model3", "model4"});
+  assert_field_list("Model2_with_exclude", {"model3"});
+  assert_field_list("Model2_without_forwarding", {"model3"});
+  auto it = module.get_model("Model2_without_forwarding")->get_properties().field_map.find("model3");
+  assert_field_constraints(*it->second, {"type_constraint"});
+}
