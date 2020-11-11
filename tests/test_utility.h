@@ -1,12 +1,12 @@
 #ifndef GARLIC_TEST_UTILITY_H
 #define GARLIC_TEST_UTILITY_H
 
-#include "garlic/constraints.h"
-#include "garlic/models.h"
 #include <cstdio>
 #include <string>
 #include <deque>
 #include <garlic/garlic.h>
+#include <garlic/constraints.h>
+#include <garlic/models.h>
 #include <garlic/providers/rapidjson.h>
 #include <garlic/providers/yaml-cpp.h>
 #include <garlic/providers/libyaml.h>
@@ -15,48 +15,18 @@
 
 using NameQueue = std::deque<std::string>;
 
-
 garlic::providers::libyaml::YamlDocument
-get_libyaml_document(const char * name) {
-  auto file = fopen(name, "r");
-  auto doc = garlic::providers::libyaml::Yaml::load(file);
-  fclose(file);
-  return doc;
-}
+get_libyaml_document(const char * name);
 
 garlic::providers::rapidjson::JsonDocument
-get_rapidjson_document(const char* name) {
-  auto file = fopen(name, "r");
-  auto doc = garlic::providers::rapidjson::Json::load(file);
-  fclose(file);
-  return doc;
-}
+get_rapidjson_document(const char* name);
 
 garlic::providers::yamlcpp::YamlNode
-get_yamlcpp_node(const char* name) {
-  auto file = fopen(name, "r");
-  auto node = garlic::providers::yamlcpp::Yaml::load(file);
-  fclose(file);
-  return node;
-}
+get_yamlcpp_node(const char* name);
 
-void print_constraint_result(const garlic::ConstraintResult& result, int level=0) {
-  if (result.valid) {
-    std::cout << "Passed all the checks." << std::endl;
-  } else {
-    std::string space = "";
-    for (auto i = 0; i < level; i++) { space += "  "; }
-    if (result.field) {
-      std::cout << space << "Field: " << result.name << std::endl;
-    } else {
-      std::cout << space << "Constraint: " << result.name << std::endl;
-    }
-    std::cout << space << "Reason: " << result.reason << std::endl << std::endl;
-    std::for_each(result.details.begin(), result.details.end(),
-        [&level](const auto& item) { print_constraint_result(item, level + 1); }
-        );
-  }
-}
+void print_constraint_result(const garlic::ConstraintResult& result, int level=0);
+void assert_field_constraint_result(const garlic::ConstraintResult& results, const char* name);
+void assert_constraint_result(const garlic::ConstraintResult& results, const char* name, const char* message);
 
 template<garlic::ReadableLayer LayerType>
 void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
@@ -66,18 +36,6 @@ void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
     else std::cout << ", " << c->get_name();
     first = false;
   }
-}
-
-auto assert_field_constraint_result(const garlic::ConstraintResult& results, const char* name) {
-  ASSERT_FALSE(results.valid);
-  ASSERT_TRUE(results.field);
-  ASSERT_STREQ(results.name.data(), name);
-}
-
-auto assert_constraint_result(const garlic::ConstraintResult& results, const char* name, const char* message) {
-  ASSERT_FALSE(results.valid);
-  ASSERT_STREQ(results.name.data(), name);
-  ASSERT_STREQ(results.reason.data(), message);
 }
 
 template<garlic::ReadableLayer LayerType>
