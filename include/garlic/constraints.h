@@ -5,13 +5,14 @@
 #include "utility.h"
 #include <cstring>
 #include <regex>
+#include <string>
 
 
 namespace garlic {
 
   struct ConstraintResult {
     bool valid = true;
-    std::string_view name;
+    std::string name;
     std::string reason;
     std::vector<ConstraintResult> details;
     bool field = false;
@@ -125,15 +126,15 @@ namespace garlic {
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (value.is_string()) {
         auto length = value.get_string_view().size();
-        if (length > max_ || length < min_) return {false, this->get_name(), "invalid string length."};
+        if (length > max_ || length < min_) return this->fail("invalid string length.");
         return {true};
       } else if (value.is_double()) {
         auto dvalue = value.get_double();
-        if(dvalue > max_ || dvalue < min_) return {false, this->get_name(), "out of range value."};
+        if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.");
         return {true};
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return {false, this->get_name(), "out of range value."};
+        if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
         return {true};
       } else return {true};
     }
@@ -234,6 +235,66 @@ namespace garlic {
   private:
     std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
   };
+
+
+  template<ReadableLayer LayerType>
+  class ListConstraint : public Constraint<LayerType> {
+  public:
+
+  ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
+
+  ListConstraint(
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
+    ConstraintProperties props
+  ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+
+  ConstraintResult test(const LayerType& value) const noexcept override {
+    if (!value.is_list()) return this->fail("Expected a list.");
+    int index = 0;
+    for (const auto& item : value.get_list()) {
+      for(const auto& constraint : constraints_) {
+        auto result = constraint->test(item);
+        if (!result.valid) {
+          auto final_result = this->fail("Invalid value found in the list.");
+          final_result.details.push_back({
+              false,
+              std::to_string(index),
+              "invalid value.",
+              {std::move(result)},
+              true
+              });
+          return final_result;
+        }
+      }
+      index++;
+    }
+    return {true};
+  }
+
+  template<ReadableLayer Source, typename Parser>
+  static std::shared_ptr<Constraint<LayerType>>
+  parse(const Source& value, Parser parser) noexcept {
+    ConstraintProperties props {false, "list_constraint"};
+    set_constraint_properties(value, props);
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints;
+    get_member(
+        value, "items", [&value, &constraints, &parser](const auto& items) {
+          for(const auto& item : items.get_list()) {
+            parser.parse_constraint(item, [&constraints](auto&& constraint) {
+                constraints.emplace_back(std::move(constraint));
+            });
+          }
+        }
+    );
+    return std::make_shared<ListConstraint>(
+        std::move(constraints), std::move(props)
+    );
+  }
+
+  private:
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+  };
+
 }
 
 #endif /* end of include guard: GARLIC_CONSTRAINTS */

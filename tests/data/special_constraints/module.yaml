@@ -11,6 +11,14 @@ fields:
               message: Either a user id or a proper user object is expected.
               name: user_reference
 
+    UserList:
+        constraints:
+            - type: list
+              items:
+                  - type: any
+                    items: [UserId, User]
+              message: List of user ids or objects expected.
+
 models:
     User:
         fields:
@@ -22,3 +30,7 @@ models:
     AnyTest:
         fields:
             user: UserReference
+
+    ListTest:
+        fields:
+            users: UserList
