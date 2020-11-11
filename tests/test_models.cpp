@@ -95,7 +95,7 @@ TEST(ModelParsing, Basic) {
   // JSON module using rapidjson.
   {
     auto module = Module<CloveView>();
-    auto document = get_rapidjson_document("data/basic_module.json");
+    auto document = get_rapidjson_document("data/basic/module.json");
     auto view = document.get_view();
     auto parse_result = module.parse(view);
     ASSERT_TRUE(parse_result.valid);
@@ -105,7 +105,7 @@ TEST(ModelParsing, Basic) {
   // YAML module using yaml-cpp
   {
     auto module = Module<CloveView>();
-    auto node = get_yamlcpp_node("data/basic_module.yaml");
+    auto node = get_yamlcpp_node("data/basic/module.yaml");
     auto parse_result = module.parse(node);
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
@@ -114,7 +114,7 @@ TEST(ModelParsing, Basic) {
   // YAML module using libyaml
   {
     auto module = Module<CloveView>();
-    auto file_handle = fopen("data/basic_module.yaml", "r");
+    auto file_handle = fopen("data/basic/module.yaml", "r");
     auto doc = garlic::providers::libyaml::Yaml::load(file_handle);
     YamlView view = doc.get_view();
     auto parse_result = module.parse(view);
@@ -127,7 +127,7 @@ TEST(ModelParsing, ForwardDeclarations) {
   // load a module full of forward dependencies to test and make sure all definitions get loaded properly.
   auto module = Module<CloveView>();
 
-  auto document = get_rapidjson_document("data/forward_fields.json");
+  auto document = get_rapidjson_document("data/forward_fields/module.json");
   auto view = document.get_view();
 
   auto parse_result = module.parse(view);
