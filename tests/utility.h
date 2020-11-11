@@ -1,6 +1,8 @@
 #ifndef GARLIC_TEST_UTILITY_H
 #define GARLIC_TEST_UTILITY_H
 
+#include "garlic/constraints.h"
+#include "garlic/models.h"
 #include <cstdio>
 #include <string>
 #include <deque>
@@ -128,6 +130,40 @@ void load_libyaml_module(garlic::Module<LayerType>& module, const char* filename
   auto module_document = get_libyaml_document(filename);
   auto parse_results = module.parse(module_document.get_view());
   ASSERT_TRUE(parse_results.valid);
+}
+
+template<typename LayerType>
+garlic::ConstraintResult
+validate_jsonfile(
+    const garlic::Module<LayerType>& module,
+    const char* model_name,
+    const char* filename) {
+  auto model = module.get_model(model_name);
+  auto doc = get_rapidjson_document(filename);
+  auto root = garlic::ModelConstraint<garlic::providers::rapidjson::JsonView>(model);
+  return root.test(doc.get_view());
+}
+
+template<typename LayerType>
+void assert_jsonfile_valid(
+    const garlic::Module<LayerType>& module,
+    const char* model_name,
+    const char* filename,
+    bool print=false) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print) print_constraint_result(result);
+  ASSERT_TRUE(result.valid);
+}
+
+template<typename LayerType>
+void assert_jsonfile_invalid(
+    const garlic::Module<LayerType>& module,
+    const char* model_name,
+    const char* filename,
+    bool print=false) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print) print_constraint_result(result);
+  ASSERT_FALSE(result.valid);
 }
 
 #endif /* end of include guard: GARLIC_TEST_UTILITY_H */

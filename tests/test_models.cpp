@@ -4,7 +4,6 @@
 #include <garlic/providers/yaml-cpp.h>
 #include <garlic/providers/libyaml.h>
 #include <gtest/gtest.h>
-#include <fstream>
 #include <iostream>
 #include "utility.h"
 
@@ -178,50 +177,20 @@ TEST(ModelParsing, ForwardDeclarations) {
 TEST(ModelParsing, FieldConstraints) {
   auto module = Module<JsonView>();
 
-  auto model_document = get_libyaml_document("data/field_constraint/module.yaml");
-  auto parse_results = module.parse(model_document.get_view());
-  ASSERT_TRUE(parse_results.valid);
+  load_libyaml_module(module, "data/field_constraint/module.yaml");
 
-  auto model = module.get_model("Account");
-  auto root = ModelConstraint<JsonView>(model);
-
-  auto good_document = get_rapidjson_document("data/field_constraint/good.json");
-  auto result = root.test(good_document.get_view());
-  ASSERT_TRUE(result.valid);
-
-  auto bad_document = get_rapidjson_document("data/field_constraint/bad.json");
-  result = root.test(bad_document.get_view());
-  ASSERT_FALSE(result.valid);
-  print_constraint_result(result);
+  assert_jsonfile_valid(module, "Account", "data/field_constraint/good.json");
+  assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad.json");
 }
 
 TEST(ModelParsing, AnyConstraint) {
   auto module = Module<JsonView>();
 
-  auto model_document = get_libyaml_document("data/special_constraints/module.yaml");
-  auto parse_results = module.parse(model_document.get_view());
-  ASSERT_TRUE(parse_results.valid);
+  load_libyaml_module(module, "data/special_constraints/module.yaml");
 
-  auto get_result = [&module](const char* name, const char* filename) {
-    auto model = module.get_model(name);
-    auto root = ModelConstraint<JsonView>(model);
-    auto doc = get_rapidjson_document(filename);
-    return root.test(doc.get_view());
-  };
-
-  auto assert_good = [&get_result](const char* name, const char* filename) {
-    ASSERT_TRUE(get_result(name, filename).valid);
-  };
-
-  auto assert_bad = [&get_result](const char* name, const char* filename) {
-    auto result = get_result(name, filename);
-    print_constraint_result(result);
-    ASSERT_FALSE(result.valid);
-  };
-
-  assert_good("AnyTest", "data/special_constraints/any_good1.json");
-  assert_good("AnyTest", "data/special_constraints/any_good2.json");
-  assert_bad("AnyTest", "data/special_constraints/any_bad1.json");
+  assert_jsonfile_valid(module, "AnyTest", "data/special_constraints/any_good1.json");
+  assert_jsonfile_valid(module, "AnyTest", "data/special_constraints/any_good2.json");
+  assert_jsonfile_invalid(module, "AnyTest", "data/special_constraints/any_bad1.json");
 }
 
 TEST(ModelParsing, ModelInheritance) {
