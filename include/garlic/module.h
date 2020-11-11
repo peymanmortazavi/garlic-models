@@ -104,6 +104,12 @@ namespace garlic {
 
     struct parse_context {
       MapOf<field_dependency> fields;
+      std::map<ModelPtr, MapOf<std::string>> lazy_model_fields;
+
+      void add_lazy_model_field(const std::string& field, const std::string& key, ModelPtr ptr) {
+        lazy_model_fields[ptr].emplace(key, field);
+        fields[field].models.emplace_back(lazy_pair{key, std::move(ptr)});
+      }
     };
 
     struct parser {
@@ -145,15 +151,39 @@ namespace garlic {
       });
     }
 
-    void process_model_inheritance(ModelPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
-      auto apply_inheritance = [this, &props](const auto& model_name) {
-        if (auto it = models_.find(model_name); it != models_.end()) {
-          auto& field_map = it->second->properties_.field_map;
-          props.field_map.insert(field_map.begin(), field_map.end());
-        } else {
-          // report parsing error.
-        }
+    void process_model_inheritance(const ModelPtr& model, parse_context& context, const ReadableLayer auto& value) {
+      enum FieldStatus : uint8_t { lazy = 1, available = 2, exclude = 3 };
+      struct field_descriptor {
+        FieldStatus status;
+        std::string lazy_field_name;
+        FieldPtr field_ptr;
       };
+      MapOf<field_descriptor> field_table;
+      auto& props = model->properties_;
+      auto apply_inheritance = [this, &context, &field_table, &model](const auto& model_name) {
+          auto it = this->models_.find(model_name);
+          if (it == this->models_.end()) {}  // report parsing error here.
+          auto& field_map = it->second->properties_.field_map;
+          for (const auto& item : field_map) {
+            auto& descriptor = field_table[item.first];
+            if (descriptor.status == FieldStatus::exclude) continue;
+            descriptor.status = FieldStatus::available;
+            descriptor.field_ptr = item.second;
+          }
+          get(context.lazy_model_fields, it->second, [&field_table](const auto& lazy_field_map) {
+              for (const auto& item : lazy_field_map.second) {
+                auto& descriptor = field_table[item.first];
+                if (descriptor.status == FieldStatus::exclude) continue;
+                descriptor.status = FieldStatus::lazy;
+                descriptor.lazy_field_name = item.second;
+              }
+          });
+      };
+      get_member(value, "exclude_fields", [&field_table](const auto& excludes) {
+          for (const auto& field : excludes.get_list()) {
+            field_table[field.get_string()].status = FieldStatus::exclude;
+          }
+      });
       get_member(value, "inherit", [&apply_inheritance](const auto& inherit) {
           if (inherit.is_string()) {
             apply_inheritance(inherit.get_string());
@@ -163,13 +193,18 @@ namespace garlic {
             apply_inheritance(model_name.get_string());
           }
       });
-      get_member(value, "exclude_fields", [&props](const auto& excludes) {
-          for (const auto& field : excludes.get_list()) {
-            if (auto it = props.field_map.find(field.get_string()); it != props.field_map.end()) {
-              props.field_map.erase(it);
-            }
-          }
-      });
+      for (const auto& item : field_table) {
+        switch (item.second.status) {
+          case FieldStatus::lazy:
+            context.add_lazy_model_field(item.second.lazy_field_name, item.first, model);
+            break;
+          case FieldStatus::available:
+            props.field_map.emplace(item.first, item.second.field_ptr);
+            break;
+          default:
+            continue;
+        }
+      }
     }
 
     template<typename Callable>
@@ -178,7 +213,7 @@ namespace garlic {
       auto& props = ptr->properties_;
 
       this->process_model_meta(props, value);
-      this->process_model_inheritance(props, value);
+      this->process_model_inheritance(ptr, context, value);
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
@@ -188,7 +223,7 @@ namespace garlic {
             props.field_map.emplace(field.key.get_cstr(), std::move(ptr));
           });
           if (!ready) {  // it must be a referenced field. add a dependency.
-            context.fields[field.value.get_cstr()].models.emplace_back(lazy_pair{field.key.get_string(), ptr});
+            context.add_lazy_model_field(field.value.get_string(), field.key.get_string(), ptr);
           }
         });
       });
