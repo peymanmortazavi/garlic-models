@@ -6,87 +6,13 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <iostream>
+#include "utility.h"
 
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
 using namespace garlic::providers::yamlcpp;
 using namespace garlic::providers::libyaml;
 using namespace std;
-
-
-garlic::providers::libyaml::YamlDocument
-get_libyaml_document(const char * name) {
-  auto file = fopen(name, "r");
-  auto doc = garlic::providers::libyaml::Yaml::load(file);
-  fclose(file);
-  return doc;
-}
-
-garlic::providers::rapidjson::JsonDocument
-get_rapidjson_document(const char* name) {
-  auto file = fopen(name, "r");
-  auto doc = garlic::providers::rapidjson::Json::load(file);
-  fclose(file);
-  return doc;
-}
-
-garlic::providers::yamlcpp::YamlNode
-get_yamlcpp_node(const char* name) {
-  auto file = fopen(name, "r");
-  auto node = garlic::providers::yamlcpp::Yaml::load(file);
-  fclose(file);
-  return node;
-}
-
-void print_result(const ConstraintResult& result, int level=0) {
-  if (result.valid) {
-    std::cout << "Passed all the checks." << std::endl;
-  } else {
-    std::string space = "";
-    for (auto i = 0; i < level; i++) { space += "  "; }
-    if (result.field) {
-      std::cout << space << "Field: " << result.name << std::endl;
-    } else {
-      std::cout << space << "Constraint: " << result.name << std::endl;
-    }
-    std::cout << space << "Reason: " << result.reason << std::endl << std::endl;
-    std::for_each(result.details.begin(), result.details.end(), [&level](const auto& item){print_result(item, level + 1); });
-  }
-}
-
-
-template<ReadableLayer LayerType>
-void print_constraints(const FieldPropertiesOf<LayerType>& props) {
-  bool first = true;
-  for (const auto& c : props.constraints) {
-    if (first) cout << c->get_name();
-    else cout << ", " << c->get_name();
-    first = false;
-  }
-}
-
-
-auto assert_field_constraint_result(const ConstraintResult& results, const char* name) {
-  ASSERT_FALSE(results.valid);
-  ASSERT_TRUE(results.field);
-  ASSERT_STREQ(results.name.data(), name);
-}
-
-
-auto assert_constraint_result(const ConstraintResult& results, const char* name, const char* message) {
-  ASSERT_FALSE(results.valid);
-  ASSERT_STREQ(results.name.data(), name);
-  ASSERT_STREQ(results.reason.data(), message);
-}
-
-
-template<ReadableLayer LayerType>
-auto assert_field_constraints(const Field<LayerType>& field, deque<string> names) {
-  for(const auto& constraint : field.get_properties().constraints) {
-    ASSERT_STREQ(constraint->get_name().data(), names.front().data());
-    names.pop_front();
-  }
-}
 
 
 TEST(FieldValidation, Basic) {
@@ -266,7 +192,7 @@ TEST(ModelParsing, FieldConstraints) {
   auto bad_document = get_rapidjson_document("data/field_constraint/bad.json");
   result = root.test(bad_document.get_view());
   ASSERT_FALSE(result.valid);
-  print_result(result);
+  print_constraint_result(result);
 }
 
 TEST(ModelParsing, AnyConstraint) {
@@ -289,7 +215,7 @@ TEST(ModelParsing, AnyConstraint) {
 
   auto assert_bad = [&get_result](const char* name, const char* filename) {
     auto result = get_result(name, filename);
-    print_result(result);
+    print_constraint_result(result);
     ASSERT_FALSE(result.valid);
   };
 
@@ -305,20 +231,12 @@ TEST(ModelParsing, ModelInheritance) {
   auto parse_results = module.parse(model_document.get_view());
   ASSERT_TRUE(parse_results.valid);
 
-  auto assert_field_list = [&module](const char* name, std::vector<std::string> fields) {
-    auto model = module.get_model(name);
-    auto field_map = model->get_properties().field_map;
-    for(const auto& field : fields) {
-      ASSERT_TRUE(field_map.find(field) != field_map.end());
-    }
-  };
-
-  assert_field_list("BaseUser", {"id", "username", "password"});
-  assert_field_list("AdminUser", {"id", "username", "password", "is_super"});
-  assert_field_list("AdminUser", {"id", "username", "password", "is_super"});
-  assert_field_list("MobileUser", {"id", "username", "password"});
-  assert_field_list("BaseQuery", {"skip", "limit"});
-  assert_field_list("UserQuery", {"skip", "limit", "id", "username"});
+  assert_model_fields(module, "BaseUser", {"id", "username", "password"});
+  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
+  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
+  assert_model_fields(module, "MobileUser", {"id", "username", "password"});
+  assert_model_fields(module, "BaseQuery", {"skip", "limit"});
+  assert_model_fields(module, "UserQuery", {"skip", "limit", "id", "username"});
 }
 
 TEST(ModelParsing, ModelInheritanceLazy) {
@@ -328,18 +246,10 @@ TEST(ModelParsing, ModelInheritanceLazy) {
   auto parse_results = module.parse(model_document.get_view());
   ASSERT_TRUE(parse_results.valid);
 
-  auto assert_field_list = [&module](const char* name, std::vector<std::string> fields) {
-    auto model = module.get_model(name);
-    auto field_map = model->get_properties().field_map;
-    for(const auto& field : fields) {
-      ASSERT_TRUE(field_map.find(field) != field_map.end());
-    }
-  };
-
-  assert_field_list("Model1", {"model3", "model4"});
-  assert_field_list("Model2", {"model3", "model4"});
-  assert_field_list("Model2_with_exclude", {"model3"});
-  assert_field_list("Model2_without_forwarding", {"model3"});
-  auto it = module.get_model("Model2_without_forwarding")->get_properties().field_map.find("model3");
-  assert_field_constraints(*it->second, {"type_constraint"});
+  assert_model_fields(module, "Model1", {"model3", "model4"});
+  assert_model_fields(module, "Model2", {"model3", "model4"});
+  assert_model_fields(module, "Model2_with_exclude", {"model3"});
+  assert_model_fields(module, "Model2_without_forwarding", {"model3"});
+  assert_model_field_constraints(module, "Model2_without_forwarding", "model3", {"type_constraint"});
+  assert_model_field_constraints(module, "Model2_with_exclude", "model3", {"Model3"});
 }
