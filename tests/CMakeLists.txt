@@ -13,6 +13,7 @@ set(TEST_SOURCES
     test_yaml.cpp
     test_models.cpp
     test_module.cpp
+    test_constraints.cpp
     test_utility.cpp)
 
 add_executable(GarlicModelTests ${TEST_SOURCES})

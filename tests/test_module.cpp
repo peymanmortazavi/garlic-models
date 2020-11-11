@@ -134,25 +134,6 @@ TEST(ModuleParsing, ForwardDeclarations) {
 };
 
 
-TEST(ModuleParsing, FieldConstraints) {
-  auto module = Module<JsonView>();
-
-  load_libyaml_module(module, "data/field_constraint/module.yaml");
-
-  assert_jsonfile_valid(module, "Account", "data/field_constraint/good.json");
-  assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad.json");
-}
-
-TEST(ModuleParsing, AnyConstraint) {
-  auto module = Module<JsonView>();
-
-  load_libyaml_module(module, "data/special_constraints/module.yaml");
-
-  assert_jsonfile_valid(module, "AnyTest", "data/special_constraints/any_good1.json");
-  assert_jsonfile_valid(module, "AnyTest", "data/special_constraints/any_good2.json");
-  assert_jsonfile_invalid(module, "AnyTest", "data/special_constraints/any_bad1.json");
-}
-
 TEST(ModuleParsing, ModelInheritance) {
   auto module = Module<JsonView>();
 

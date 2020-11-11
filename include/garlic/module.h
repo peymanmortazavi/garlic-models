@@ -349,6 +349,7 @@ namespace garlic {
         {"range", &RangeConstraint<Destination>::parse},
         {"field", &FieldConstraint<Destination>::parse},
         {"any", &AnyConstraint<Destination>::parse},
+        {"list", &ListConstraint<Destination>::parse},
       };
 
       if (value.is_string()) {
