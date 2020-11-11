@@ -227,9 +227,7 @@ TEST(ModelParsing, AnyConstraint) {
 TEST(ModelParsing, ModelInheritance) {
   auto module = Module<JsonView>();
 
-  auto model_document = get_libyaml_document("data/model_inheritance/module.yaml");
-  auto parse_results = module.parse(model_document.get_view());
-  ASSERT_TRUE(parse_results.valid);
+  load_libyaml_module(module, "data/model_inheritance/module.yaml");
 
   assert_model_fields(module, "BaseUser", {"id", "username", "password"});
   assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
@@ -242,9 +240,7 @@ TEST(ModelParsing, ModelInheritance) {
 TEST(ModelParsing, ModelInheritanceLazy) {
   auto module = Module<JsonView>();
 
-  auto model_document = get_libyaml_document("data/model_inheritance/lazy_load.yaml");
-  auto parse_results = module.parse(model_document.get_view());
-  ASSERT_TRUE(parse_results.valid);
+  load_libyaml_module(module, "data/model_inheritance/lazy_load.yaml");
 
   assert_model_fields(module, "Model1", {"model3", "model4"});
   assert_model_fields(module, "Model2", {"model3", "model4"});

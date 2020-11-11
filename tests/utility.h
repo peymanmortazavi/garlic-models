@@ -94,7 +94,6 @@ void assert_model_fields(const garlic::Model<LayerType>& model, NameQueue names)
   }
 }
 
-
 template<typename LayerType>
 void assert_model_fields(const garlic::Module<LayerType>& module, const char* model_name, NameQueue names) {
   auto model = module.get_model(model_name);
@@ -122,6 +121,13 @@ void assert_model_field_constraints(
   auto model = module.get_model(model_name);
   ASSERT_NE(model, nullptr);
   assert_model_field_constraints(*model, field_name, std::move(constraints));
+}
+
+template<typename LayerType>
+void load_libyaml_module(garlic::Module<LayerType>& module, const char* filename) {
+  auto module_document = get_libyaml_document(filename);
+  auto parse_results = module.parse(module_document.get_view());
+  ASSERT_TRUE(parse_results.valid);
 }
 
 #endif /* end of include guard: GARLIC_TEST_UTILITY_H */
