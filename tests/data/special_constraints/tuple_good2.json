@@ -1,0 +1,5 @@
+{
+    "city": ["Any String", "CA"],
+    "location": ["home", 0.0, 0.0],
+    "command": ["env"]
+}

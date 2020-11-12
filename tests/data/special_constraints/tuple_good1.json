@@ -1,0 +1,5 @@
+{
+    "city": ["New York", "NY"],
+    "location": ["home", 12.10, -10.20],
+    "command": ["sh", "-c", "echo", "test"]
+}
