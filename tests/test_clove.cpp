@@ -6,18 +6,12 @@
 * Description:      Tests out default value implementations (garlic::object, garlic::string, etc.)
 *****************************************************************************/
 
-#include <algorithm>
 #include <gtest/gtest.h>
 #include <garlic/garlic.h>
-#include <iterator>
-#include <iostream>
 #include "test_protocol.h"
-
-using namespace garlic;
-using namespace std;
 
 
 TEST(BasicValue, ProtocolTest) {
-  CloveDocument doc;
+  garlic::CloveDocument doc;
   test_full_layer(doc.get_reference());
 }

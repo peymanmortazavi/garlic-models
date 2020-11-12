@@ -4,7 +4,9 @@
 #include "layer.h"
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <streambuf>
+#include <string_view>
 
 
 namespace garlic {
@@ -37,10 +39,58 @@ namespace garlic {
   }
 
 
+  class lazy_string_splitter {
+  public:
+    using const_iterator = std::string_view::const_iterator;
+    lazy_string_splitter(std::string_view text) : text_(text), cursor_(text.begin()) {}
+
+    template<typename Callable>
+    void for_each(const Callable& cb) {
+      std::string_view part = this->next();
+      while (!part.empty()) {
+        cb(part);
+        part = this->next();
+      }
+    }
+
+    std::string_view next() {
+      bool found_word = false;
+      auto it = cursor_;
+      for(; it < text_.end(); it++) {
+        if (*it == '.') {
+          if (found_word) return get_substr(it);
+          else cursor_ = it;
+        } else {
+          found_word = true;
+          cursor_ = it;
+        }
+      }
+      if (found_word) return get_substr(it);
+      return {};
+    }
+    
+  private:
+    std::string_view text_;
+    const_iterator cursor_;
+
+    std::string_view get_substr(const const_iterator& it) {
+      auto old_cursor = cursor_;
+      cursor_ = it;
+      return std::string_view{old_cursor, it};
+    }
+  };
+
+
+  template<typename Callable>
+  void resolve(const ReadableLayer auto& value, std::string_view path, Callable cb) {
+  }
+
+
   template<typename Callable>
   void get_member(const ReadableLayer auto& value, const char* key, const Callable& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
+
 
   template<typename Container, typename ValueType, typename Callable>
   void get(const Container& container, const ValueType& value, const Callable& cb) {
