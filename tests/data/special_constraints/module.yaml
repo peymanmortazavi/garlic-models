@@ -19,6 +19,30 @@ fields:
                     items: [UserId, User]
               message: List of user ids or objects expected.
 
+    GeoLocation:
+        constraints:
+            - type: tuple
+              items: [string, double, double]
+              message: Expected [name, lat, long]
+
+    StateField:
+        constraints:
+            - type: string
+            - type: range
+              min: 2
+              max: 2
+
+    CityTuple:
+        constraints:
+            - type: tuple
+              items: [string, StateField]
+
+    UnixCommand:
+        constraints:
+            - type: tuple
+              items: [string]
+              strict: false
+
 models:
     User:
         fields:
@@ -34,3 +58,9 @@ models:
     ListTest:
         fields:
             users: UserList
+
+    TupleTest:
+        fields:
+            city: CityTuple
+            location: GeoLocation
+            command: UnixCommand

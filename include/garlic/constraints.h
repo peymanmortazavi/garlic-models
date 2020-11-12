@@ -4,6 +4,7 @@
 #include "layer.h"
 #include "utility.h"
 #include <cstring>
+#include <iterator>
 #include <regex>
 #include <string>
 
@@ -293,6 +294,79 @@ namespace garlic {
 
   private:
     std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+  };
+
+
+  template<ReadableLayer LayerType>
+  class TupleConstraint : public Constraint<LayerType> {
+  public:
+
+  TupleConstraint() : Constraint<LayerType>({false, "tuple_constraint"}) {}
+
+  TupleConstraint(
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
+    bool strict,
+    ConstraintProperties props
+  ) : constraints_(std::move(constraints)), strict_(strict), Constraint<LayerType>(std::move(props)) {}
+
+  ConstraintResult test(const LayerType& value) const noexcept override {
+    if (!value.is_list()) return this->fail("Expected a list (tuple).");
+    int index = 0;
+    auto tuple_it = value.begin_list();
+    auto constraint_it = constraints_.begin();
+    while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
+      auto result = (*constraint_it)->test(*tuple_it);
+      if (!result.valid) {
+        auto final_result = this->fail("Invalid value found in the tuple.");
+        final_result.details.push_back({
+            false,
+            std::to_string(index),
+            "invalid value.",
+            {std::move(result)},
+            true
+            });
+        return final_result;
+      }
+      std::advance(tuple_it, 1);
+      std::advance(constraint_it, 1);
+      index++;
+    }
+    if (strict_ && tuple_it != value.end_list()) {
+      return this->fail("Too many values in the tuple.");
+    }
+    if (constraint_it != constraints_.end()) {
+      return this->fail("Too few values in the tuple.");
+    }
+    return {true};
+  }
+
+  template<ReadableLayer Source, typename Parser>
+  static std::shared_ptr<Constraint<LayerType>>
+  parse(const Source& value, Parser parser) noexcept {
+    ConstraintProperties props {false, "tuple_constraint"};
+    set_constraint_properties(value, props);
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints;
+    bool strict = true;
+    get_member(
+        value, "items", [&value, &constraints, &parser](const auto& items) {
+          for(const auto& item : items.get_list()) {
+            parser.parse_constraint(item, [&constraints](auto&& constraint) {
+                constraints.emplace_back(std::move(constraint));
+            });
+          }
+        }
+    );
+    get_member(value, "strict", [&strict](const auto& item) {
+        strict = item.get_bool();
+    });
+    return std::make_shared<TupleConstraint>(
+        std::move(constraints), strict, std::move(props)
+    );
+  }
+
+  private:
+    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    bool strict_;
   };
 
 }

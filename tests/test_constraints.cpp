@@ -33,7 +33,22 @@ TEST(Constraints, ListConstraint) {
 
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
-  assert_jsonfile_valid(module, "ListTest", "data/special_constraints/list_good1.json", true);
-  assert_jsonfile_invalid(module, "ListTest", "data/special_constraints/list_bad1.json", true);
-  assert_jsonfile_invalid(module, "ListTest", "data/special_constraints/list_bad2.json", true);
+  assert_jsonfile_valid(module, "ListTest", "data/special_constraints/list_good1.json");
+  assert_jsonfile_invalid(module, "ListTest", "data/special_constraints/list_bad1.json");
+  assert_jsonfile_invalid(module, "ListTest", "data/special_constraints/list_bad2.json");
+}
+
+TEST(Constraints, TupleConstraint) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/special_constraints/module.yaml");
+
+  assert_jsonfile_valid(module, "TupleTest", "data/special_constraints/tuple_good1.json", true);
+  assert_jsonfile_valid(module, "TupleTest", "data/special_constraints/tuple_good2.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad1.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad2.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad3.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad4.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad5.json", true);
+  assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad6.json", true);
 }

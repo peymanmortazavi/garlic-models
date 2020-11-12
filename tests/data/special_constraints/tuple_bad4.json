@@ -1,0 +1,5 @@
+{
+    "city": ["New York", "NY"],
+    "location": ["home", 0.0, 0.0],
+    "command": [0, "env"]
+}

@@ -350,6 +350,7 @@ namespace garlic {
         {"field", &FieldConstraint<Destination>::parse},
         {"any", &AnyConstraint<Destination>::parse},
         {"list", &ListConstraint<Destination>::parse},
+        {"tuple", &TupleConstraint<Destination>::parse},
       };
 
       if (value.is_string()) {
