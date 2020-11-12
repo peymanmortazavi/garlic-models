@@ -137,6 +137,14 @@ namespace garlic {
         auto ivalue = value.get_int();
         if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
         return {true};
+      } else if (value.is_list()) {
+        int count = 0;
+        for (const auto& item : value.get_list()) {
+          count++;
+          if (count > max_) return this->fail("too many items in the list.");
+        }
+        if (count < min_) return this->fail("too few items in the list.");
+        return {true};
       } else return {true};
     }
 
