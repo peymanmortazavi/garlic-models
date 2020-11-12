@@ -161,30 +161,35 @@ void test_full_object_value(LayerType& value) {
   value.add_member("int", 25);
   value.add_member("bool", false);
 
+  auto assert_member = [](auto& value, const auto& key, auto it) {
+    ASSERT_EQ(value.find_member(key), it);
+    ASSERT_EQ(value.find_member(std::string_view(key)), it);
+  };
+
   test_readonly_object_range(value);
   auto it = value.begin_member();
   ASSERT_STREQ((*it).key.get_cstr(), "null");
   ASSERT_TRUE((*it).value.is_null());
-  ASSERT_EQ(value.find_member("null"), it);
+  assert_member(value, "null", it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "string");
   ASSERT_STREQ((*it).value.get_cstr(), "string");
-  ASSERT_EQ(value.find_member("string"), it);
+  assert_member(value, "string", it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "double");
   ASSERT_EQ((*it).value.get_double(), 1.1);
-  ASSERT_EQ(value.find_member("double"), it);
+  assert_member(value, "double", it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "int");
   ASSERT_EQ((*it).value.get_int(), 25);
-  ASSERT_EQ(value.find_member("int"), it);
+  assert_member(value, "int", it);
   it++;
   ASSERT_STREQ((*it).key.get_cstr(), "bool");
   ASSERT_EQ((*it).value.get_bool(), false);
-  ASSERT_EQ(value.find_member("bool"), it);
+  assert_member(value, "bool", it);
   it++;
   ASSERT_EQ(it, value.end_member());
-  ASSERT_EQ(value.find_member("missing key"), value.end_member());
+  assert_member(value, "missing key", value.end_member());
 
   for(auto item : value.get_object()) {
     item.key.set_string("v2." + item.key.get_string());

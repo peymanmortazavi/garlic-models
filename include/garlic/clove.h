@@ -141,7 +141,6 @@ namespace garlic {
     using ConstMemberIterator = CloveMemberIterator<GenericCloveView, typename DataType::Object::Container>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
-    GenericCloveView (const GenericCloveView& another) = delete;
 
     bool is_null() const noexcept { return data_.type == TypeFlag::Null; }
     bool is_int() const noexcept { return data_.type & TypeFlag::Integer; }
@@ -167,6 +166,11 @@ namespace garlic {
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return strcmp(item.key.get_cstr(), key) == 0;
+      });
+    }
+    ConstMemberIterator find_member(std::string_view key) const {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
+        return key.compare(item.key.get_cstr()) == 0;
       });
     }
     ConstMemberIterator find_member(const GenericCloveView& value) const {
@@ -208,8 +212,6 @@ namespace garlic {
     GenericCloveRef (
         DataType& data, AllocatorType& allocator
     ) : data_(data), allocator_(allocator), ViewType(data) {}
-
-    GenericCloveRef (const GenericCloveRef& another) = delete;
 
     void set_string(const char* str) {
       this->clean();
@@ -342,6 +344,11 @@ namespace garlic {
     MemberIterator find_member(const char* key) {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return strcmp(item.key.get_cstr(), key) == 0;
+      });
+    }
+    MemberIterator find_member(std::string_view key) {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
+        return key.compare(item.key.get_cstr()) == 0;
       });
     }
 
