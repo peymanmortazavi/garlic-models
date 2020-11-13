@@ -21,7 +21,6 @@ namespace garlic::providers::libyaml {
 
     MemberIterator() = default;
     MemberIterator(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), ptr_(ptr) {}
-    MemberIterator(const MemberIterator& another) : ptr_(another.ptr_), doc_(another.doc_) {}
 
     using difference_type = ptrdiff_t;
     using value_type = MemberWrapper;
@@ -51,7 +50,6 @@ namespace garlic::providers::libyaml {
   public:
     ValueIterator() = default;
     ValueIterator(yaml_document_t* doc, yaml_node_item_t* ptr) : doc_(doc), ptr_(ptr) {}
-    ValueIterator(const ValueIterator& another) : ptr_(another.ptr_), doc_(another.doc_) {}
 
     using difference_type = int;
     using value_type = ValueType;
@@ -80,7 +78,6 @@ namespace garlic::providers::libyaml {
 
     YamlView (yaml_document_t* doc, yaml_node_t* node) : doc_(doc), node_(node) {}
     YamlView (yaml_document_t* doc) : doc_(doc) { node_ = yaml_document_get_root_node(doc); }
-    YamlView (const YamlView& another) : node_(another.node_), doc_(another.doc_) {}
 
     bool is_null() const { return node_->type == yaml_node_type_t::YAML_NO_NODE; }
     bool is_int() const noexcept {
@@ -133,6 +130,11 @@ namespace garlic::providers::libyaml {
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
         return strcmp(key, item.key.get_cstr()) == 0;
+      });
+    }
+    ConstMemberIterator find_member(std::string_view key) const {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+        return key.compare(item.key.get_cstr()) == 0;
       });
     }
     ConstMemberIterator find_member(const YamlView& value) const { return this->find_member(value.get_cstr()); }

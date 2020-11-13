@@ -4,7 +4,12 @@
 #include "layer.h"
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <streambuf>
+#include <string_view>
+#include <charconv>
+#include <system_error>
+#include <memory>
 
 
 namespace garlic {
@@ -37,10 +42,94 @@ namespace garlic {
   }
 
 
+  class lazy_string_splitter {
+  public:
+    using const_iterator = std::string_view::const_iterator;
+    lazy_string_splitter(std::string_view text) : text_(text), cursor_(text.begin()) {}
+
+    template<typename Callable>
+    void for_each(const Callable& cb) {
+      std::string_view part = this->next();
+      while (!part.empty()) {
+        cb(part);
+        part = this->next();
+      }
+    }
+
+    std::string_view next() {
+      bool found_word = false;
+      auto it = cursor_;
+      for(; it < text_.end(); it++) {
+        if (*it == '.') {
+          if (found_word) return get_substr(it);
+          else cursor_ = it;
+        } else {
+          if (!found_word) cursor_ = it;
+          found_word = true;
+        }
+      }
+      if (found_word) return get_substr(it);
+      return {};
+    }
+    
+  private:
+    std::string_view text_;
+    const_iterator cursor_;
+
+    std::string_view get_substr(const const_iterator& it) {
+      auto old_cursor = cursor_;
+      cursor_ = it;
+      return std::string_view{old_cursor, it};
+    }
+  };
+
+
+  template<ReadableLayer LayerType, typename Callable>
+  void resolve(const LayerType& value, std::string_view path, Callable cb) {
+    lazy_string_splitter parts{path};
+    auto cursor = std::make_unique<LayerType>(value);
+    while (true) {
+      auto part = parts.next();
+      if (part.empty()) {
+        cb(*cursor);
+        return;
+      }
+      if (cursor->is_object()) {
+        bool found = false;
+        get_member(*cursor, part, [&cursor, &found](const auto& result) {
+            cursor = std::make_unique<LayerType>(result);
+            found = true;
+            });
+        if (!found) return;
+      } else if (cursor->is_list()) {
+        size_t position;
+        if (std::from_chars(part.begin(), part.end(), position).ec != std::errc::invalid_argument) {
+          size_t index = 0;
+          for (const auto& item : cursor->get_list()) {
+            if (index == position) {
+              cursor = std::make_unique<LayerType>(item);
+              break;
+            }
+            index++;
+          }
+          if (index != position) return;
+        } else return;
+      } else return;
+    }
+  }
+
+
   template<typename Callable>
   void get_member(const ReadableLayer auto& value, const char* key, const Callable& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
+
+
+  template<typename Callable>
+  void get_member(const ReadableLayer auto& value, std::string_view key, const Callable& cb) noexcept {
+    if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
+  }
+
 
   template<typename Container, typename ValueType, typename Callable>
   void get(const Container& container, const ValueType& value, const Callable& cb) {

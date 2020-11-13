@@ -55,7 +55,6 @@ namespace garlic::providers::yamlcpp {
 
     YamlNode () = default;
     YamlNode (const ValueType& node) : node_(node) {}
-    YamlNode (const YamlNode& another) : node_(another.node_) {}
 
     bool is_null() const noexcept { return node_.IsNull(); }
     bool is_int() const noexcept { return this->is<int>(); }
@@ -104,6 +103,11 @@ namespace garlic::providers::yamlcpp {
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
           return strcmp(key, item.key.get_cstr()) == 0;
+      });
+    }
+    ConstMemberIterator find_member(std::string_view key) const {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+          return key.compare(item.key.get_cstr()) == 0;
       });
     }
     ConstMemberIterator find_member(const YamlNode& value) const { return this->find_member(value.get_cstr()); }

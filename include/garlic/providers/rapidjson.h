@@ -80,7 +80,6 @@ namespace garlic::providers::rapidjson {
     using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
-    JsonView (const JsonView& another) = delete;
 
     bool is_null() const noexcept { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
@@ -97,6 +96,8 @@ namespace garlic::providers::rapidjson {
     double get_double() const noexcept { return value_.GetDouble(); }
     bool get_bool() const noexcept { return value_.GetBool(); }
 
+    JsonView operator = (const JsonView& another) { return JsonView(another); }
+
     ConstValueIterator begin_list() const { return ConstValueIterator(value_.Begin()); }
     ConstValueIterator end_list() const { return ConstValueIterator(value_.End()); }
     auto get_list() const { return ConstListRange<JsonView>{*this}; }
@@ -104,6 +105,11 @@ namespace garlic::providers::rapidjson {
     ConstMemberIterator begin_member() const { return ConstMemberIterator(value_.MemberBegin()); }
     ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
     ConstMemberIterator find_member(const char* key) const { return ConstMemberIterator{value_.FindMember(key)}; }
+    ConstMemberIterator find_member(std::string_view key) const {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+          return key.compare(item.key.get_cstr()) == 0;
+          });
+    }
     ConstMemberIterator find_member(const JsonView& value) const { return ConstMemberIterator{value_.FindMember(value.get_inner_value())}; }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
 
@@ -134,7 +140,6 @@ namespace garlic::providers::rapidjson {
     ) : JsonView(value), value_(value), allocator_(allocator) {}
 
     JsonRef(DocumentType& doc) : JsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
-    JsonRef(const JsonRef& another) = delete;
 
     void set_string(const char* value) { value_.SetString(value, allocator_); }
     void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
@@ -193,6 +198,11 @@ namespace garlic::providers::rapidjson {
 
     // member functions.
     MemberIterator find_member(const char* key) { return MemberIterator{value_.FindMember(key), allocator_}; }
+    MemberIterator find_member(std::string_view key) {
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+          return key.compare(item.key.get_cstr()) == 0;
+          });
+    }
     MemberIterator find_member(const JsonView& value) { return MemberIterator{value_.FindMember(value.get_inner_value()), allocator_}; }
     void add_member(const JsonView& key, const JsonView& value) {
       value_.AddMember(
