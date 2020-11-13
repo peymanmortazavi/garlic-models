@@ -7,6 +7,9 @@
 #include <iterator>
 #include <streambuf>
 #include <string_view>
+#include <charconv>
+#include <system_error>
+#include <iostream>
 
 
 namespace garlic {
@@ -97,11 +100,20 @@ namespace garlic {
             cursor = LayerType{result};
             found = true;
             });
-        if (!found) return;
+        if (!found) { std::cout << part << std::endl; return; }
       } else if (cursor.is_list()) {
-        std::string_view x;
-        // leave the list out for now.
-        return;
+        size_t position;
+        if (std::from_chars(part.begin(), part.end(), position).ec != std::errc::invalid_argument) {
+          size_t index = 0;
+          for (const auto& item : cursor.get_list()) {
+            if (index == position) {
+              cursor = LayerType{item};
+              break;
+            }
+            index++;
+          }
+          if (index != position) return;
+        } else return;
       } else return;
     }
   }
