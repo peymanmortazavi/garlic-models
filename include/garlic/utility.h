@@ -9,7 +9,7 @@
 #include <string_view>
 #include <charconv>
 #include <system_error>
-#include <iostream>
+#include <memory>
 
 
 namespace garlic {
@@ -87,27 +87,27 @@ namespace garlic {
   template<ReadableLayer LayerType, typename Callable>
   void resolve(const LayerType& value, std::string_view path, Callable cb) {
     lazy_string_splitter parts{path};
-    auto cursor = LayerType{value};
+    auto cursor = std::make_unique<LayerType>(value);
     while (true) {
       auto part = parts.next();
       if (part.empty()) {
-        cb(cursor);
+        cb(*cursor);
         return;
       }
-      if (cursor.is_object()) {
+      if (cursor->is_object()) {
         bool found = false;
-        get_member(cursor, part, [&cursor, &found](const auto& result) {
-            cursor = LayerType{result};
+        get_member(*cursor, part, [&cursor, &found](const auto& result) {
+            cursor = std::make_unique<LayerType>(result);
             found = true;
             });
-        if (!found) { std::cout << part << std::endl; return; }
-      } else if (cursor.is_list()) {
+        if (!found) return;
+      } else if (cursor->is_list()) {
         size_t position;
         if (std::from_chars(part.begin(), part.end(), position).ec != std::errc::invalid_argument) {
           size_t index = 0;
-          for (const auto& item : cursor.get_list()) {
+          for (const auto& item : cursor->get_list()) {
             if (index == position) {
-              cursor = LayerType{item};
+              cursor = std::make_unique<LayerType>(item);
               break;
             }
             index++;
