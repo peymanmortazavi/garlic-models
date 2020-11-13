@@ -106,9 +106,9 @@ namespace garlic::providers::rapidjson {
     ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
     ConstMemberIterator find_member(const char* key) const { return ConstMemberIterator{value_.FindMember(key)}; }
     ConstMemberIterator find_member(std::string_view key) const {
-      return ConstMemberIterator{
-        value_.FindMember(::rapidjson::StringRef(key.data(), key.size()))
-      };
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+          return key.compare(item.key.get_cstr()) == 0;
+          });
     }
     ConstMemberIterator find_member(const JsonView& value) const { return ConstMemberIterator{value_.FindMember(value.get_inner_value())}; }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
@@ -199,10 +199,9 @@ namespace garlic::providers::rapidjson {
     // member functions.
     MemberIterator find_member(const char* key) { return MemberIterator{value_.FindMember(key), allocator_}; }
     MemberIterator find_member(std::string_view key) {
-      return MemberIterator{
-        value_.FindMember(::rapidjson::StringRef(key.data(), key.size())),
-        allocator_
-      };
+      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
+          return key.compare(item.key.get_cstr()) == 0;
+          });
     }
     MemberIterator find_member(const JsonView& value) { return MemberIterator{value_.FindMember(value.get_inner_value()), allocator_}; }
     void add_member(const JsonView& key, const JsonView& value) {

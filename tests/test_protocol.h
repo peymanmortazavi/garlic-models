@@ -187,6 +187,8 @@ void test_full_object_value(LayerType& value) {
   ASSERT_STREQ((*it).key.get_cstr(), "bool");
   ASSERT_EQ((*it).value.get_bool(), false);
   assert_member(value, "bool", it);
+  // test search by string_view
+  ASSERT_EQ(value.find_member(std::string_view{"bool_extraextra", 4}), it);
   it++;
   ASSERT_EQ(it, value.end_member());
   assert_member(value, "missing key", value.end_member());
@@ -207,6 +209,9 @@ void test_full_object_value(LayerType& value) {
   ASSERT_NE(it, value.end_member());
   (*it).value.set_double(12);
   auto const_it = value_view.find_member("v2.null");
+  ASSERT_NE(const_it, value_view.end_member());
+  ASSERT_EQ((*const_it).value.get_double(), 12);
+  const_it = value_view.find_member(std::string_view{"v2.null_extra", 7});
   ASSERT_NE(const_it, value_view.end_member());
   ASSERT_EQ((*const_it).value.get_double(), 12);
 }
