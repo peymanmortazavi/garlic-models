@@ -27,10 +27,20 @@ TEST(Utility, StringSplitter) {
 
 TEST(Utility, Resolve) {
   auto doc = get_rapidjson_document("data/resolve/file.json");
-  resolve(doc.get_view(), "user.first_name", [](const auto& item){
+  auto assert_resolve = [&doc](const char* path, const auto& cb) {
+    auto fail = true;
+    resolve(doc.get_view(), path, [&fail, &cb](const auto& item){
+        fail = false;
+        cb(item);
+        });
+    if (fail) {
+      FAIL() << "Resolve never called the callback.";
+    }
+  };
+  assert_resolve("user.first_name", [](const auto& item) {
       test_readonly_string_value(item, "Peyman");
       });
-  resolve(doc.get_view(), "user.numbers.3", [](const auto& item){
+  assert_resolve("user.numbers.3", [](const auto& item) {
       test_readonly_int_value(item, 4);
       });
 }
