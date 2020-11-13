@@ -5,10 +5,8 @@
 #include <algorithm>
 #include <cstring>
 #include <iterator>
-#include <memory>
 #include <streambuf>
 #include <string_view>
-#include <iostream>
 
 
 namespace garlic {
@@ -86,21 +84,21 @@ namespace garlic {
   template<ReadableLayer LayerType, typename Callable>
   void resolve(const LayerType& value, std::string_view path, Callable cb) {
     lazy_string_splitter parts{path};
-    std::unique_ptr<LayerType> cursor = std::make_unique<LayerType>(value);
+    auto cursor = LayerType{value};
     while (true) {
       auto part = parts.next();
       if (part.empty()) {
-        cb(*cursor);
+        cb(cursor);
         return;
       }
-      if (cursor->is_object()) {
+      if (cursor.is_object()) {
         bool found = false;
-        get_member(*cursor, part, [&cursor, &found](const auto& result) {
-            cursor = std::make_unique<LayerType>(result);
+        get_member(cursor, part, [&cursor, &found](const auto& result) {
+            cursor = LayerType{result};
             found = true;
             });
         if (!found) return;
-      } else if (cursor->is_list()) {
+      } else if (cursor.is_list()) {
         std::string_view x;
         // leave the list out for now.
         return;
@@ -117,7 +115,6 @@ namespace garlic {
 
   template<typename Callable>
   void get_member(const ReadableLayer auto& value, std::string_view key, const Callable& cb) noexcept {
-    std::cout << "getting member : " << key << std::endl;
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
