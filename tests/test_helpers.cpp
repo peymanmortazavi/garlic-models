@@ -26,10 +26,9 @@ TEST(Utility, StringSplitter) {
 }
 
 TEST(Utility, Resolve) {
-  auto doc = get_rapidjson_document("data/resolve/file.json");
-  auto assert_resolve = [&doc](const char* path, const auto& cb) {
+  auto assert_resolve = [](const auto& value, const char* path, const auto& cb) {
     auto fail = true;
-    resolve(doc.get_view(), path, [&fail, &cb](const auto& item){
+    resolve(value, path, [&fail, &cb](const auto& item){
         fail = false;
         cb(item);
         });
@@ -37,10 +36,24 @@ TEST(Utility, Resolve) {
       FAIL() << "Resolve never called the callback.";
     }
   };
-  assert_resolve("user.first_name", [](const auto& item) {
-      test_readonly_string_value(item, "Peyman");
-      });
-  assert_resolve("user.numbers.3", [](const auto& item) {
-      test_readonly_int_value(item, 4);
-      });
+  auto assert_view = [&assert_resolve](const auto& value) {
+    assert_resolve(value, "user.first_name", [](const auto& item) {
+        test_readonly_string_value(item, "Peyman");
+        });
+    assert_resolve(value, "user.numbers.3", [](const auto& item) {
+        test_readonly_int_value(item, 4);
+        });
+  };
+  {
+    auto value = get_rapidjson_document("data/resolve/file.json");
+    assert_view(value.get_view());
+  }
+  {
+    auto value = get_libyaml_document("data/resolve/file.yaml");
+    assert_view(value.get_view());
+  }
+  {
+    auto value = get_yamlcpp_node("data/resolve/file.yaml");
+    assert_view(value.get_view());
+  }
 }
