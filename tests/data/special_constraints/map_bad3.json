@@ -1,0 +1,7 @@
+{
+    "_meta": {},
+    "string_to_any": {},
+    "string_to_bool": {
+        "something": 12
+    }
+}

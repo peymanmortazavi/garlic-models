@@ -1,0 +1,7 @@
+{
+    "_meta": {},
+    "string_to_any": {
+        "some_random_value": "test"
+    },
+    "string_to_bool": {}
+}
