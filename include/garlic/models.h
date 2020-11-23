@@ -45,7 +45,7 @@ namespace garlic {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    ValidationResult test(const LayerType& value) const {
+    ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
       for(auto& constraint : properties_.constraints) {
         auto test = constraint->test(value);
@@ -95,34 +95,13 @@ namespace garlic {
       properties_.field_map.emplace(std::move(name), std::move(field));
     }
 
-    const Properties& get_properties() const { return properties_; }
-    const std::vector<std::string> get_required_fields() const { return required_fields_; }
-
-  protected:
-    Properties properties_;
-    std::vector<std::string> required_fields_;
-  };
-
-
-  // Model Constraint
-  template<ReadableLayer LayerType>
-  class ModelConstraint : public Constraint<LayerType> {
-  public:
-    using ModelType = Model<LayerType>;
-
-    ModelConstraint(
-        std::shared_ptr<ModelType> model
-    ) : model_(std::move(model)), Constraint<LayerType>({true, model->get_properties().name}) {}
-
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult validate(const LayerType& value) const {
       ConstraintResult result;
-      const auto& properties = model_->get_properties();
-      auto required_fields = model_->get_required_fields();
       if (value.is_object()) {
         for (const auto& member : value.get_object()) {
-          auto it = properties.field_map.find(member.key.get_cstr());
-          if (it != properties.field_map.end()) {
-            auto test = it->second->test(member.value);
+          auto it = properties_.field_map.find(member.key.get_cstr());
+          if (it != properties_.field_map.end()) {
+            auto test = it->second->validate(member.value);
             if (!test.is_valid()) {
               result.valid = false;
               result.details.push_back({
@@ -144,10 +123,33 @@ namespace garlic {
         });
       }
       if (!result.valid) {
-        result.name = model_->get_properties().name;
+        result.name = properties_.name;
         result.reason = "This model is invalid";
       }
       return result;
+    }
+
+    const Properties& get_properties() const { return properties_; }
+    const std::vector<std::string> get_required_fields() const { return required_fields_; }
+
+  protected:
+    Properties properties_;
+    std::vector<std::string> required_fields_;
+  };
+
+
+  // Model Constraint
+  template<ReadableLayer LayerType>
+  class ModelConstraint : public Constraint<LayerType> {
+  public:
+    using ModelType = Model<LayerType>;
+
+    ModelConstraint(
+        std::shared_ptr<ModelType> model
+    ) : model_(std::move(model)), Constraint<LayerType>({true, model->get_properties().name}) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      return model_->validate(value);
     }
 
   private:
@@ -178,10 +180,12 @@ namespace garlic {
     FieldConstraint(
         FieldReference field,
         ConstraintProperties&& props
-    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {}
+    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {
+      this->update_name();
+    }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      auto result = (*field_)->test(value);
+      auto result = (*field_)->validate(value);
       if (result.is_valid()) return {true};
       return {
         false, this->props_.name, this->props_.message,
@@ -189,11 +193,14 @@ namespace garlic {
       };
     }
 
-    void set_field(FieldPtr field) { field_->swap(field); }
+    void set_field(FieldPtr field) {
+      field_->swap(field);
+      this->update_name();
+    }
 
     template<ReadableLayer Source, typename Parser>
     static std::shared_ptr<Constraint<LayerType>> parse(const Source& value, Parser parser) noexcept {
-      ConstraintProperties props {true, "field_constraint"};
+      ConstraintProperties props {true};
       set_constraint_properties(value, props);
       std::shared_ptr<FieldConstraint<LayerType>> result;
       get_member(value, "field", [&parser, &result, &props](const auto& field) {
@@ -210,6 +217,12 @@ namespace garlic {
 
   protected:
     FieldReference field_;
+
+    void update_name() {
+      if (*field_ && this->props_.name.empty()) {
+        this->props_.name = (*field_)->get_name();
+      }
+    }
   };
 
 }

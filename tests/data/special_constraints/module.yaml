@@ -1,6 +1,5 @@
 fields:
     UserId:
-        name: user_id
         type: integer
         constraints: [{type: range, min: 1, max: 1000000}]
 
