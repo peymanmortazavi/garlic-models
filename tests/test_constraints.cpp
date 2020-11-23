@@ -16,6 +16,7 @@ TEST(Constraints, FieldConstraint) {
 
   assert_jsonfile_valid(module, "Account", "data/field_constraint/good.json");
   assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad.json");
+  assert_model_field_constraints(module, "Account", "user", {"User"});
 }
 
 TEST(Constraints, AnyConstraint) {

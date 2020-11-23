@@ -178,7 +178,9 @@ namespace garlic {
     FieldConstraint(
         FieldReference field,
         ConstraintProperties&& props
-    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {}
+    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {
+      this->update_name();
+    }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       auto result = (*field_)->test(value);
@@ -189,11 +191,14 @@ namespace garlic {
       };
     }
 
-    void set_field(FieldPtr field) { field_->swap(field); }
+    void set_field(FieldPtr field) {
+      field_->swap(field);
+      this->update_name();
+    }
 
     template<ReadableLayer Source, typename Parser>
     static std::shared_ptr<Constraint<LayerType>> parse(const Source& value, Parser parser) noexcept {
-      ConstraintProperties props {true, "field_constraint"};
+      ConstraintProperties props {true};
       set_constraint_properties(value, props);
       std::shared_ptr<FieldConstraint<LayerType>> result;
       get_member(value, "field", [&parser, &result, &props](const auto& field) {
@@ -210,6 +215,12 @@ namespace garlic {
 
   protected:
     FieldReference field_;
+
+    void update_name() {
+      if (*field_ && this->props_.name.empty()) {
+        this->props_.name = (*field_)->get_name();
+      }
+    }
   };
 
 }

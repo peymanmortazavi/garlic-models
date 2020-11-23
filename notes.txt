@@ -1,0 +1,12 @@
+* Explore making both Field and Model return a single ConstraintResult.
+* Explore adding a stop point in the constraints.
+* Create a single function for parsing constraints and use it everywhere.
+* Create a single function for executing a series of constraints and use it everywhere.
+  All the meta constraints and the field constraints would benefit from this.
+* Add a message portion to the Field so it can be inherited by the FieldConstraint.
+* Start polishing the test methods across the board so they actually return the errors.
+* Make a parsing model and test against it before parsing.
+* Move all parse methods from the constraints to the module header.
+* Make a yaml parser that uses libyaml to create clove value and parse clove to yaml.
+* Create an issue to explore using a different container other than vector to enable constexpr
+  models.

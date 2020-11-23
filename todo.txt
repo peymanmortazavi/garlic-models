@@ -1,19 +1,14 @@
-Fix the library installation:
-  - move installation part from the root CMakeLists.txt to the src/CMakeLists.txt
-  - make sure public headers work fine while DRY (no duplication of includes).
-
 Future improvement:
   - add back inserter and shit like that.
   - work on optimizing the clove data structure and use libyaml to parse into clove.
   - use template structure to support adding decoders from ReadableLayer to any class typ
-  - provide an easy to use C library to use garlic library.
   - provide some performance metrics to examine the performance of this library.
+  - provide inputs and generic types like List<input1, input2>
 
 Nice Improvements:
   - lower memory footprint of GenericCloveData by utilizing pointers for arrays and maps.
   - explore using an actual hash table for the GenericCloveData
   - explore using a linked list for GenericCloveData
-  - use build system to enable/disable JSON.
   - provide more friendly tools for adding new providers, like a class that would take in
     a convertor and then build out the rest of the functionality. Like provide the way to create
     a string and then use that to automatically provide all the add_member methods.
