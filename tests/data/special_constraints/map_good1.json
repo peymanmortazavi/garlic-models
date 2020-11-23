@@ -1,0 +1,15 @@
+{
+    "_meta": {
+        "field1":" value2"
+    },
+    "string_to_any": {
+        "field1": "String",
+        "field2": 12,
+        "field3": 1.1,
+        "field4": true
+    },
+    "string_to_bool": {
+        "field1": true,
+        "field2": false
+    }
+}

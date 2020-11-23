@@ -377,6 +377,72 @@ namespace garlic {
     bool strict_;
   };
 
+
+  template<ReadableLayer LayerType>
+  class MapConstraint : public Constraint<LayerType> {
+  public:
+    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+
+    MapConstraint() : Constraint<LayerType>({false, "map_constraint"}) {}
+
+    MapConstraint(
+      ConstraintPtr key_constraint,
+      ConstraintPtr value_constraint,
+      ConstraintProperties props
+    ) : key_constraint_(std::move(key_constraint)),
+        value_constraint_(std::move(value_constraint)),
+        Constraint<LayerType>(std::move(props)) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (!value.is_object()) return this->fail("Expected an object.");
+      for (const auto& item : value.get_object()) {
+        if (key_constraint_) {
+          if (auto result = key_constraint_->test(item.key); !result.valid) {
+            auto final_result = this->fail("Object contains invalid key.");
+            final_result.details.push_back(std::move(result));
+            return final_result;
+          }
+        }
+        if (value_constraint_) {
+          if (auto result = value_constraint_->test(item.value); !result.valid) {
+            auto final_result = this->fail("Object contains invalid value.");
+            final_result.details.push_back(std::move(result));
+            return final_result;
+          }
+        }
+      }
+      return {true};
+    }
+
+    template<ReadableLayer Source, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>>
+    parse(const Source& value, Parser parser) noexcept {
+      ConstraintProperties props {false, "map_constraint"};
+      set_constraint_properties(value, props);
+      ConstraintPtr key_constraint;
+      ConstraintPtr value_constraint;
+      read_constraint(value, parser, "key", key_constraint);
+      read_constraint(value, parser, "value", value_constraint);
+      return std::make_shared<MapConstraint<LayerType>>(
+          std::move(key_constraint), std::move(value_constraint), std::move(props)
+          );
+    }
+
+  private:
+    ConstraintPtr key_constraint_;
+    ConstraintPtr value_constraint_;
+
+    template<typename ParserType>
+    static void
+    read_constraint(const ReadableLayer auto& value, ParserType& parser, const char* name, ConstraintPtr& ptr) {
+      get_member(value, name, [&parser, &ptr](const auto& key) {
+          parser.parse_constraint(key, [&ptr](auto&& constraint) {
+              ptr = std::move(constraint);
+              });
+         });
+    }
+  };
+
 }
 
 #endif /* end of include guard: GARLIC_CONSTRAINTS */

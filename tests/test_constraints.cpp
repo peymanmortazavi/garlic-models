@@ -53,3 +53,14 @@ TEST(Constraints, TupleConstraint) {
   assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad5.json");
   assert_jsonfile_invalid(module, "TupleTest", "data/special_constraints/tuple_bad6.json");
 }
+
+TEST(Constraints, MapConstraint) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/special_constraints/module.yaml");
+
+  assert_jsonfile_valid(module, "MapTest", "data/special_constraints/map_good1.json");
+  assert_jsonfile_invalid(module, "MapTest", "data/special_constraints/map_bad1.json");
+  assert_jsonfile_invalid(module, "MapTest", "data/special_constraints/map_bad2.json");
+  assert_jsonfile_invalid(module, "MapTest", "data/special_constraints/map_bad3.json");
+}

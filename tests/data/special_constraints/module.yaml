@@ -42,6 +42,25 @@ fields:
               items: [string]
               strict: false
 
+    MetaField:
+        constraints:
+            - type: map
+              key: string
+              value: string
+
+    StringToAny:
+        constraints:
+            - type: map
+              key:
+                  type: regex
+                  pattern: field\d*
+
+    StringToBool:
+        constraints:
+            - type: map
+              key: string
+              value: bool
+
 models:
     User:
         fields:
@@ -63,3 +82,9 @@ models:
             city: CityTuple
             location: GeoLocation
             command: UnixCommand
+
+    MapTest:
+        fields:
+            _meta: MetaField
+            string_to_any: StringToAny
+            string_to_bool: StringToBool
