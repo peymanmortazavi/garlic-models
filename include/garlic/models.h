@@ -95,33 +95,12 @@ namespace garlic {
       properties_.field_map.emplace(std::move(name), std::move(field));
     }
 
-    const Properties& get_properties() const { return properties_; }
-    const std::vector<std::string> get_required_fields() const { return required_fields_; }
-
-  protected:
-    Properties properties_;
-    std::vector<std::string> required_fields_;
-  };
-
-
-  // Model Constraint
-  template<ReadableLayer LayerType>
-  class ModelConstraint : public Constraint<LayerType> {
-  public:
-    using ModelType = Model<LayerType>;
-
-    ModelConstraint(
-        std::shared_ptr<ModelType> model
-    ) : model_(std::move(model)), Constraint<LayerType>({true, model->get_properties().name}) {}
-
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult validate(const LayerType& value) const {
       ConstraintResult result;
-      const auto& properties = model_->get_properties();
-      auto required_fields = model_->get_required_fields();
       if (value.is_object()) {
         for (const auto& member : value.get_object()) {
-          auto it = properties.field_map.find(member.key.get_cstr());
-          if (it != properties.field_map.end()) {
+          auto it = properties_.field_map.find(member.key.get_cstr());
+          if (it != properties_.field_map.end()) {
             auto test = it->second->validate(member.value);
             if (!test.is_valid()) {
               result.valid = false;
@@ -144,10 +123,33 @@ namespace garlic {
         });
       }
       if (!result.valid) {
-        result.name = model_->get_properties().name;
+        result.name = properties_.name;
         result.reason = "This model is invalid";
       }
       return result;
+    }
+
+    const Properties& get_properties() const { return properties_; }
+    const std::vector<std::string> get_required_fields() const { return required_fields_; }
+
+  protected:
+    Properties properties_;
+    std::vector<std::string> required_fields_;
+  };
+
+
+  // Model Constraint
+  template<ReadableLayer LayerType>
+  class ModelConstraint : public Constraint<LayerType> {
+  public:
+    using ModelType = Model<LayerType>;
+
+    ModelConstraint(
+        std::shared_ptr<ModelType> model
+    ) : model_(std::move(model)), Constraint<LayerType>({true, model->get_properties().name}) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      return model_->validate(value);
     }
 
   private:
