@@ -45,7 +45,7 @@ namespace garlic {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    ValidationResult test(const LayerType& value) const {
+    ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
       for(auto& constraint : properties_.constraints) {
         auto test = constraint->test(value);
@@ -122,7 +122,7 @@ namespace garlic {
         for (const auto& member : value.get_object()) {
           auto it = properties.field_map.find(member.key.get_cstr());
           if (it != properties.field_map.end()) {
-            auto test = it->second->test(member.value);
+            auto test = it->second->validate(member.value);
             if (!test.is_valid()) {
               result.valid = false;
               result.details.push_back({
@@ -183,7 +183,7 @@ namespace garlic {
     }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      auto result = (*field_)->test(value);
+      auto result = (*field_)->validate(value);
       if (result.is_valid()) return {true};
       return {
         false, this->props_.name, this->props_.message,
