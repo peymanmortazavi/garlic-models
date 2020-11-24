@@ -93,7 +93,9 @@ namespace garlic::parsing {
     std::string pattern;
     ConstraintProperties props {false, "regex_constraint"};
     set_constraint_properties(value, props);
-    get_member(value, "pattern", [&pattern](const auto& v) { pattern = v.get_string(); });
+    get_member(value, "pattern", [&pattern](const auto& v) {
+        pattern = v.get_cstr();
+        });
     return std::make_shared<RegexConstraint<Destination>>(
         std::move(pattern), std::move(props)
         );
