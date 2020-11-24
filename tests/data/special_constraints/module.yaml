@@ -61,6 +61,27 @@ fields:
               key: string
               value: bool
 
+    ThreeItemsTable:
+        constraints:
+            - type: map
+              value:
+                  type: all
+                  items: [list, {type: range, min: 3, max: 3}]
+
+    ThreeItemsTablePrecise:
+        constraints:
+            - type: map
+              value:
+                  type: all
+                  hide: false
+                  name: three_item_constraint
+                  message: "Only three items are allowed."
+                  items:
+                      - list
+                      - type: range
+                        min: 3
+                        max: 3
+
 models:
     User:
         fields:
@@ -88,3 +109,8 @@ models:
             _meta: MetaField
             string_to_any: StringToAny
             string_to_bool: StringToBool
+
+    AllTest:
+        fields:
+            hide_constraint: ThreeItemsTable
+            hide_constraint_precise: ThreeItemsTablePrecise

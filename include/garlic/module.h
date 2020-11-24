@@ -349,6 +349,7 @@ namespace garlic {
         {"range", &RangeConstraint<Destination>::parse},
         {"field", &FieldConstraint<Destination>::parse},
         {"any", &AnyConstraint<Destination>::parse},
+        {"all", &AllConstraint<Destination>::parse},
         {"list", &ListConstraint<Destination>::parse},
         {"tuple", &TupleConstraint<Destination>::parse},
         {"map", &MapConstraint<Destination>::parse},

@@ -29,8 +29,8 @@ namespace garlic {
 
   void set_constraint_properties(const ReadableLayer auto& value, ConstraintProperties& props) noexcept {
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
-    get_member(value, "message", [&props](const auto& item) { props.message = item.get_string(); });
-    get_member(value, "name", [&props](const auto& item) { props.name = item.get_string(); });
+    get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
+    get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
   }
 
   template<garlic::ReadableLayer LayerType>
@@ -181,7 +181,7 @@ namespace garlic {
 
     RegexConstraint(
         std::string pattern,
-        ConstraintProperties props
+        ConstraintProperties&& props
     ) : pattern_(std::move(pattern)), Constraint<LayerType>(std::move(props)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -209,9 +209,14 @@ namespace garlic {
   public:
 
   AnyConstraint(
-      std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
-      ConstraintProperties props
+      std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
+      ConstraintProperties&& props
   ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+
+  AnyConstraint(
+      const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+      ConstraintProperties&& props
+  ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
 
   ConstraintResult test(const LayerType& value) const noexcept override {
     for(const auto& constraint : constraints_) {
@@ -253,9 +258,14 @@ namespace garlic {
   ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
 
   ListConstraint(
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
-    ConstraintProperties props
+    std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
+    ConstraintProperties&& props
   ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+
+  ListConstraint(
+    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+    ConstraintProperties&& props
+  ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
 
   ConstraintResult test(const LayerType& value) const noexcept override {
     if (!value.is_list()) return this->fail("Expected a list.");
@@ -283,7 +293,7 @@ namespace garlic {
   template<ReadableLayer Source, typename Parser>
   static std::shared_ptr<Constraint<LayerType>>
   parse(const Source& value, Parser parser) noexcept {
-    ConstraintProperties props {false, "list_constraint"};
+    ConstraintProperties props {true, "list_constraint"};
     set_constraint_properties(value, props);
     std::vector<std::shared_ptr<Constraint<LayerType>>> constraints;
     get_member(
@@ -312,10 +322,16 @@ namespace garlic {
   TupleConstraint() : Constraint<LayerType>({false, "tuple_constraint"}) {}
 
   TupleConstraint(
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints,
+    std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
     bool strict,
-    ConstraintProperties props
+    ConstraintProperties&& props
   ) : constraints_(std::move(constraints)), strict_(strict), Constraint<LayerType>(std::move(props)) {}
+
+  TupleConstraint(
+    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+    bool strict,
+    ConstraintProperties&& props
+  ) : constraints_(constraints), strict_(strict), Constraint<LayerType>(std::move(props)) {}
 
   ConstraintResult test(const LayerType& value) const noexcept override {
     if (!value.is_list()) return this->fail("Expected a list (tuple).");
@@ -388,7 +404,7 @@ namespace garlic {
     MapConstraint(
       ConstraintPtr key_constraint,
       ConstraintPtr value_constraint,
-      ConstraintProperties props
+      ConstraintProperties&& props
     ) : key_constraint_(std::move(key_constraint)),
         value_constraint_(std::move(value_constraint)),
         Constraint<LayerType>(std::move(props)) {}
@@ -441,6 +457,70 @@ namespace garlic {
               });
          });
     }
+  };
+
+
+  template<ReadableLayer LayerType>
+  class AllConstraint : public Constraint<LayerType> {
+  public:
+
+    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+
+    AllConstraint() : Constraint<LayerType>({true, ""}) {}
+
+    AllConstraint(
+        std::vector<ConstraintPtr>&& constraints,
+        ConstraintProperties&& props,
+        bool hide = true
+    ) : constraints_(std::move(constraints)),
+        Constraint<LayerType>(std::move(props)),
+        hide_(hide) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (hide_) {
+        for (const auto& constraint : constraints_) {
+          if (auto result = constraint->test(value); !result.valid) return result;
+        }
+        return {true};
+      }
+      std::vector<ConstraintResult> results;
+      for (const auto& constraint : constraints_) {
+        if (auto result = constraint->test(value); !result.valid) {
+          results.push_back(std::move(result));
+          if (constraint->skip_constraints()) break;
+        }
+      }
+      if (results.empty()) return {true};
+      auto result = this->fail("Some of the constraints fail on this value.");
+      result.details = std::move(results);
+      return result;
+    }
+
+    template<ReadableLayer Source, typename Parser>
+    static std::shared_ptr<Constraint<LayerType>>
+    parse(const Source& value, Parser parser) noexcept {
+      ConstraintProperties props {false, ""};
+      set_constraint_properties(value, props);
+      std::vector<ConstraintPtr> constraints;
+      bool hide = true;
+      get_member(value, "items", [&parser, &constraints](const auto& items) {
+          for (const auto& item : items.get_list()) {
+            parser.parse_constraint(item, [&parser, &constraints](auto&& constraint) {
+                constraints.push_back(std::move(constraint));
+                });
+          }
+          });
+      get_member(value, "hide", [&hide](const auto& result) {
+          hide = result.get_bool();
+          });
+      return std::make_shared<AllConstraint<LayerType>>(
+          std::move(constraints), std::move(props), hide
+          );
+    }
+
+  private:
+    std::vector<ConstraintPtr> constraints_;
+    bool hide_;
   };
 
 }
