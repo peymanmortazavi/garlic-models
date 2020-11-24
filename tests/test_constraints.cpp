@@ -64,3 +64,13 @@ TEST(Constraints, MapConstraint) {
   assert_jsonfile_invalid(module, "MapTest", "data/special_constraints/map_bad2.json");
   assert_jsonfile_invalid(module, "MapTest", "data/special_constraints/map_bad3.json");
 }
+
+TEST(Constraints, AllConstraint) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/special_constraints/module.yaml");
+
+  assert_jsonfile_valid(module, "AllTest", "data/special_constraints/all_good1.json", true);
+  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad1.json", true);
+  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad2.json", true);
+}

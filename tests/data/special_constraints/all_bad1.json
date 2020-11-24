@@ -1,0 +1,4 @@
+{
+    "hide_constraint": {"some_key": "not a list"},
+    "hide_constraint_precise": {"some_key": "not a list"}
+}
