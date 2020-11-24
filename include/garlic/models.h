@@ -198,23 +198,6 @@ namespace garlic {
       this->update_name();
     }
 
-    template<ReadableLayer Source, typename Parser>
-    static std::shared_ptr<Constraint<LayerType>> parse(const Source& value, Parser parser) noexcept {
-      ConstraintProperties props {true};
-      set_constraint_properties(value, props);
-      std::shared_ptr<FieldConstraint<LayerType>> result;
-      get_member(value, "field", [&parser, &result, &props](const auto& field) {
-          auto ptr = parser.resolve_field_reference(field.get_cstr());
-          result = std::make_shared<FieldConstraint<LayerType>>(
-              std::make_shared<FieldPtr>(ptr), std::move(props)
-          );
-          if (!ptr) {
-            parser.add_field_dependency(field.get_cstr(), result);
-          }
-      });
-      return result;
-    }
-
   protected:
     FieldReference field_;
 
