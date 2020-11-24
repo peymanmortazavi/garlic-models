@@ -210,43 +210,43 @@ namespace garlic {
   class ListConstraint : public Constraint<LayerType> {
   public:
 
-  ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
+    ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
 
-  ListConstraint(
-    std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
-    ConstraintProperties&& props
-  ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+    ListConstraint(
+      std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
+      ConstraintProperties&& props
+    ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
 
-  ListConstraint(
-    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-    ConstraintProperties&& props
-  ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
+    ListConstraint(
+      const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+      ConstraintProperties&& props
+    ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
-    if (!value.is_list()) return this->fail("Expected a list.");
-    int index = 0;
-    for (const auto& item : value.get_list()) {
-      for(const auto& constraint : constraints_) {
-        auto result = constraint->test(item);
-        if (!result.valid) {
-          auto final_result = this->fail("Invalid value found in the list.");
-          final_result.details.push_back({
-              false,
-              std::to_string(index),
-              "invalid value.",
-              {std::move(result)},
-              true
-              });
-          return final_result;
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (!value.is_list()) return this->fail("Expected a list.");
+      int index = 0;
+      for (const auto& item : value.get_list()) {
+        for(const auto& constraint : constraints_) {
+          auto result = constraint->test(item);
+          if (!result.valid) {
+            auto final_result = this->fail("Invalid value found in the list.");
+            final_result.details.push_back({
+                false,
+                std::to_string(index),
+                "invalid value.",
+                {std::move(result)},
+                true
+                });
+            return final_result;
+          }
         }
+        index++;
       }
-      index++;
+      return {true};
     }
-    return {true};
-  }
 
   private:
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    std::shared_ptr<Constraint<LayerType>> constraints_;
   };
 
 
