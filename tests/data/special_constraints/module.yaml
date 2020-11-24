@@ -13,9 +13,9 @@ fields:
     UserList:
         constraints:
             - type: list
-              items:
-                  - type: any
-                    items: [UserId, User]
+              item:
+                  type: any
+                  items: [UserId, User]
               message: List of user ids or objects expected.
 
     GeoLocation:

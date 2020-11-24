@@ -59,18 +59,16 @@ namespace garlic::parsing {
   parse_list(const ReadableLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {true, "list_constraint"};
     set_constraint_properties(value, props);
-    std::vector<ConstraintPtrOf<Destination>> constraints;
+    ConstraintPtrOf<Destination> constraint;
     get_member(
-        value, "items", [&value, &constraints, &parser](const auto& items) {
-          for(const auto& item : items.get_list()) {
-            parser.parse_constraint(item, [&constraints](auto&& constraint) {
-                constraints.emplace_back(std::move(constraint));
-            });
-          }
+        value, "item", [&value, &constraint, &parser](const auto& item) {
+          parser.parse_constraint(item, [&constraint](auto&& parsed_constraint) {
+              constraint = std::move(parsed_constraint);
+          });
         }
     );
     return std::make_shared<ListConstraint<Destination>>(
-        std::move(constraints), std::move(props)
+        std::move(constraint), std::move(props)
     );
   }
 
