@@ -16,15 +16,7 @@ namespace garlic::parsing {
     ConstraintProperties props {false};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
-    get_member(
-        value, "items", [&value, &constraints, &parser](const auto& items) {
-          for(const auto& item : items.get_list()) {
-            parser.parse_constraint(item, [&constraints](auto&& constraint) {
-                constraints.emplace_back(std::move(constraint));
-            });
-          }
-        }
-    );
+    read_constraints<Destination>(value, parser, "items", constraints);
     return std::make_shared<AnyConstraint<Destination>>(
         std::move(constraints), std::move(props)
     );
@@ -38,13 +30,7 @@ namespace garlic::parsing {
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
     bool hide = true;
-    get_member(value, "items", [&parser, &constraints](const auto& items) {
-        for (const auto& item : items.get_list()) {
-        parser.parse_constraint(item, [&parser, &constraints](auto&& constraint) {
-            constraints.push_back(std::move(constraint));
-            });
-        }
-        });
+    read_constraints<Destination>(value, parser, "items", constraints);
     get_member(value, "hide", [&hide](const auto& result) {
         hide = result.get_bool();
         });
@@ -60,13 +46,7 @@ namespace garlic::parsing {
     ConstraintProperties props {true, "list_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> constraint;
-    get_member(
-        value, "item", [&value, &constraint, &parser](const auto& item) {
-          parser.parse_constraint(item, [&constraint](auto&& parsed_constraint) {
-              constraint = std::move(parsed_constraint);
-          });
-        }
-    );
+    read_constraint<Destination>(value, parser, "item", constraint);
     return std::make_shared<ListConstraint<Destination>>(
         std::move(constraint), std::move(props)
     );
@@ -79,16 +59,8 @@ namespace garlic::parsing {
     ConstraintProperties props {false, "tuple_constraint"};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
+    read_constraints<Destination>(value, parser, "items", constraints);
     bool strict = true;
-    get_member(
-        value, "items", [&value, &constraints, &parser](const auto& items) {
-          for(const auto& item : items.get_list()) {
-            parser.parse_constraint(item, [&constraints](auto&& constraint) {
-                constraints.emplace_back(std::move(constraint));
-            });
-          }
-        }
-    );
     get_member(value, "strict", [&strict](const auto& item) {
         strict = item.get_bool();
     });
@@ -121,7 +93,9 @@ namespace garlic::parsing {
     std::string pattern;
     ConstraintProperties props {false, "regex_constraint"};
     set_constraint_properties(value, props);
-    get_member(value, "pattern", [&pattern](const auto& v) { pattern = v.get_string(); });
+    get_member(value, "pattern", [&pattern](const auto& v) {
+        pattern = v.get_cstr();
+        });
     return std::make_shared<RegexConstraint<Destination>>(
         std::move(pattern), std::move(props)
         );
@@ -175,6 +149,23 @@ namespace garlic::parsing {
             ptr = std::move(constraint);
             });
        });
+  }
+
+  
+  template<ReadableLayer Destination, typename ParserType>
+  static void
+  read_constraints(
+      const ReadableLayer auto& value,
+      ParserType& parser,
+      const char* name,
+      std::vector<ConstraintPtrOf<Destination>>& container) {
+    get_member(value, name, [&parser, &container](const auto& items) {
+        for (const auto& item : items.get_list()) {
+          parser.parse_constraint(item, [&container](auto&& constraint) {
+              container.emplace_back(std::move(constraint));
+              });
+          }
+        });
   }
 
 }
