@@ -3,6 +3,7 @@
 
 #include "models.h"
 #include "layer.h"
+#include "parsing/constraints.h"
 
 
 namespace garlic {
@@ -345,14 +346,14 @@ namespace garlic {
     void parse_constraint(const Source& value, parse_context& context, const Callable& cb) noexcept {
       typedef ConstraintPtr (*ConstraintInitializer)(const Source&, parser);
       static const std::map<std::string, ConstraintInitializer> ctors = {
-        {"regex", &RegexConstraint<Destination>::parse},
-        {"range", &RangeConstraint<Destination>::parse},
-        {"field", &FieldConstraint<Destination>::parse},
-        {"any", &AnyConstraint<Destination>::parse},
-        {"all", &AllConstraint<Destination>::parse},
-        {"list", &ListConstraint<Destination>::parse},
-        {"tuple", &TupleConstraint<Destination>::parse},
-        {"map", &MapConstraint<Destination>::parse},
+        {"regex", &parsing::parse_regex<Destination>},
+        {"range", &parsing::parse_range<Destination>},
+        {"field", &parsing::parse_field<Destination>},
+        {"any", &parsing::parse_any<Destination>},
+        {"all", &parsing::parse_all<Destination>},
+        {"list", &parsing::parse_list<Destination>},
+        {"tuple", &parsing::parse_tuple<Destination>},
+        {"map", &parsing::parse_map<Destination>},
       };
 
       if (value.is_string()) {
