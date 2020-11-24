@@ -16,7 +16,7 @@ namespace garlic::parsing {
     ConstraintProperties props {false};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
-    read_constraints<Destination>(value, parser, "items", constraints);
+    read_constraints<Destination>(value, parser, "of", constraints);
     return std::make_shared<AnyConstraint<Destination>>(
         std::move(constraints), std::move(props)
     );
@@ -30,7 +30,7 @@ namespace garlic::parsing {
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
     bool hide = true;
-    read_constraints<Destination>(value, parser, "items", constraints);
+    read_constraints<Destination>(value, parser, "of", constraints);
     get_member(value, "hide", [&hide](const auto& result) {
         hide = result.get_bool();
         });
@@ -46,7 +46,7 @@ namespace garlic::parsing {
     ConstraintProperties props {true, "list_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> constraint;
-    read_constraint<Destination>(value, parser, "item", constraint);
+    read_constraint<Destination>(value, parser, "of", constraint);
     return std::make_shared<ListConstraint<Destination>>(
         std::move(constraint), std::move(props)
     );

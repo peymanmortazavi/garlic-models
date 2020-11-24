@@ -6,16 +6,16 @@ fields:
     UserReference:
         constraints:
             - type: any
-              items: [UserId, User]
+              of: [UserId, User]
               message: Either a user id or a proper user object is expected.
               name: user_reference
 
     UserList:
         constraints:
             - type: list
-              item:
+              of:
                   type: any
-                  items: [UserId, User]
+                  of: [UserId, User]
               message: List of user ids or objects expected.
 
     GeoLocation:
@@ -66,7 +66,7 @@ fields:
             - type: map
               value:
                   type: all
-                  items: [list, {type: range, min: 3, max: 3}]
+                  of: [list, {type: range, min: 3, max: 3}]
 
     ThreeItemsTablePrecise:
         constraints:
@@ -76,7 +76,7 @@ fields:
                   hide: false
                   name: three_item_constraint
                   message: "Only three items are allowed."
-                  items:
+                  of:
                       - list
                       - type: range
                         min: 3
