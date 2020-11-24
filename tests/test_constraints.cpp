@@ -70,7 +70,7 @@ TEST(Constraints, AllConstraint) {
 
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
-  assert_jsonfile_valid(module, "AllTest", "data/special_constraints/all_good1.json", true);
-  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad1.json", true);
-  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad2.json", true);
+  assert_jsonfile_valid(module, "AllTest", "data/special_constraints/all_good1.json");
+  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad1.json");
+  assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad2.json");
 }
