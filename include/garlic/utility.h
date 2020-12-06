@@ -14,7 +14,7 @@
 
 namespace garlic {
 
-  template<garlic::ReadableLayer L1, garlic::ReadableLayer L2>
+  template<ReadableLayer L1, ReadableLayer L2>
   bool cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
     else if (layer1.is_string() && layer2.is_string() && std::strcmp(layer1.get_cstr(), layer2.get_cstr()) == 0) {
