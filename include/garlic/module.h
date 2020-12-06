@@ -393,12 +393,14 @@ namespace garlic {
       if (ptr) {
         return std::make_shared<FieldConstraintType>(
             std::make_shared<FieldPtr>(ptr),
-            ConstraintProperties{}
+            ConstraintProperties{},
+            true
         );
       }
       return std::make_shared<FieldConstraintType>(
           std::make_shared<FieldPtr>(nullptr),
-          ConstraintProperties{}
+          ConstraintProperties{},
+          true
       );
     }
 
