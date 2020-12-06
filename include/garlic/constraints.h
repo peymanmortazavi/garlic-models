@@ -21,11 +21,44 @@ namespace garlic {
     bool is_scalar() const noexcept { return details.size() == 0; }
   };
 
+
   struct ConstraintProperties {
     bool fatal = false;  // should stop looking at other constraints.
     std::string name;  // constraint name.
     std::string message;  // custom rejection reason.
   };
+
+
+  template<typename ConstraintPtrType>
+  std::vector<ConstraintResult>
+  test_constraints(
+      const ReadableLayer auto& value,
+      const std::vector<ConstraintPtrType>& constraints,
+      std::vector<ConstraintResult>& results) {
+    for (const auto& constraint : constraints) {
+      if (auto result = constraint->test(value); !result.valid) {
+        results.push_back(std::move(result));
+        if (constraint->skip_constraints()) break;
+      }
+    }
+    return results;
+  }
+
+
+  template<typename ConstraintPtrType, typename Callback>
+  void test_constraints_first_failure(
+      const ReadableLayer auto& value,
+      std::vector<ConstraintPtrType> constraints,
+      const Callback& cb
+      ) {
+    for (const auto& constraint : constraints) {
+      if (auto result = constraint->test(value); !result.valid) {
+        cb(std::move(result));
+        return;
+      }
+    }
+  }
+
 
   void set_constraint_properties(const ReadableLayer auto& value, ConstraintProperties& props) noexcept {
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
@@ -372,12 +405,7 @@ namespace garlic {
         return {true};
       }
       std::vector<ConstraintResult> results;
-      for (const auto& constraint : constraints_) {
-        if (auto result = constraint->test(value); !result.valid) {
-          results.push_back(std::move(result));
-          if (constraint->skip_constraints()) break;
-        }
-      }
+      test_constraints(value, constraints_, results);
       if (results.empty()) return {true};
       auto result = this->fail("Some of the constraints fail on this value.");
       result.details = std::move(results);

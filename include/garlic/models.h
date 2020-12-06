@@ -47,13 +47,7 @@ namespace garlic {
 
     ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
-      for(auto& constraint : properties_.constraints) {
-        auto test = constraint->test(value);
-        if(!test.valid) {
-          result.failures.push_back(std::move(test));
-          if (constraint->skip_constraints()) break;
-        }
-      }
+      test_constraints(value, properties_.constraints, result.failures);
       return result;
     }
 
