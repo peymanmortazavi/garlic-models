@@ -11,5 +11,5 @@ models:
 
     Account:
         fields:
-            user: User
+            user: TestField
             email: string

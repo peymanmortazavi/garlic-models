@@ -173,12 +173,23 @@ namespace garlic {
 
     FieldConstraint(
         FieldReference field,
-        ConstraintProperties&& props
-    ) : field_(std::move(field)), Constraint<LayerType>(std::move(props)) {
+        ConstraintProperties&& props,
+        bool hide = false
+    ) : field_(std::move(field)),
+        Constraint<LayerType>(std::move(props)),
+        hide_(hide) {
       this->update_name();
     }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
+      if (hide_) {
+        for (const auto& constraint : (*field_)->get_properties().constraints) {
+          if (auto result = constraint->test(value); !result.valid) {
+            return std::move(result);
+          }
+        }
+        return {true};
+      }
       auto result = (*field_)->validate(value);
       if (result.is_valid()) return {true};
       return {
@@ -194,6 +205,7 @@ namespace garlic {
 
   protected:
     FieldReference field_;
+    bool hide_;
 
     void update_name() {
       if (*field_ && this->props_.name.empty()) {

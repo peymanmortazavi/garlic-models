@@ -108,11 +108,15 @@ namespace garlic::parsing {
     using FieldPtr = std::shared_ptr<Field<Destination>>;
     ConstraintProperties props {true};
     set_constraint_properties(value, props);
+    bool hide = false;
     std::shared_ptr<FieldConstraint<Destination>> result;
-    get_member(value, "field", [&parser, &result, &props](const auto& field) {
+    get_member(value, "hide", [&hide](const auto& hide_value) {
+        hide = hide_value.get_bool();
+    });
+    get_member(value, "field", [&parser, &result, &props, &hide](const auto& field) {
         auto ptr = parser.resolve_field_reference(field.get_cstr());
         result = std::make_shared<FieldConstraint<Destination>>(
-            std::make_shared<FieldPtr>(ptr), std::move(props)
+            std::make_shared<FieldPtr>(ptr), std::move(props), hide
         );
         if (!ptr) {
           parser.add_field_dependency(field.get_cstr(), result);
