@@ -66,6 +66,7 @@ namespace garlic {
     get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
   }
 
+
   template<garlic::ReadableLayer LayerType>
   class Constraint {
   public:
