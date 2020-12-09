@@ -76,16 +76,55 @@ namespace garlic {
     std::string_view get_name() const noexcept { return props_.name; };
     bool skip_constraints() const noexcept { return props_.fatal; };
 
-    auto fail() const noexcept -> ConstraintResult {
-      return {false, this->props_.name, this->props_.message};
+    auto fail(bool field=false) const noexcept -> ConstraintResult {
+      return ConstraintResult{
+        .valid = false,
+        .name = this->props_.name,
+        .reason = this->props_.message,
+        .field = field
+      };
     }
 
-    auto fail(const char* message) const noexcept -> ConstraintResult {
+    auto fail(const char* message, bool field=false) const noexcept -> ConstraintResult {
       if (!this->props_.message.empty()) {
-        return ConstraintResult{false, this->props_.name, props_.message};
+        return ConstraintResult{
+          .valid = false,
+          .name = this->props_.name,
+          .reason = props_.message,
+          .field = field
+        };
       } else {
-        return ConstraintResult{false, this->props_.name, std::string{message}};
+        return ConstraintResult{
+          .valid = false,
+          .name = this->props_.name,
+          .reason = message,
+          .field = field
+        };
       }
+    }
+
+    auto fail(const char* message, std::vector<ConstraintResult>&& details, bool field=false) const noexcept {
+      if (!this->props_.message.empty()) {
+        return ConstraintResult {
+          .valid = false,
+          .name = this->props_.name,
+          .reason = props_.message,
+          .details = std::move(details),
+          .field = field,
+        };
+      } else {
+        return ConstraintResult {
+          .valid = false,
+          .name = this->props_.name,
+          .reason = message,
+          .details = std::move(details),
+          .field = field
+        };
+      }
+    }
+
+    auto ok() const noexcept -> ConstraintResult {
+      return ConstraintResult{ .valid = true };
     }
 
   protected:
@@ -105,34 +144,34 @@ namespace garlic {
     ConstraintResult test(const LayerType& value) const noexcept override {
       switch (flag_) {
         case TypeFlag::Null: {
-          if (value.is_null()) { return {true}; }
+          if (value.is_null()) { return this->ok(); }
           else return this->fail("Expected null.");
         }
         case TypeFlag::Boolean: {
-          if (value.is_bool()) { return {true}; }
+          if (value.is_bool()) { return this->ok(); }
           else return this->fail("Expected boolean type.");
         }
         case TypeFlag::Double: {
-          if (value.is_double()) { return {true}; }
+          if (value.is_double()) { return this->ok(); }
           else return this->fail("Expected double type.");
         }
         case TypeFlag::Integer: {
-          if (value.is_int()) { return {true}; }
+          if (value.is_int()) { return this->ok(); }
           else return this->fail("Expected integer type.");
         }
         case TypeFlag::String: {
-          if (value.is_string()) { return {true}; }
+          if (value.is_string()) { return this->ok(); }
           else return this->fail("Expected string type.");
         }
         case TypeFlag::List: {
-          if (value.is_list()) { return {true}; }
+          if (value.is_list()) { return this->ok(); }
           else return this->fail("Expected a list.");
         }
         case TypeFlag::Object: {
-          if (value.is_object()) { return {true}; }
+          if (value.is_object()) { return this->ok(); }
           else return this->fail("Expected an object.");
         }
-        default: return {true};
+        default: return this->ok();
       }
     }
 
@@ -162,15 +201,15 @@ namespace garlic {
       if (value.is_string()) {
         auto length = value.get_string_view().size();
         if (length > max_ || length < min_) return this->fail("invalid string length.");
-        return {true};
+        return this->ok();
       } else if (value.is_double()) {
         auto dvalue = value.get_double();
         if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.");
-        return {true};
+        return this->ok();
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
         if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
-        return {true};
+        return this->ok();
       } else if (value.is_list()) {
         int count = 0;
         for (const auto& item : value.get_list()) {
@@ -178,8 +217,8 @@ namespace garlic {
           if (count > max_) return this->fail("too many items in the list.");
         }
         if (count < min_) return this->fail("too few items in the list.");
-        return {true};
-      } else return {true};
+        return this->ok();
+      } else return this->ok();
     }
 
   private:
@@ -204,8 +243,8 @@ namespace garlic {
     ) : pattern_(std::move(pattern)), Constraint<LayerType>(std::move(props)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      if (!value.is_string()) return {true};
-      if (std::regex_match(value.get_cstr(), pattern_)) { return {true}; }
+      if (!value.is_string()) return this->ok();
+      if (std::regex_match(value.get_cstr(), pattern_)) { return this->ok(); }
       else { return this->fail("invalid value."); }
     }
 
@@ -231,7 +270,7 @@ namespace garlic {
   ConstraintResult test(const LayerType& value) const noexcept override {
     for(const auto& constraint : constraints_) {
       auto result = constraint->test(value);
-      if (result.valid) return {true};
+      if (result.valid) return this->ok();
     }
     return this->fail("None of the constraints read this value.");
   }
@@ -277,7 +316,7 @@ namespace garlic {
         }
         index++;
       }
-      return {true};
+      return this->ok();
     }
 
   private:
@@ -331,7 +370,7 @@ namespace garlic {
     if (constraint_it != constraints_.end()) {
       return this->fail("Too few values in the tuple.");
     }
-    return {true};
+    return this->ok();
   }
 
   private:
@@ -373,7 +412,7 @@ namespace garlic {
           }
         }
       }
-      return {true};
+      return this->ok();
     }
 
   private:
@@ -403,11 +442,11 @@ namespace garlic {
         for (const auto& constraint : constraints_) {
           if (auto result = constraint->test(value); !result.valid) return result;
         }
-        return {true};
+        return this->ok();
       }
       std::vector<ConstraintResult> results;
       test_constraints(value, constraints_, results);
-      if (results.empty()) return {true};
+      if (results.empty()) return this->ok();
       auto result = this->fail("Some of the constraints fail on this value.");
       result.details = std::move(results);
       return result;

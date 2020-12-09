@@ -51,8 +51,15 @@ namespace garlic {
       return result;
     }
 
-  const std::string& get_name() const noexcept { return properties_.name; }
-  const Properties& get_properties() const noexcept { return properties_; }
+    const char* get_message() const noexcept {
+      const auto& meta = properties_.meta;
+      if (auto it = meta.find("message"); it != meta.end()) {
+        return it->second.c_str();
+      }
+      return nullptr;
+    }
+    const std::string& get_name() const noexcept { return properties_.name; }
+    const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
     Properties properties_;
@@ -188,14 +195,11 @@ namespace garlic {
             return std::move(result);
           }
         }
-        return {true};
+        return this->ok();
       }
       auto result = (*field_)->validate(value);
-      if (result.is_valid()) return {true};
-      return {
-        false, this->props_.name, this->props_.message,
-        std::move(result.failures), false
-      };
+      if (result.is_valid()) return this->ok();
+      return this->fail(this->props_.message.c_str(), std::move(result.failures));
     }
 
     void set_field(FieldPtr field) {
