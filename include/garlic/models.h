@@ -199,7 +199,7 @@ namespace garlic {
       }
       auto result = (*field_)->validate(value);
       if (result.is_valid()) return this->ok();
-      return this->fail(this->props_.message.c_str(), std::move(result.failures));
+      return this->fail((*field_)->get_message(), std::move(result.failures));
     }
 
     void set_field(FieldPtr field) {
