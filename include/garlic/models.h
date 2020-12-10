@@ -208,10 +208,9 @@ namespace garlic {
       }
       auto result = (*field_)->validate(value);
       if (result.is_valid()) return this->ok();
-      if (auto message = (*field_)->get_message(); message != nullptr) {
-        return this->fail((*field_)->get_message(), std::move(result.failures));
-      }
-      return this->fail("", std::move(result.failures));
+      auto reason = (*field_)->get_message();
+      if (reason == nullptr) return this ->fail("", std::move(result.failures));
+      return this->fail(reason, std::move(result.failures));
     }
 
     void set_field(FieldPtr field) {
