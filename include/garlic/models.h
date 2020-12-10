@@ -198,20 +198,20 @@ namespace garlic {
     }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      //if (hide_) {
-      //  for (const auto& constraint : (*field_)->get_properties().constraints) {
-      //    if (auto result = constraint->test(value); !result.valid) {
-      //      return std::move(result);
-      //    }
-      //  }
-      //  return this->ok();
-      //}
+      if (hide_) {
+        for (const auto& constraint : (*field_)->get_properties().constraints) {
+          if (auto result = constraint->test(value); !result.valid) {
+            return std::move(result);
+          }
+        }
+        return this->ok();
+      }
       auto result = (*field_)->validate(value);
       if (result.is_valid()) return this->ok();
       if (auto message = (*field_)->get_message(); message != nullptr) {
         return this->fail((*field_)->get_message(), std::move(result.failures));
       }
-      return this->fail("Peyman", std::move(result.failures));
+      return this->fail("", std::move(result.failures));
     }
 
     void set_field(FieldPtr field) {

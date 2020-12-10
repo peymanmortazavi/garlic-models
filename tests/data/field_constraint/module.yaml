@@ -1,7 +1,18 @@
 fields:
     TestField:
         constraints: [User]
+        message: "Invalid user object."
 
+    EmailField:
+        constraints:
+            - type: regex
+              pattern: "\\w*[@]\\w*[.]\\w{1,10}"
+        message: "Invalid email!"
+
+    EmailCustomMessage:
+        constraints:
+            - type: field
+              field: EmailField
 
 models:
     User:
@@ -12,4 +23,9 @@ models:
     Account:
         fields:
             user: TestField
-            email: string
+            email: EmailField
+
+    AccountCustomMessage:
+        inherit: Account
+        fields:
+            email: EmailCustomMessage

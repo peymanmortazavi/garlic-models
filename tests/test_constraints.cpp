@@ -15,7 +15,20 @@ TEST(Constraints, FieldConstraint) {
   load_libyaml_module(module, "data/field_constraint/module.yaml");
 
   assert_jsonfile_valid(module, "Account", "data/field_constraint/good.json");
-  assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad.json");
+  assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad1.json");
+  assert_jsonfile_invalid(module, "Account", "data/field_constraint/bad2.json");
+  assert_jsonfile_invalid(module, "AccountCustomMessage", "data/field_constraint/bad2.json");
+
+  // Test messages
+  auto results = validate_jsonfile(module, "Account", "data/field_constraint/bad1.json");
+  ASSERT_STREQ(results.details[0].reason.c_str(), "Invalid user object.");
+
+  results = validate_jsonfile(module, "Account", "data/field_constraint/bad2.json");
+  ASSERT_STREQ(results.details[0].reason.c_str(), "Invalid email!");
+
+  results = validate_jsonfile(module, "AccountCustomMessage", "data/field_constraint/bad2.json");
+  ASSERT_STREQ(results.details[0].details[0].reason.c_str(), "Invalid email!");
+
   assert_model_field_constraints(module, "Account", "user", {"User"});
 }
 
