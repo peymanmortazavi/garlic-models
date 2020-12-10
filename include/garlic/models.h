@@ -96,6 +96,14 @@ namespace garlic {
       properties_.field_map.emplace(std::move(name), std::move(field));
     }
 
+    FieldPtr get_field(const std::string& name) const {
+      auto it = properties_.field_map.find(name);
+      if (it != properties_.field_map.end()) {
+        return it->second;
+      }
+      return nullptr;
+    }
+
     ConstraintResult validate(const LayerType& value) const {
       ConstraintResult result;
       if (value.is_object()) {
@@ -105,12 +113,13 @@ namespace garlic {
             auto test = it->second->validate(member.value);
             if (!test.is_valid()) {
               result.valid = false;
+              const char* reason = it->second->get_message();
               result.details.push_back({
-                  false,
-                  member.key.get_cstr(),
-                  "find a summary of why this field value sucks.",
-                  std::move(test.failures),
-                  true
+                  .valid = false,
+                  .name = member.key.get_cstr(),
+                  .reason = (reason == nullptr ? "" : reason),
+                  .details = std::move(test.failures),
+                  .field = true
               });
             }
           }
@@ -189,17 +198,20 @@ namespace garlic {
     }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      if (hide_) {
-        for (const auto& constraint : (*field_)->get_properties().constraints) {
-          if (auto result = constraint->test(value); !result.valid) {
-            return std::move(result);
-          }
-        }
-        return this->ok();
-      }
+      //if (hide_) {
+      //  for (const auto& constraint : (*field_)->get_properties().constraints) {
+      //    if (auto result = constraint->test(value); !result.valid) {
+      //      return std::move(result);
+      //    }
+      //  }
+      //  return this->ok();
+      //}
       auto result = (*field_)->validate(value);
       if (result.is_valid()) return this->ok();
-      return this->fail((*field_)->get_message(), std::move(result.failures));
+      if (auto message = (*field_)->get_message(); message != nullptr) {
+        return this->fail((*field_)->get_message(), std::move(result.failures));
+      }
+      return this->fail("Peyman", std::move(result.failures));
     }
 
     void set_field(FieldPtr field) {

@@ -221,7 +221,7 @@ namespace garlic {
           auto ready = false;
           this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete) {
             ready = true;
-            props.field_map.emplace(field.key.get_cstr(), std::move(ptr));
+            props.field_map[field.key.get_cstr()] = std::move(ptr);
           });
           if (!ready) {  // it must be a referenced field. add a dependency.
             context.add_lazy_model_field(field.value.get_string(), field.key.get_string(), ptr);
@@ -260,6 +260,7 @@ namespace garlic {
 
       add_meta_field("label");
       add_meta_field("description");
+      add_meta_field("message");
     }
 
     template<typename Callable>
@@ -339,7 +340,7 @@ namespace garlic {
       } else {
         context.fields[key];  // create a record so it would be deemed as incomplete.
       }
-      fields_.emplace(std::move(key), std::move(ptr));  // register the field.
+      fields_[std::move(key)] = std::move(ptr);  // register the field.
     }
 
     template<ReadableLayer Source, typename Callable>
@@ -394,13 +395,13 @@ namespace garlic {
         return std::make_shared<FieldConstraintType>(
             std::make_shared<FieldPtr>(ptr),
             ConstraintProperties{},
-            true
+            false
         );
       }
       return std::make_shared<FieldConstraintType>(
           std::make_shared<FieldPtr>(nullptr),
           ConstraintProperties{},
-          true
+          false
       );
     }
 

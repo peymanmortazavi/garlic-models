@@ -145,6 +145,8 @@ TEST(ModuleParsing, ModelInheritance) {
   assert_model_fields(module, "MobileUser", {"id", "username", "password"});
   assert_model_fields(module, "BaseQuery", {"skip", "limit"});
   assert_model_fields(module, "UserQuery", {"skip", "limit", "id", "username"});
+
+  assert_model_field_name(module, "MobileUser", "username", "StrictUserName");
 }
 
 TEST(ModuleParsing, ModelInheritanceLazy) {
@@ -158,4 +160,7 @@ TEST(ModuleParsing, ModelInheritanceLazy) {
   assert_model_fields(module, "Model2_without_forwarding", {"model3"});
   assert_model_field_constraints(module, "Model2_without_forwarding", "model3", {"type_constraint"});
   assert_model_field_constraints(module, "Model2_with_exclude", "model3", {"Model3"});
+
+  assert_model_field_name(module, "Model2_overriding", "model3", "IntegerField");
+  assert_model_field_name(module, "Model2_overriding", "model4", "Model4");
 }

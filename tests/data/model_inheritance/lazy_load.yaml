@@ -20,5 +20,10 @@ models:
         inherit: [Model1, Model1_without_forwarding]
         exclude_fields: [model4]
 
+    Model2_overriding:
+        inherit: [Model1]
+        fields:
+            model3: integer
+
     Model3: {}
     Model4: {}

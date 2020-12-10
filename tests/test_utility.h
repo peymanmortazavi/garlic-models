@@ -84,6 +84,20 @@ void assert_model_field_constraints(
 }
 
 template<typename LayerType>
+void assert_model_field_name(
+    const garlic::Module<LayerType>& module,
+    const char* model_name,
+    const char* field_name,
+    const char* field_type
+    ) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  auto field = model->get_field(field_name);
+  ASSERT_NE(field, nullptr);
+  ASSERT_STREQ(field->get_name().c_str(), field_type);
+}
+
+template<typename LayerType>
 void load_libyaml_module(garlic::Module<LayerType>& module, const char* filename) {
   auto module_document = get_libyaml_document(filename);
   auto parse_results = module.parse(module_document.get_view());
