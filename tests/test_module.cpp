@@ -169,15 +169,19 @@ TEST(ModuleParsing, OptionalFields) {
   auto module = Module<JsonView>();
 
   load_libyaml_module(module, "data/optional_fields/module.yaml");
-  assert_jsonfile_valid(module, "User", "data/optional_fields/good1.json", true);
-  assert_jsonfile_valid(module, "Staff", "data/optional_fields/good1.json", true);
 
-  assert_jsonfile_valid(module, "User", "data/optional_fields/good2.json", true);
-  assert_jsonfile_valid(module, "Staff", "data/optional_fields/good2.json", true);
+  auto valid_names = vector<string>{"good1", "good2", "good3"};
+  auto invalid_names = vector<string>{"bad1","bad2", "bad3"};
 
-  assert_jsonfile_invalid(module, "User", "data/optional_fields/bad1.json", true);
-  assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad1.json", true);
+  for (const auto& name : valid_names) {
+    auto path = "data/optional_fields/" + name + ".json";
+    assert_jsonfile_valid(module, "User", path.data(), true);
+    assert_jsonfile_valid(module, "Staff", path.data(), true);
+  }
 
-  assert_jsonfile_invalid(module, "User", "data/optional_fields/bad2.json", true);
-  assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad2.json", true);
+  for (const auto& name : invalid_names) {
+    auto path = "data/optional_fields/" + name + ".json";
+    assert_jsonfile_invalid(module, "User", path.data(), true);
+    assert_jsonfile_invalid(module, "Staff", path.data(), true);
+  }
 }

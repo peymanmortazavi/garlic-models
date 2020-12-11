@@ -52,7 +52,7 @@ namespace garlic {
               [this, &context, &field](auto ptr, auto complete, auto) {
                 this->add_field(field.key.get_string(), context,
                                 std::move(ptr), complete);
-              });
+              }, [](auto&&, auto){});
         }
       });
 
@@ -218,14 +218,12 @@ namespace garlic {
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
-          auto ready = false;
-          this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete, auto optional) {
-            ready = true;
+          this->parse_field("", field.value, context,
+              [&props, &field](auto ptr, auto complete, auto optional) {
             props.field_map[field.key.get_cstr()] = {.field = std::move(ptr), .required = !optional};
+          }, [&field, &context, &ptr](auto&& name, auto optional) {
+            context.add_lazy_model_field(std::move(name), field.key.get_string(), ptr);
           });
-          if (!ready) {  // it must be a referenced field. add a dependency.
-            context.add_lazy_model_field(field.value.get_string(), field.key.get_string(), ptr);
-          }
         });
       });
 
@@ -263,8 +261,12 @@ namespace garlic {
       add_meta_field("message");
     }
 
-    template<typename Callable>
-    void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
+    template<typename SuccessCallable, typename FailCallable>
+    void parse_field(
+        std::string&& name, const ReadableLayer auto& value,
+        parse_context& context,const SuccessCallable& cb,
+        const FailCallable& fcb = [](auto, auto){}
+        ) noexcept {
       auto optional = false;
 
       if (value.is_string()) {  // parse the field reference.
@@ -277,8 +279,11 @@ namespace garlic {
             field_name.c_str(), context, [&cb, &optional](const auto& ptr) {
               cb(ptr, true, optional);
               });
-        if (!ready && !name.empty()) {
-          context.fields[std::move(field_name)].fields.emplace_back(std::move(name));
+        if (!ready) {
+          if (!name.empty()) {
+            context.fields[field_name].fields.emplace_back(std::move(name));
+          }
+          fcb(std::move(field_name), optional);
         }
         return;
       }
