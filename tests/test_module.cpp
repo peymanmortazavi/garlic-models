@@ -126,7 +126,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
   };
   for(const auto& item : model_ptr->get_properties().field_map) {
     if (auto it = expectations.find(item.first); it != expectations.end()) {
-      assert_field_constraints(*item.second, it->second);
+      assert_field_constraints(*item.second.field, it->second);
       expectations.erase(it);
     }
   }
@@ -169,15 +169,15 @@ TEST(ModuleParsing, OptionalFields) {
   auto module = Module<JsonView>();
 
   load_libyaml_module(module, "data/optional_fields/module.yaml");
-  //assert_jsonfile_valid(module, "User", "data/optional_fields/good1.json", true);
-  //assert_jsonfile_valid(module, "Staff", "data/optional_fields/good1.json", true);
+  assert_jsonfile_valid(module, "User", "data/optional_fields/good1.json", true);
+  assert_jsonfile_valid(module, "Staff", "data/optional_fields/good1.json", true);
 
-  //assert_jsonfile_valid(module, "User", "data/optional_fields/good2.json", true);
-  //assert_jsonfile_valid(module, "Staff", "data/optional_fields/good2.json", true);
+  assert_jsonfile_valid(module, "User", "data/optional_fields/good2.json", true);
+  assert_jsonfile_valid(module, "Staff", "data/optional_fields/good2.json", true);
 
-  //assert_jsonfile_invalid(module, "User", "data/optional_fields/bad1.json", true);
-  //assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad1.json", true);
+  assert_jsonfile_invalid(module, "User", "data/optional_fields/bad1.json", true);
+  assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad1.json", true);
 
-  //assert_jsonfile_invalid(module, "User", "data/optional_fields/bad2.json", true);
-  //assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad2.json", true);
+  assert_jsonfile_invalid(module, "User", "data/optional_fields/bad2.json", true);
+  assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad2.json", true);
 }

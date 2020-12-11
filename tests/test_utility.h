@@ -69,7 +69,7 @@ void assert_model_field_constraints(
   const auto& field_map = model.get_properties().field_map;
   auto it = field_map.find(field_name);
   ASSERT_NE(it, field_map.end());
-  assert_field_constraints(*it->second, std::move(constraints));
+  assert_field_constraints(*it->second.field, std::move(constraints));
 }
 
 template<typename LayerType>
