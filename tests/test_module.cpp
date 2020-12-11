@@ -164,3 +164,20 @@ TEST(ModuleParsing, ModelInheritanceLazy) {
   assert_model_field_name(module, "Model2_overriding", "model3", "IntegerField");
   assert_model_field_name(module, "Model2_overriding", "model4", "Model4");
 }
+
+TEST(ModuleParsing, OptionalFields) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/optional_fields/module.yaml");
+  //assert_jsonfile_valid(module, "User", "data/optional_fields/good1.json", true);
+  //assert_jsonfile_valid(module, "Staff", "data/optional_fields/good1.json", true);
+
+  //assert_jsonfile_valid(module, "User", "data/optional_fields/good2.json", true);
+  //assert_jsonfile_valid(module, "Staff", "data/optional_fields/good2.json", true);
+
+  //assert_jsonfile_invalid(module, "User", "data/optional_fields/bad1.json", true);
+  //assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad1.json", true);
+
+  //assert_jsonfile_invalid(module, "User", "data/optional_fields/bad2.json", true);
+  //assert_jsonfile_invalid(module, "Staff", "data/optional_fields/bad2.json", true);
+}

@@ -49,7 +49,7 @@ namespace garlic {
           // parse field definition.
           this->parse_field(
               field.key.get_string(), field.value, context,
-              [this, &context, &field](auto ptr, auto complete) {
+              [this, &context, &field](auto ptr, auto complete, auto) {
                 this->add_field(field.key.get_string(), context,
                                 std::move(ptr), complete);
               });
@@ -219,7 +219,12 @@ namespace garlic {
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
           auto ready = false;
-          this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete) {
+          /*
+           * So here's the deal: we want to be able to specify what fields are required but without
+           * using any new hash tables. So we should probably replace the Model properties so that it
+           * would contain a value that includes whether or not the field is required and the pointer.
+           */
+          this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete, auto optional) {
             ready = true;
             props.field_map[field.key.get_cstr()] = std::move(ptr);
           });
@@ -265,10 +270,20 @@ namespace garlic {
 
     template<typename Callable>
     void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
+      auto optional = false;
+
       if (value.is_string()) {  // parse the field reference.
-        auto ready = this->parse_reference(value.get_cstr(), context, [&cb](const auto& ptr){ cb(ptr, true); });
+        auto field_name = value.get_string();
+        if (field_name.back() == '?') {
+          field_name.pop_back();
+          optional = true;
+        }
+        auto ready = this->parse_reference(
+            field_name.c_str(), context, [&cb, &optional](const auto& ptr) {
+              cb(ptr, true, optional);
+              });
         if (!ready && !name.empty()) {
-          context.fields[value.get_cstr()].fields.emplace_back(std::move(name));
+          context.fields[std::move(field_name)].fields.emplace_back(std::move(name));
         }
         return;
       }
@@ -295,7 +310,11 @@ namespace garlic {
         }
       });
 
-      cb(std::move(ptr), complete);
+      get_member(value, "optional", [&optional](const auto& item) {
+          optional = item.get_bool();
+          });
+
+      cb(std::move(ptr), complete, optional);
     }
 
     void resolve_field(const std::string& key, parse_context& context, const FieldPtr& ptr) {
