@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include "layer.h"
@@ -75,11 +76,16 @@ namespace garlic {
     using FieldType = Field<LayerType>;
     using FieldPtr = std::shared_ptr<FieldType>;
 
+    struct FieldDescriptor {
+      FieldPtr field;
+      bool required;
+    };
+
     struct Properties {
       std::string name;
       bool strict = false;
       std::map<std::string, std::string> meta;
-      std::map<std::string, FieldPtr> field_map;
+      std::map<std::string, FieldDescriptor> field_map;
     };
 
     Model() {}
@@ -91,15 +97,17 @@ namespace garlic {
       properties_.name = name;
     }
 
-    void add_field(std::string&& name, FieldPtr field) {
-      //if (field->is_required()) required_fields_.push_back(name);
-      properties_.field_map.emplace(std::move(name), std::move(field));
+    void add_field(std::string&& name, FieldPtr field, bool required = true) {
+      properties_.field_map.emplace(
+          std::move(name),
+          { .field = std::move(field), .required = required }
+          );
     }
 
     FieldPtr get_field(const std::string& name) const {
       auto it = properties_.field_map.find(name);
       if (it != properties_.field_map.end()) {
-        return it->second;
+        return it->second.field;
       }
       return nullptr;
     }
@@ -107,44 +115,54 @@ namespace garlic {
     ConstraintResult validate(const LayerType& value) const {
       ConstraintResult result;
       if (value.is_object()) {
+        // todo : if the container allows for atomic table look up, swap the loop.
+        std::set<std::string_view> requirements;
         for (const auto& member : value.get_object()) {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
-            auto test = it->second->validate(member.value);
+            auto test = it->second.field->validate(member.value);
             if (!test.is_valid()) {
-              result.valid = false;
-              const char* reason = it->second->get_message();
+              const char* reason = it->second.field->get_message();
               result.details.push_back({
-                  .valid = false,
-                  .name = member.key.get_cstr(),
-                  .reason = (reason == nullptr ? "" : reason),
-                  .details = std::move(test.failures),
-                  .field = true
-              });
+                    .valid = false,
+                    .name = member.key.get_cstr(),
+                    .reason = (reason == nullptr ? "" : reason),
+                    .details = std::move(test.failures),
+                    .field = true
+                  });
             }
+            requirements.emplace(it->first);
           }
         }
+        for (const auto& item : properties_.field_map) {
+          if (auto it = requirements.find(item.first); it != requirements.end()) continue;
+          if (!item.second.required) continue;
+          result.details.push_back({
+                .valid = false,
+                .name = item.first,
+                .reason = "missing required field!",
+                .field = true
+              });
+        }
       } else {
-        result.valid = false; 
         result.details.push_back({
-            false,
-            "type",
-            "Expected object."
+            .valid = false,
+            .name = "type",
+            .reason = "Expected object."
         });
       }
-      if (!result.valid) {
+      if (!result.details.empty()) {
+        result.valid = false;
         result.name = properties_.name;
-        result.reason = "This model is invalid";
+        result.reason = "This model is invalid!";
       }
       return result;
     }
 
     const Properties& get_properties() const { return properties_; }
-    const std::vector<std::string> get_required_fields() const { return required_fields_; }
 
   protected:
     Properties properties_;
-    std::vector<std::string> required_fields_;
   };
 
 

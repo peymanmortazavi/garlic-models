@@ -49,10 +49,10 @@ namespace garlic {
           // parse field definition.
           this->parse_field(
               field.key.get_string(), field.value, context,
-              [this, &context, &field](auto ptr, auto complete) {
+              [this, &context, &field](auto ptr, auto complete, auto) {
                 this->add_field(field.key.get_string(), context,
                                 std::move(ptr), complete);
-              });
+              }, [](auto&&, auto){});
         }
       });
 
@@ -94,6 +94,7 @@ namespace garlic {
     struct lazy_pair {
       std::string key;
       ModelPtr target;
+      bool required;
     };
 
     struct field_dependency {
@@ -103,13 +104,23 @@ namespace garlic {
       std::vector<std::shared_ptr<FieldConstraintType>> constraints;  // field constraints.
     };
 
+    struct lazy_model_field {
+      std::string name;
+      bool required;
+    };
+
     struct parse_context {
       MapOf<field_dependency> fields;
-      std::map<ModelPtr, MapOf<std::string>> lazy_model_fields;
+      std::map<ModelPtr, MapOf<lazy_model_field>> lazy_model_fields;
 
-      void add_lazy_model_field(const std::string& field, const std::string& key, ModelPtr ptr) {
-        lazy_model_fields[ptr].emplace(key, field);
-        fields[field].models.emplace_back(lazy_pair{key, std::move(ptr)});
+      void add_lazy_model_field(const std::string& field, const std::string& key, ModelPtr ptr, bool required) {
+        lazy_model_fields[ptr].emplace(key, lazy_model_field{.name = field, .required = required});
+        fields[field].models.emplace_back(
+            lazy_pair{
+              .key = key,
+              .target = std::move(ptr),
+              .required = required
+            });
       }
     };
 
@@ -154,29 +165,29 @@ namespace garlic {
 
     void process_model_inheritance(const ModelPtr& model, parse_context& context, const ReadableLayer auto& value) {
       enum FieldStatus : uint8_t { lazy = 1, available = 2, exclude = 3 };
-      struct field_descriptor {
+      struct field_info {
         FieldStatus status;
-        std::string lazy_field_name;
-        FieldPtr field_ptr;
+        lazy_model_field lazy_field;
+        typename ModelType::FieldDescriptor descriptor;
       };
-      MapOf<field_descriptor> field_table;
+      MapOf<field_info> field_table;
       auto& props = model->properties_;
       auto apply_inheritance = [this, &context, &field_table, &model](const auto& model_name) {
           auto it = this->models_.find(model_name);
           if (it == this->models_.end()) {}  // report parsing error here.
           auto& field_map = it->second->properties_.field_map;
           for (const auto& item : field_map) {
-            auto& descriptor = field_table[item.first];
-            if (descriptor.status == FieldStatus::exclude) continue;
-            descriptor.status = FieldStatus::available;
-            descriptor.field_ptr = item.second;
+            auto& info = field_table[item.first];
+            if (info.status == FieldStatus::exclude) continue;
+            info.status = FieldStatus::available;
+            info.descriptor = item.second;
           }
           get(context.lazy_model_fields, it->second, [&field_table](const auto& lazy_field_map) {
               for (const auto& item : lazy_field_map.second) {
-                auto& descriptor = field_table[item.first];
-                if (descriptor.status == FieldStatus::exclude) continue;
-                descriptor.status = FieldStatus::lazy;
-                descriptor.lazy_field_name = item.second;
+                auto& info = field_table[item.first];
+                if (info.status == FieldStatus::exclude) continue;
+                info.status = FieldStatus::lazy;
+                info.lazy_field = item.second;
               }
           });
       };
@@ -197,10 +208,14 @@ namespace garlic {
       for (const auto& item : field_table) {
         switch (item.second.status) {
           case FieldStatus::lazy:
-            context.add_lazy_model_field(item.second.lazy_field_name, item.first, model);
+            context.add_lazy_model_field(
+                item.second.lazy_field.name,
+                item.first,
+                model,
+                item.second.lazy_field.required);
             break;
           case FieldStatus::available:
-            props.field_map.emplace(item.first, item.second.field_ptr);
+            props.field_map.emplace(item.first, item.second.descriptor);
             break;
           default:
             continue;
@@ -218,14 +233,12 @@ namespace garlic {
 
       get_member(value, "fields", [this, &props, &context, &ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
-          auto ready = false;
-          this->parse_field("", field.value, context, [&props, &field, &ready](auto ptr, auto complete) {
-            ready = true;
-            props.field_map[field.key.get_cstr()] = std::move(ptr);
+          this->parse_field("", field.value, context,
+              [&props, &field](auto ptr, auto complete, auto optional) {
+            props.field_map[field.key.get_cstr()] = {.field = std::move(ptr), .required = !optional};
+          }, [&field, &context, &ptr](auto&& name, auto optional) {
+            context.add_lazy_model_field(std::move(name), field.key.get_string(), ptr, !optional);
           });
-          if (!ready) {  // it must be a referenced field. add a dependency.
-            context.add_lazy_model_field(field.value.get_string(), field.key.get_string(), ptr);
-          }
         });
       });
 
@@ -263,12 +276,29 @@ namespace garlic {
       add_meta_field("message");
     }
 
-    template<typename Callable>
-    void parse_field(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) noexcept {
+    template<typename SuccessCallable, typename FailCallable>
+    void parse_field(
+        std::string&& name, const ReadableLayer auto& value,
+        parse_context& context, const SuccessCallable& cb,
+        const FailCallable& fcb
+        ) noexcept {
+      auto optional = false;
+
       if (value.is_string()) {  // parse the field reference.
-        auto ready = this->parse_reference(value.get_cstr(), context, [&cb](const auto& ptr){ cb(ptr, true); });
-        if (!ready && !name.empty()) {
-          context.fields[value.get_cstr()].fields.emplace_back(std::move(name));
+        auto field_name = value.get_string();
+        if (field_name.back() == '?') {
+          field_name.pop_back();
+          optional = true;
+        }
+        auto ready = this->parse_reference(
+            field_name.c_str(), context, [&cb, &optional](const auto& ptr) {
+              cb(ptr, true, optional);
+              });
+        if (!ready) {
+          if (!name.empty()) {
+            context.fields[field_name].fields.emplace_back(std::move(name));
+          }
+          fcb(std::move(field_name), optional);
         }
         return;
       }
@@ -295,7 +325,11 @@ namespace garlic {
         }
       });
 
-      cb(std::move(ptr), complete);
+      get_member(value, "optional", [&optional](const auto& item) {
+          optional = item.get_bool();
+          });
+
+      cb(std::move(ptr), complete, optional);
     }
 
     void resolve_field(const std::string& key, parse_context& context, const FieldPtr& ptr) {
@@ -317,7 +351,10 @@ namespace garlic {
 
         // add the field to the depending models.
         for (auto& member : it->second.models) {
-          member.target->properties_.field_map.emplace(std::move(member.key), ptr);
+          member.target->properties_.field_map.emplace(
+              std::move(member.key),
+              typename ModelType::FieldDescriptor{.field = ptr, .required = member.required}
+              );
         }
 
         // register all the field aliases.
