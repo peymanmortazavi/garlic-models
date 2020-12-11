@@ -279,8 +279,8 @@ namespace garlic {
     template<typename SuccessCallable, typename FailCallable>
     void parse_field(
         std::string&& name, const ReadableLayer auto& value,
-        parse_context& context,const SuccessCallable& cb,
-        const FailCallable& fcb = [](auto, auto){}
+        parse_context& context, const SuccessCallable& cb,
+        const FailCallable& fcb
         ) noexcept {
       auto optional = false;
 
