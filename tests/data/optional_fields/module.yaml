@@ -1,0 +1,27 @@
+fields:
+    PhoneNumber:
+        constraints:
+            - type: regex
+              pattern: "[+]?\\d{10,11}"
+
+models:
+    User:
+        fields:
+            first_name:
+                optional: true
+                constraints:
+                    - string
+                    - type: range
+                      min: 3
+                      max: 12
+            last_name:
+                constraints:
+                    - string
+                    - type: range
+                      min: 3
+                      max: 12
+            work_phone: PhoneNumber
+            home_phone: PhoneNumber?
+
+    Staff:
+        inherit: User
