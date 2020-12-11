@@ -23,6 +23,7 @@ models:
             work_phone: PhoneNumber
             home_phone: PhoneNumber?
             parent: ParentInfo?
+            degree: Degree
 
     Staff:
         inherit: User
@@ -32,3 +33,9 @@ models:
             name: string
             phone: PhoneNumber
             address: string?
+
+    Degree:
+        fields:
+            name: string
+            first_year: integer
+            last_year: integer?

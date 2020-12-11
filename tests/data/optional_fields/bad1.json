@@ -2,5 +2,9 @@
     "first_name": "a",
     "last_name": "Models",
     "home_phone": "1",
-    "work_phone": "8001111111"
+    "work_phone": "8001111111",
+    "degree": {
+        "name": "B.S.",
+        "first_year": 2016
+    }
 }

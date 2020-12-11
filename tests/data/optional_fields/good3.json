@@ -4,5 +4,9 @@
     "parent": {
         "name": "c++",
         "phone": "8001111111"
+    },
+    "degree": {
+        "name": "B.S.",
+        "first_year": 2016
     }
 }
