@@ -1,0 +1,22 @@
+fields:
+    ConciseEmail:
+        constraints:
+            - type: field
+              field: Email
+              message: Invalid Email!
+              stop: true
+
+    RegularEmail:
+        constraints:
+            - Email
+
+    Email:
+        constraints:
+            - type: regex
+              pattern: \w+[@]\w+[.]\w+
+
+models:
+    User:
+        fields:
+            concise_email: ConciseEmail
+            regular_email: RegularEmail
