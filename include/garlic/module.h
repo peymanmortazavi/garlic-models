@@ -8,7 +8,7 @@
 
 namespace garlic {
 
-  template<ReadableLayer Destination>
+  template<ViewLayer Destination>
   class Module {
   public:
     template <typename T> using MapOf = std::map<std::string, T>;
@@ -39,7 +39,7 @@ namespace garlic {
       fields_ = static_map;
     }
 
-    ParsingResult parse(const ReadableLayer auto& value) noexcept {
+    ParsingResult parse(const ViewLayer auto& value) noexcept {
       if (!value.is_object()) return {false};
       
       parse_context context;
@@ -133,7 +133,7 @@ namespace garlic {
           Module& module
       ) : context(context), module(module) {}
 
-      template<ReadableLayer Source, typename Callable>
+      template<ViewLayer Source, typename Callable>
       void parse_constraint(const Source& value, const Callable& cb) {
         module.parse_constraint(value, context, cb);
       }
@@ -151,7 +151,7 @@ namespace garlic {
       }
     };
 
-    void process_model_meta(ModelPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
+    void process_model_meta(ModelPropertiesOf<Destination>& props, const ViewLayer auto& value) {
       get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", item.get_string());
       });
@@ -163,7 +163,7 @@ namespace garlic {
       });
     }
 
-    void process_model_inheritance(const ModelPtr& model, parse_context& context, const ReadableLayer auto& value) {
+    void process_model_inheritance(const ModelPtr& model, parse_context& context, const ViewLayer auto& value) {
       enum FieldStatus : uint8_t { lazy = 1, available = 2, exclude = 3 };
       struct field_info {
         FieldStatus status;
@@ -224,7 +224,7 @@ namespace garlic {
     }
 
     template<typename Callable>
-    void parse_model(std::string&& name, const ReadableLayer auto& value, parse_context& context, const Callable& cb) {
+    void parse_model(std::string&& name, const ViewLayer auto& value, parse_context& context, const Callable& cb) {
       auto ptr = std::make_shared<ModelType>(std::move(name));
       auto& props = ptr->properties_;
 
@@ -258,7 +258,7 @@ namespace garlic {
       return false;
     }
 
-    void process_field_meta(FieldPropertiesOf<Destination>& props, const ReadableLayer auto& value) {
+    void process_field_meta(FieldPropertiesOf<Destination>& props, const ViewLayer auto& value) {
       get_member(value, "meta", [&props](const auto& item) {
         for (const auto& member : item.get_object()) {
           props.meta.emplace(member.key.get_string(), member.value.get_string());
@@ -278,7 +278,7 @@ namespace garlic {
 
     template<typename SuccessCallable, typename FailCallable>
     void parse_field(
-        std::string&& name, const ReadableLayer auto& value,
+        std::string&& name, const ViewLayer auto& value,
         parse_context& context, const SuccessCallable& cb,
         const FailCallable& fcb
         ) noexcept {
@@ -380,7 +380,7 @@ namespace garlic {
       fields_[std::move(key)] = std::move(ptr);  // register the field.
     }
 
-    template<ReadableLayer Source, typename Callable>
+    template<ViewLayer Source, typename Callable>
     void parse_constraint(const Source& value, parse_context& context, const Callable& cb) noexcept {
       typedef ConstraintPtr (*ConstraintInitializer)(const Source&, parser);
       static const std::map<std::string, ConstraintInitializer> ctors = {
