@@ -23,6 +23,7 @@ namespace garlic {
 
 
   struct ConstraintProperties {
+    bool stop = false;  // should avoid storing details.
     bool fatal = false;  // should stop looking at other constraints.
     std::string name;  // constraint name.
     std::string message;  // custom rejection reason.
@@ -61,6 +62,7 @@ namespace garlic {
 
 
   void set_constraint_properties(const ViewLayer auto& value, ConstraintProperties& props) noexcept {
+    get_member(value, "stop", [&props](const auto& item) { props.stop = item.get_bool(); });
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
     get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
     get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
@@ -139,7 +141,9 @@ namespace garlic {
     TypeConstraint(
         TypeFlag required_type,
         std::string&& name="type_constraint"
-    ) : flag_(required_type), Constraint<LayerType>({true, std::move(name)}) {}
+    ) : flag_(required_type), Constraint<LayerType>({
+      .stop = false, .fatal = true, .name = std::move(name)
+      }) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       switch (flag_) {
@@ -189,7 +193,9 @@ namespace garlic {
         SizeType min,
         SizeType max,
         std::string&& name="range_constraint"
-    ) : min_(min), max_(max), Constraint<LayerType>({false, std::move(name)}) {}
+    ) : min_(min), max_(max), Constraint<LayerType>({
+      .stop = false, .fatal = false, .name = std::move(name)
+      }) {}
 
     RangeConstraint(
         SizeType min,
@@ -235,7 +241,9 @@ namespace garlic {
     RegexConstraint(
         std::string pattern,
         std::string name="regex_constraint"
-    ) : pattern_(std::move(pattern)), Constraint<LayerType>({false, std::move(name)}) {}
+    ) : pattern_(std::move(pattern)), Constraint<LayerType>({
+      .stop = false, .fatal = false, .name = std::move(name)
+      }) {}
 
     RegexConstraint(
         std::string pattern,
@@ -328,7 +336,9 @@ namespace garlic {
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
-  TupleConstraint() : Constraint<LayerType>({false, "tuple_constraint"}) {}
+  TupleConstraint() : Constraint<LayerType>({
+      .stop = false, .fatal = false, .name = "tuple_constraint"
+      }) {}
 
   TupleConstraint(
     std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
@@ -384,7 +394,9 @@ namespace garlic {
   public:
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
-    MapConstraint() : Constraint<LayerType>({false, "map_constraint"}) {}
+    MapConstraint() : Constraint<LayerType>({
+        .stop = false, .fatal = false, .name = "map_constraint"
+        }) {}
 
     MapConstraint(
       ConstraintPtr key_constraint,
@@ -427,7 +439,9 @@ namespace garlic {
 
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
-    AllConstraint() : Constraint<LayerType>({true, ""}) {}
+    AllConstraint() : Constraint<LayerType>({
+        .stop = false, .fatal = true
+        }) {}
 
     AllConstraint(
         std::vector<ConstraintPtr>&& constraints,
