@@ -16,7 +16,7 @@
 #include <vector>
 
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_string_value(const LayerType& value, const std::string& text) {
   ASSERT_TRUE(value.is_string());
 
@@ -28,30 +28,30 @@ void test_readonly_string_value(const LayerType& value, const std::string& text)
   ASSERT_TRUE(std_string_view == text);
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_int_value(const LayerType& value, int expectation) {
   ASSERT_TRUE(value.is_int());
   ASSERT_EQ(value.get_int(), expectation);
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_double_value(const LayerType& value, double expectation) {
   ASSERT_TRUE(value.is_double());
   ASSERT_EQ(value.get_double(), expectation);
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_bool_value(const LayerType& value, bool expectation) {
   ASSERT_TRUE(value.is_bool());
   ASSERT_EQ(value.get_bool(), expectation);
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_null_value(const LayerType& value) {
   ASSERT_TRUE(value.is_null());
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_list_range(const LayerType& value) {
   ASSERT_TRUE(value.is_list());
   auto it = value.begin_list();
@@ -62,7 +62,7 @@ void test_readonly_list_range(const LayerType& value) {
   ASSERT_EQ(it, value.end_list());
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void test_readonly_object_range(const LayerType& value) {
   ASSERT_TRUE(value.is_object());
   auto it = value.begin_member();
@@ -75,7 +75,7 @@ void test_readonly_object_range(const LayerType& value) {
 
 // Tests for writing.
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_string_value(LayerType& value) {
   std::string origin = "This is a very smoky test just to show if we have some string support.";
   std::string_view view = std::string_view{origin};
@@ -89,19 +89,19 @@ void test_full_string_value(LayerType& value) {
   test_readonly_string_value(value, origin);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_int_value(LayerType& value) {
   value.set_int(170);
   test_readonly_int_value(value, 170);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_double_value(LayerType& value) {
   value.set_double(170.189);
   test_readonly_double_value(value, 170.189);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_bool_value(LayerType& value) {
   value.set_bool(true);
   test_readonly_bool_value(value, true);
@@ -110,13 +110,13 @@ void test_full_bool_value(LayerType& value) {
   test_readonly_bool_value(value, false);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_null_value(LayerType& value) {
   value.set_null();
   test_readonly_null_value(value);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_list_value(LayerType& value) {
   value.set_list();
   value.push_back("string");
@@ -152,7 +152,7 @@ void test_full_list_value(LayerType& value) {
   ASSERT_EQ(value.begin_list(), value.end_list());
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_object_value(LayerType& value) {
   value.set_object();
   value.add_member("null");
@@ -216,7 +216,7 @@ void test_full_object_value(LayerType& value) {
   ASSERT_EQ((*const_it).value.get_double(), 12);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_basic_assignment(LayerType& value) {
   value = 12.5;
   test_readonly_double_value(value, 12.5);
@@ -228,7 +228,7 @@ void test_full_basic_assignment(LayerType& value) {
   test_readonly_bool_value(value, false);
 }
 
-template<garlic::GarlicLayer LayerType>
+template<garlic::RefLayer LayerType>
 void test_full_layer(LayerType&& value) {
   test_full_string_value(value);
   test_full_double_value(value);

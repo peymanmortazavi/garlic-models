@@ -28,7 +28,7 @@ void print_constraint_result(const garlic::ConstraintResult& result, int level=0
 void assert_field_constraint_result(const garlic::ConstraintResult& results, const char* name);
 void assert_constraint_result(const garlic::ConstraintResult& results, const char* name, const char* message);
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
   bool first = true;
   for (const auto& c : props.constraints) {
@@ -38,7 +38,7 @@ void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
   }
 }
 
-template<garlic::ReadableLayer LayerType>
+template<garlic::ViewLayer LayerType>
 void assert_field_constraints(const garlic::Field<LayerType>& field, NameQueue names) {
   for(const auto& constraint : field.get_properties().constraints) {
     ASSERT_STREQ(constraint->get_name().data(), names.front().data());

@@ -32,7 +32,7 @@ namespace garlic {
   template<typename ConstraintPtrType>
   std::vector<ConstraintResult>
   test_constraints(
-      const ReadableLayer auto& value,
+      const ViewLayer auto& value,
       const std::vector<ConstraintPtrType>& constraints,
       std::vector<ConstraintResult>& results) {
     for (const auto& constraint : constraints) {
@@ -47,7 +47,7 @@ namespace garlic {
 
   template<typename ConstraintPtrType, typename Callback>
   void test_constraints_first_failure(
-      const ReadableLayer auto& value,
+      const ViewLayer auto& value,
       std::vector<ConstraintPtrType> constraints,
       const Callback& cb
       ) {
@@ -60,14 +60,14 @@ namespace garlic {
   }
 
 
-  void set_constraint_properties(const ReadableLayer auto& value, ConstraintProperties& props) noexcept {
+  void set_constraint_properties(const ViewLayer auto& value, ConstraintProperties& props) noexcept {
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
     get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
     get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
   }
 
 
-  template<garlic::ReadableLayer LayerType>
+  template<garlic::ViewLayer LayerType>
   class Constraint {
   public:
     explicit Constraint(ConstraintProperties&& props) : props_(std::move(props)) {}
@@ -132,7 +132,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class TypeConstraint : public Constraint<LayerType> {
   public:
 
@@ -180,7 +180,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class RangeConstraint : public Constraint<LayerType> {
   public:
     using SizeType = size_t;
@@ -228,7 +228,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class RegexConstraint : public Constraint<LayerType> {
   public:
 
@@ -253,7 +253,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class AnyConstraint : public Constraint<LayerType> {
   public:
 
@@ -280,7 +280,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class ListConstraint : public Constraint<LayerType> {
   public:
 
@@ -324,7 +324,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
@@ -379,7 +379,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class MapConstraint : public Constraint<LayerType> {
   public:
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
@@ -421,7 +421,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class AllConstraint : public Constraint<LayerType> {
   public:
 

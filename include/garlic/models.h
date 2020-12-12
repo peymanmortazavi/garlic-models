@@ -14,10 +14,10 @@
 
 namespace garlic {
 
-  template<garlic::ReadableLayer LayerType>
+  template<garlic::ViewLayer LayerType>
   class Field {
   public:
-    template<garlic::ReadableLayer> friend class Module;
+    template<garlic::ViewLayer> friend class Module;
 
     using ConstraintType = Constraint<LayerType>;
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
@@ -67,10 +67,10 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class Model {
   public:
-    template<garlic::ReadableLayer> friend class Module;
+    template<garlic::ViewLayer> friend class Module;
 
     using Layer = LayerType;
     using FieldType = Field<LayerType>;
@@ -167,7 +167,7 @@ namespace garlic {
 
 
   // Model Constraint
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class ModelConstraint : public Constraint<LayerType> {
   public:
     using ModelType = Model<LayerType>;
@@ -184,22 +184,22 @@ namespace garlic {
     std::shared_ptr<ModelType> model_;
   };
 
-  // Model Parsing From ReadableLayer
+  // Model Parsing From ViewLayer
   template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
   template<typename T> using FieldPropertiesOf = typename Field<T>::Properties;
   
-  template<ReadableLayer LayerType, typename...Args>
+  template<ViewLayer LayerType, typename...Args>
   std::shared_ptr<Field<LayerType>> make_field(Args&&... args) {
     return std::make_shared<Field<LayerType>>(std::forward<Args>(args)...);
   }
 
-  template<ReadableLayer LayerType, typename...Args>
+  template<ViewLayer LayerType, typename...Args>
   std::shared_ptr<Model<LayerType>> make_model(Args&&...args) {
     return std::make_shared<Model<LayerType>>(std::forward<Args>(args)...);
   }
 
 
-  template<ReadableLayer LayerType>
+  template<ViewLayer LayerType>
   class FieldConstraint : public Constraint<LayerType> {
   public:
     using FieldPtr = std::shared_ptr<Field<LayerType>>;

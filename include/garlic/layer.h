@@ -23,7 +23,7 @@ namespace garlic {
   template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
   template<typename T> using MemberIterator = typename T::MemberIterator;
 
-  template<typename T> concept ReadableLayer = std::copy_constructible<T> && requires(const T& t) {
+  template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
     typename ConstValueIterator<T>;
     typename ConstMemberIterator<T>;
 
@@ -53,7 +53,7 @@ namespace garlic {
     { t.get_object() } -> std::ranges::range;
   };
 
-  template<typename T> concept GarlicLayer = ReadableLayer<T> && requires(T t) {
+  template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
     typename ValueIterator<T>;
     typename MemberIterator<T>;
 

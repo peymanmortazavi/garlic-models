@@ -10,9 +10,9 @@ namespace garlic::parsing {
 
   template<typename T> using ConstraintPtrOf = std::shared_ptr<Constraint<T>>;
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static std::shared_ptr<Constraint<Destination>>
-  parse_any(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_any(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {false};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
@@ -23,9 +23,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_all(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_all(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {false, ""};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
@@ -40,9 +40,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_list(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_list(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {true, "list_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> constraint;
@@ -53,9 +53,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_tuple(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_tuple(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {false, "tuple_constraint"};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
@@ -70,9 +70,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_range(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_range(const ViewLayer auto& value, Parser parser) noexcept {
     typename RangeConstraint<Destination>::SizeType min;
     typename RangeConstraint<Destination>::SizeType max;
     get_member(value, "min", [&min](const auto& v) {
@@ -87,9 +87,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_regex(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_regex(const ViewLayer auto& value, Parser parser) noexcept {
     std::string pattern;
     ConstraintProperties props {false, "regex_constraint"};
     set_constraint_properties(value, props);
@@ -102,9 +102,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_field(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_field(const ViewLayer auto& value, Parser parser) noexcept {
     using FieldPtr = std::shared_ptr<Field<Destination>>;
     ConstraintProperties props {true};
     set_constraint_properties(value, props);
@@ -126,9 +126,9 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename Parser>
+  template<ViewLayer Destination, typename Parser>
   static std::shared_ptr<Constraint<Destination>>
-  parse_map(const ReadableLayer auto& value, Parser parser) noexcept {
+  parse_map(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {false, "map_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> key_constraint;
@@ -141,10 +141,10 @@ namespace garlic::parsing {
   }
 
 
-  template<ReadableLayer Destination, typename ParserType>
+  template<ViewLayer Destination, typename ParserType>
   static void
   read_constraint(
-      const ReadableLayer auto& value,
+      const ViewLayer auto& value,
       ParserType& parser,
       const char* name,
       ConstraintPtrOf<Destination>& ptr) {
@@ -156,10 +156,10 @@ namespace garlic::parsing {
   }
 
   
-  template<ReadableLayer Destination, typename ParserType>
+  template<ViewLayer Destination, typename ParserType>
   static void
   read_constraints(
-      const ReadableLayer auto& value,
+      const ViewLayer auto& value,
       ParserType& parser,
       const char* name,
       std::vector<ConstraintPtrOf<Destination>>& container) {

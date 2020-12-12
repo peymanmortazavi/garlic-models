@@ -14,7 +14,7 @@
 
 namespace garlic {
 
-  template<ReadableLayer L1, ReadableLayer L2>
+  template<ViewLayer L1, ViewLayer L2>
   bool cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
     else if (layer1.is_string() && layer2.is_string() && std::strcmp(layer1.get_cstr(), layer2.get_cstr()) == 0) {
@@ -84,7 +84,7 @@ namespace garlic {
   };
 
 
-  template<ReadableLayer LayerType, typename Callable>
+  template<ViewLayer LayerType, typename Callable>
   void resolve(const LayerType& value, std::string_view path, Callable cb) {
     lazy_string_splitter parts{path};
     auto cursor = std::make_unique<LayerType>(value);
@@ -120,13 +120,13 @@ namespace garlic {
 
 
   template<typename Callable>
-  void get_member(const ReadableLayer auto& value, const char* key, const Callable& cb) noexcept {
+  void get_member(const ViewLayer auto& value, const char* key, const Callable& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
 
   template<typename Callable>
-  void get_member(const ReadableLayer auto& value, std::string_view key, const Callable& cb) noexcept {
+  void get_member(const ViewLayer auto& value, std::string_view key, const Callable& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
