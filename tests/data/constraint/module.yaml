@@ -8,7 +8,10 @@ fields:
 
     RegularEmail:
         constraints:
-            - Email
+            - type: field
+              field: Email
+              message: Invalid Email!
+              hide: false
 
     Email:
         constraints:

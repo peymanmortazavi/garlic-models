@@ -87,3 +87,11 @@ TEST(Constraints, AllConstraint) {
   assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad1.json");
   assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad2.json");
 }
+
+TEST(Constraints, StopFeature) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/constraint/module.yaml");
+
+  assert_jsonfile_invalid(module, "User", "data/constraint/bad1.json", true);
+}
