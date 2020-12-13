@@ -31,8 +31,7 @@ namespace garlic {
 
 
   template<typename ConstraintPtrType>
-  std::vector<ConstraintResult>
-  test_constraints(
+  void test_constraints(
       const ViewLayer auto& value,
       const std::vector<ConstraintPtrType>& constraints,
       std::vector<ConstraintResult>& results) {
@@ -42,7 +41,19 @@ namespace garlic {
         if (constraint->skip_constraints()) break;
       }
     }
-    return results;
+  }
+
+
+  template<typename ConstraintPtrType>
+  bool test_constraints_concise(
+      const ViewLayer auto& value,
+      const std::vector<ConstraintPtrType>& constraints) {
+    for (const auto& constraint : constraints) {
+      if (auto result = constraint->test(value, false); !result.valid) {
+        return false;
+      }
+    }
+    return true;
   }
 
 
@@ -74,11 +85,12 @@ namespace garlic {
   public:
     explicit Constraint(ConstraintProperties&& props) : props_(std::move(props)) {}
 
-    virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
+    virtual ConstraintResult test(const LayerType& value, bool concise = false) const noexcept = 0;
     std::string_view get_name() const noexcept { return props_.name; };
     bool skip_constraints() const noexcept { return props_.fatal; };
 
-    auto fail(bool field=false) const noexcept -> ConstraintResult {
+    auto fail(bool concise = false, bool field = false) const noexcept -> ConstraintResult {
+      if (concise) return ConstraintResult { .valid = false };
       return ConstraintResult{
         .valid = false,
         .name = this->props_.name,
@@ -87,7 +99,8 @@ namespace garlic {
       };
     }
 
-    auto fail(const char* message, bool field=false) const noexcept -> ConstraintResult {
+    auto fail(const char* message, bool concise = false, bool field=false) const noexcept -> ConstraintResult {
+      if (concise) return ConstraintResult { .valid = false };
       if (!this->props_.message.empty()) {
         return ConstraintResult{
           .valid = false,
@@ -105,13 +118,14 @@ namespace garlic {
       }
     }
 
-    auto fail(const char* message, std::vector<ConstraintResult>&& details, bool field=false) const noexcept {
+    auto fail(const char* message, std::vector<ConstraintResult>&& details, bool concise = false, bool field=false) const noexcept {
       // if stop/concise is needed, then only set the valid state and return immediately.
       // what's needed is an easy interface so that the future constraints can easily hand
       // this concise logic to these fail methods instead of implementing a custom way every
       // single time.
       // using concise should automatically enable fatality as well, because we won't be
       // showing any other constraints.
+      if (concise) return ConstraintResult { .valid = false };
       if (!this->props_.message.empty()) {
         return ConstraintResult {
           .valid = false,
@@ -151,35 +165,35 @@ namespace garlic {
       .leaf = false, .fatal = true, .name = std::move(name)
       }) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
       switch (flag_) {
         case TypeFlag::Null: {
           if (value.is_null()) { return this->ok(); }
-          else return this->fail("Expected null.");
+          else return this->fail("Expected null.", concise);
         }
         case TypeFlag::Boolean: {
           if (value.is_bool()) { return this->ok(); }
-          else return this->fail("Expected boolean type.");
+          else return this->fail("Expected boolean type.", concise);
         }
         case TypeFlag::Double: {
           if (value.is_double()) { return this->ok(); }
-          else return this->fail("Expected double type.");
+          else return this->fail("Expected double type.", concise);
         }
         case TypeFlag::Integer: {
           if (value.is_int()) { return this->ok(); }
-          else return this->fail("Expected integer type.");
+          else return this->fail("Expected integer type.", concise);
         }
         case TypeFlag::String: {
           if (value.is_string()) { return this->ok(); }
-          else return this->fail("Expected string type.");
+          else return this->fail("Expected string type.", concise);
         }
         case TypeFlag::List: {
           if (value.is_list()) { return this->ok(); }
-          else return this->fail("Expected a list.");
+          else return this->fail("Expected a list.", concise);
         }
         case TypeFlag::Object: {
           if (value.is_object()) { return this->ok(); }
-          else return this->fail("Expected an object.");
+          else return this->fail("Expected an object.", concise);
         }
         default: return this->ok();
       }
@@ -209,26 +223,26 @@ namespace garlic {
         ConstraintProperties&& props
     ) : min_(min), max_(max), Constraint<LayerType>(std::move(props)) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
       if (value.is_string()) {
         auto length = value.get_string_view().size();
-        if (length > max_ || length < min_) return this->fail("invalid string length.");
+        if (length > max_ || length < min_) return this->fail("invalid string length.", concise);
         return this->ok();
       } else if (value.is_double()) {
         auto dvalue = value.get_double();
-        if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.");
+        if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.", concise);
         return this->ok();
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
+        if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.", concise);
         return this->ok();
       } else if (value.is_list()) {
         int count = 0;
         for (const auto& item : value.get_list()) {
           count++;
-          if (count > max_) return this->fail("too many items in the list.");
+          if (count > max_) return this->fail("too many items in the list.", concise);
         }
-        if (count < min_) return this->fail("too few items in the list.");
+        if (count < min_) return this->fail("too few items in the list.", concise);
         return this->ok();
       } else return this->ok();
     }
@@ -256,10 +270,10 @@ namespace garlic {
         ConstraintProperties&& props
     ) : pattern_(std::move(pattern)), Constraint<LayerType>(std::move(props)) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
       if (!value.is_string()) return this->ok();
       if (std::regex_match(value.get_cstr(), pattern_)) { return this->ok(); }
-      else { return this->fail("invalid value."); }
+      else { return this->fail("invalid value.", concise); }
     }
 
   private:
@@ -281,12 +295,12 @@ namespace garlic {
       ConstraintProperties&& props
   ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
+  ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
     for(const auto& constraint : constraints_) {
-      auto result = constraint->test(value);
+      auto result = constraint->test(value, true);
       if (result.valid) return this->ok();
     }
-    return this->fail("None of the constraints read this value.");
+    return this->fail("None of the constraints read this value.", concise);
   }
 
   private:
@@ -312,20 +326,22 @@ namespace garlic {
       ConstraintProperties&& props
     ) : constraint_(constraint), Constraint<LayerType>(std::move(props)) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
-      if (!value.is_list()) return this->fail("Expected a list.");
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
+      if (!value.is_list()) return this->fail("Expected a list.", concise);
       int index = 0;
       for (const auto& item : value.get_list()) {
-        auto result = constraint_->test(item);
+        auto result = constraint_->test(item, this->props_.leaf || concise);
         if (!result.valid) {
-          auto final_result = this->fail("Invalid value found in the list.");
-          final_result.details.push_back({
-              false,
-              std::to_string(index),
-              "invalid value.",
-              {std::move(result)},
-              true
-              });
+          auto final_result = this->fail("Invalid value found in the list.", concise);
+          if (!concise) {
+            final_result.details.push_back(ConstraintResult{
+                .valid = false,
+                .name = std::to_string(index),
+                .reason = "invalid value.",
+                .details = (this->props_.leaf ? std::vector<ConstraintResult>{} : std::vector<ConstraintResult>{std::move(result)}),
+                .field = true
+                });
+          }
           return final_result;
         }
         index++;
@@ -358,22 +374,24 @@ namespace garlic {
     ConstraintProperties&& props
   ) : constraints_(constraints), strict_(strict), Constraint<LayerType>(std::move(props)) {}
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
-    if (!value.is_list()) return this->fail("Expected a list (tuple).");
+  ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
+    if (!value.is_list()) return this->fail("Expected a list (tuple).", concise);
     int index = 0;
     auto tuple_it = value.begin_list();
     auto constraint_it = constraints_.begin();
     while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
-      auto result = (*constraint_it)->test(*tuple_it);
+      auto result = (*constraint_it)->test(*tuple_it, this->props_.leaf || concise);
       if (!result.valid) {
-        auto final_result = this->fail("Invalid value found in the tuple.");
-        final_result.details.push_back({
-            false,
-            std::to_string(index),
-            "invalid value.",
-            {std::move(result)},
-            true
-            });
+        auto final_result = this->fail("Invalid value found in the tuple.", concise);
+        if (!concise) {
+          final_result.details.push_back(ConstraintResult{
+              .valid = false,
+              .name = std::to_string(index),
+              .reason = "invalid value.",
+              .details = (this->props_.leaf ? std::vector<ConstraintResult>{} : std::vector<ConstraintResult>{std::move(result)}),
+              .field = true
+              });
+        }
         return final_result;
       }
       std::advance(tuple_it, 1);
@@ -381,10 +399,10 @@ namespace garlic {
       index++;
     }
     if (strict_ && tuple_it != value.end_list()) {
-      return this->fail("Too many values in the tuple.");
+      return this->fail("Too many values in the tuple.", concise);
     }
     if (constraint_it != constraints_.end()) {
-      return this->fail("Too few values in the tuple.");
+      return this->fail("Too few values in the tuple.", concise);
     }
     return this->ok();
   }
@@ -412,20 +430,24 @@ namespace garlic {
         value_constraint_(std::move(value_constraint)),
         Constraint<LayerType>(std::move(props)) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
-      if (!value.is_object()) return this->fail("Expected an object.");
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
+      if (!value.is_object()) return this->fail("Expected an object.", concise);
       for (const auto& item : value.get_object()) {
         if (key_constraint_) {
           if (auto result = key_constraint_->test(item.key); !result.valid) {
-            auto final_result = this->fail("Object contains invalid key.");
-            final_result.details.push_back(std::move(result));
+            auto final_result = this->fail("Object contains invalid key.", concise);
+            if (!(this->props_.leaf || concise)) {
+              final_result.details.push_back(std::move(result));
+            }
             return final_result;
           }
         }
         if (value_constraint_) {
           if (auto result = value_constraint_->test(item.value); !result.valid) {
-            auto final_result = this->fail("Object contains invalid value.");
-            final_result.details.push_back(std::move(result));
+            auto final_result = this->fail("Object contains invalid value.", concise);
+            if (!(this->props_.leaf || concise)) {
+              final_result.details.push_back(std::move(result));
+            }
             return final_result;
           }
         }
@@ -457,19 +479,21 @@ namespace garlic {
         Constraint<LayerType>(std::move(props)),
         hide_(hide) {}
 
-    ConstraintResult test(const LayerType& value) const noexcept override {
+    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
       if (hide_) {
         for (const auto& constraint : constraints_) {
-          if (auto result = constraint->test(value); !result.valid) return result;
+          if (auto result = constraint->test(value, concise); !result.valid) return result;
         }
         return this->ok();
+      }
+      if (this->props_.leaf || concise) {
+        if (test_constraints_concise(value, constraints_)) return this->ok();
+        else return this->fail("Some of the constraints fail on this value.", concise);
       }
       std::vector<ConstraintResult> results;
       test_constraints(value, constraints_, results);
       if (results.empty()) return this->ok();
-      auto result = this->fail("Some of the constraints fail on this value.");
-      result.details = std::move(results);
-      return result;
+      return this->fail("Some of the constraints fail on this value.", std::move(results));
     }
 
   private:
