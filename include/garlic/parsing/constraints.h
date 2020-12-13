@@ -43,7 +43,7 @@ namespace garlic::parsing {
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
   parse_list(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .stop = false, .fatal = true, .name = "list_constraint"};
+    ConstraintProperties props { .leaf = false, .fatal = true, .name = "list_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> constraint;
     read_constraint<Destination>(value, parser, "of", constraint);
@@ -56,7 +56,7 @@ namespace garlic::parsing {
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
   parse_tuple(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .stop = false, .fatal = false, .name = "tuple_constraint"};
+    ConstraintProperties props { .leaf = false, .fatal = false, .name = "tuple_constraint"};
     set_constraint_properties(value, props);
     std::vector<ConstraintPtrOf<Destination>> constraints;
     read_constraints<Destination>(value, parser, "items", constraints);
@@ -81,7 +81,7 @@ namespace garlic::parsing {
     get_member(value, "max", [&max](const auto& v) {
         if (v.is_double()) max = v.get_double(); else max = v.get_int();
         });
-    ConstraintProperties props { .stop = false, .fatal = false, .name = "range_constraint"};
+    ConstraintProperties props { .leaf = false, .fatal = false, .name = "range_constraint"};
     set_constraint_properties(value, props);
     return std::make_shared<RangeConstraint<Destination>>(min, max, std::move(props));
   }
@@ -91,7 +91,7 @@ namespace garlic::parsing {
   static ConstraintPtrOf<Destination>
   parse_regex(const ViewLayer auto& value, Parser parser) noexcept {
     std::string pattern;
-    ConstraintProperties props { .stop = false, .fatal = false, .name = "regex_constraint"};
+    ConstraintProperties props { .leaf = false, .fatal = false, .name = "regex_constraint"};
     set_constraint_properties(value, props);
     get_member(value, "pattern", [&pattern](const auto& v) {
         pattern = v.get_cstr();
@@ -106,7 +106,7 @@ namespace garlic::parsing {
   static ConstraintPtrOf<Destination>
   parse_field(const ViewLayer auto& value, Parser parser) noexcept {
     using FieldPtr = std::shared_ptr<Field<Destination>>;
-    ConstraintProperties props { .stop = false, .fatal = true };
+    ConstraintProperties props { .leaf = false, .fatal = true };
     set_constraint_properties(value, props);
     bool hide = false;
     std::shared_ptr<FieldConstraint<Destination>> result;
@@ -129,7 +129,7 @@ namespace garlic::parsing {
   template<ViewLayer Destination, typename Parser>
   static std::shared_ptr<Constraint<Destination>>
   parse_map(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .stop = false, .fatal = false, .name = "map_constraint"};
+    ConstraintProperties props { .leaf = false, .fatal = false, .name = "map_constraint"};
     set_constraint_properties(value, props);
     ConstraintPtrOf<Destination> key_constraint;
     ConstraintPtrOf<Destination> value_constraint;

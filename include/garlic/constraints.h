@@ -23,7 +23,7 @@ namespace garlic {
 
 
   struct ConstraintProperties {
-    bool stop = false;  // should avoid storing details.
+    bool leaf = false;  // should avoid storing details.
     bool fatal = false;  // should stop looking at other constraints.
     std::string name;  // constraint name.
     std::string message;  // custom rejection reason.
@@ -62,7 +62,7 @@ namespace garlic {
 
 
   void set_constraint_properties(const ViewLayer auto& value, ConstraintProperties& props) noexcept {
-    get_member(value, "stop", [&props](const auto& item) { props.stop = item.get_bool(); });
+    get_member(value, "leaf", [&props](const auto& item) { props.leaf = item.get_bool(); });
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
     get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
     get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
@@ -106,12 +106,18 @@ namespace garlic {
     }
 
     auto fail(const char* message, std::vector<ConstraintResult>&& details, bool field=false) const noexcept {
+      // if stop/concise is needed, then only set the valid state and return immediately.
+      // what's needed is an easy interface so that the future constraints can easily hand
+      // this concise logic to these fail methods instead of implementing a custom way every
+      // single time.
+      // using concise should automatically enable fatality as well, because we won't be
+      // showing any other constraints.
       if (!this->props_.message.empty()) {
         return ConstraintResult {
           .valid = false,
           .name = this->props_.name,
           .reason = props_.message,
-          .details = std::move(details),
+          .details = (props_.leaf ? std::vector<ConstraintResult>{} : std::move(details)),
           .field = field,
         };
       } else {
@@ -119,7 +125,7 @@ namespace garlic {
           .valid = false,
           .name = this->props_.name,
           .reason = message,
-          .details = std::move(details),
+          .details = (props_.leaf ? std::vector<ConstraintResult>{} : std::move(details)),
           .field = field
         };
       }
@@ -142,7 +148,7 @@ namespace garlic {
         TypeFlag required_type,
         std::string&& name="type_constraint"
     ) : flag_(required_type), Constraint<LayerType>({
-      .stop = false, .fatal = true, .name = std::move(name)
+      .leaf = false, .fatal = true, .name = std::move(name)
       }) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -194,7 +200,7 @@ namespace garlic {
         SizeType max,
         std::string&& name="range_constraint"
     ) : min_(min), max_(max), Constraint<LayerType>({
-      .stop = false, .fatal = false, .name = std::move(name)
+      .leaf = false, .fatal = false, .name = std::move(name)
       }) {}
 
     RangeConstraint(
@@ -242,7 +248,7 @@ namespace garlic {
         std::string pattern,
         std::string name="regex_constraint"
     ) : pattern_(std::move(pattern)), Constraint<LayerType>({
-      .stop = false, .fatal = false, .name = std::move(name)
+      .leaf = false, .fatal = false, .name = std::move(name)
       }) {}
 
     RegexConstraint(
@@ -337,7 +343,7 @@ namespace garlic {
   public:
 
   TupleConstraint() : Constraint<LayerType>({
-      .stop = false, .fatal = false, .name = "tuple_constraint"
+      .leaf = false, .fatal = false, .name = "tuple_constraint"
       }) {}
 
   TupleConstraint(
@@ -395,7 +401,7 @@ namespace garlic {
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
     MapConstraint() : Constraint<LayerType>({
-        .stop = false, .fatal = false, .name = "map_constraint"
+        .leaf = false, .fatal = false, .name = "map_constraint"
         }) {}
 
     MapConstraint(
@@ -440,7 +446,7 @@ namespace garlic {
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
     AllConstraint() : Constraint<LayerType>({
-        .stop = false, .fatal = true
+        .leaf = false, .fatal = true
         }) {}
 
     AllConstraint(

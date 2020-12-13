@@ -175,7 +175,7 @@ namespace garlic {
     ModelConstraint(
         std::shared_ptr<ModelType> model
     ) : model_(std::move(model)), Constraint<LayerType>({
-      .stop = false, .fatal = true, .name = model->get_properties().name
+      .leaf = false, .fatal = true, .name = model->get_properties().name
       }) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
