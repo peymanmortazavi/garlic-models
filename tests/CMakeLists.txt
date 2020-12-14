@@ -4,6 +4,9 @@ project(GarlicModelTests)
 find_package(GTest REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." OFF)
+
 enable_testing()
 
 set(TEST_SOURCES 
@@ -20,5 +23,9 @@ set(TEST_SOURCES
 add_executable(GarlicModelTests ${TEST_SOURCES})
 target_link_libraries(GarlicModelTests GarlicModel yaml-cpp yaml Threads::Threads ${GTEST_BOTH_LIBRARIES})
 
+IF(GARLIC_BUILD_PERFORMANCE_TESTS)
+    add_executable(PerformanceTests performance.cpp test_utility.cpp)
+    target_link_libraries(PerformanceTests GarlicModel yaml-cpp yaml Threads::Threads ${GTEST_BOTH_LIBRARIES} benchmark)
+ENDIF()
 
 file(COPY data DESTINATION ${CMAKE_BINARY_DIR}/bin)
