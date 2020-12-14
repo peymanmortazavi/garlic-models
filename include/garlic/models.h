@@ -23,14 +23,15 @@ namespace garlic {
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
 
     struct ValidationResult {
+      bool valid;
       std::vector<ConstraintResult> failures;
-      bool is_valid() { return !failures.size(); }
     };
 
     struct Properties {
       std::string name;
       std::map<std::string, std::string> meta;
       std::vector<ConstraintPtr> constraints;
+      bool ignore_details = false;
     };
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
@@ -46,9 +47,13 @@ namespace garlic {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    ValidationResult validate(const LayerType& value) const {
+    ValidationResult validate(const LayerType& value, bool concise = false) const {
+      if (concise || properties_.ignore_details) {
+        return { .valid = test_constraints_concise(value, properties_.constraints) };
+      }
       ValidationResult result;
       test_constraints(value, properties_.constraints, result.failures);
+      result.valid = !result.failures.size();
       return result;
     }
 
@@ -112,6 +117,25 @@ namespace garlic {
       return nullptr;
     }
 
+    bool quick_validate(const LayerType& value) const {
+      if (!value.is_object()) return false;
+      std::set<std::string_view> requirements;
+      for (const auto& member : value.get_object()) {
+        auto it = properties_.field_map.find(member.key.get_cstr());
+        if (it == properties_.field_map.end()) continue;
+        if (!it->second.field->validate(member.value, true).valid) {
+          return false;
+        }
+        requirements.emplace(it->first);
+      }
+      for (const auto& item : properties_.field_map) {
+        if (auto it = requirements.find(item.first); it != requirements.end()) continue;
+        if (!item.second.required) continue;
+        return false;
+      }
+      return true;
+    }
+
     ConstraintResult validate(const LayerType& value) const {
       ConstraintResult result;
       if (value.is_object()) {
@@ -121,7 +145,7 @@ namespace garlic {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
             auto test = it->second.field->validate(member.value);
-            if (!test.is_valid()) {
+            if (!test.valid) {
               const char* reason = it->second.field->get_message();
               result.details.push_back({
                     .valid = false,
@@ -179,6 +203,7 @@ namespace garlic {
       }) {}
 
     ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
+      if (concise) return { .valid = model_->quick_validate(value) };
       return model_->validate(value);
     }
 
@@ -226,8 +251,8 @@ namespace garlic {
         }
         return this->ok();
       }
-      auto result = (*field_)->validate(value);
-      if (result.is_valid()) return this->ok();
+      auto result = (*field_)->validate(value, concise);
+      if (result.valid) return this->ok();
       auto reason = (*field_)->get_message();
       if (reason == nullptr) return this ->fail("", std::move(result.failures), concise);
       return this->fail(reason, std::move(result.failures), concise);
