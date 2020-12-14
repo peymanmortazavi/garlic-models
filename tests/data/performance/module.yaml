@@ -21,7 +21,7 @@ fields:
         constraints:
             - type: regex
               pattern: "[a-zA-Z_]+[a-zA-Z_0-9]*[?]?"
-        message: Field reference must be a valid field ending, optionally, with a question mark.
+        message: Field reference must be a valid field name that can end with a ? to indicate an optional field.
 
     FieldMap:
         meta:
