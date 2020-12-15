@@ -87,3 +87,19 @@ TEST(Constraints, AllConstraint) {
   assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad1.json");
   assert_jsonfile_invalid(module, "AllTest", "data/special_constraints/all_bad2.json");
 }
+
+TEST(Constraints, StopFeature) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/constraint/module.yaml");
+
+  auto result = validate_jsonfile(module, "User", "data/constraint/bad1.json");
+  ASSERT_STREQ(result.details[0].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[0].details[0].details.size(), 0);
+
+  ASSERT_STREQ(result.details[1].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[1].details[0].details.size(), 1);
+
+  ASSERT_STREQ(result.details[2].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[2].details.size(), 0);
+}

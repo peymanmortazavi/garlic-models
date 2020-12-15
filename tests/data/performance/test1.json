@@ -1,3 +1,87 @@
 {
-    "fields": {}
+    "fields": {
+        "AlphanumericName": {
+            "constraints": [{"type": "regex", "pattern": "[a-zA-Z_]+[a-zA-Z_0-9]*"}]
+        },
+        "FieldName": {
+            "type": "AlphanumericName",
+            "message": "Field name must be alphanumeric and start with alpha characters."
+        },
+        "ConstraintName": {
+            "type": "AlphanumericName",
+            "message": "Constraint name must be alphanumeric and start with alpha characters."
+        },
+        "ModelName": {
+            "type": "AlphanumericName",
+            "message": "Model name must be alphanumeric and start with alpha characters."
+        },
+        "ModelFieldReference": {
+            "description": "Reference to a field, can end with ? to indicate optional fields.",
+            "constraints": [{"type": "rexex", "pattern": "[a-zA-Z_]+[a-zA-Z_0-9]*[?]?"}],
+            "message": "Field reference must be a valid field name that can end with a ? to indicate an optional field."
+        },
+        "FieldMap": {
+            "meta": {"description": "A map of declared fields."},
+            "constraints": [{"type": "map", "key": "FieldName", "value": "Field"}]
+        },
+        "ModelMap": {
+            "meta": {"description": "A map of declared models."},
+            "constraints": [{"type": "map", "key": "ModelName", "value": "Model"}]
+        },
+        "Meta": {
+            "constraints": [{"type": "map", "key": "string", "value": "string"}]
+        },
+        "ModelInheritance": {
+            "constraints": [{"type": "any", "of": ["ModelName", {"type": "list", "of": "ModelName"}]
+                }
+            ]
+        },
+        "Constraint": {
+            "constraints": [{"type": "any", "of": ["ConstraintName", "ConstraintDefinition"]}]
+        }
+    },
+    "models": {
+        "Module": {
+            "fields": {"fields": "FieldMap?", "models": "ModelMap?"}
+        },
+        "ConstraintDefinition": {
+            "fields": {
+                "type": "string",
+                "name": "string?",
+                "message": "string?",
+                "leaf": "bool?",
+                "fatal": "bool?"
+            }
+        },
+        "Model": {
+            "fields": {
+                "fields": {
+                    "optional": true,
+                    "constraints": [
+                        {
+                            "type": "map",
+                            "key": "FieldName",
+                            "value": {"type": "any", "of": ["ModelFieldReference", "Field"]}
+                        }
+                    ]
+                },
+                "meta": "Meta?",
+                "inherit": "ModelInheritance?",
+                "description": "string?"
+            }
+        },
+        "Field": {
+            "fields": {
+                "type": "string",
+                "label": "string?",
+                "description": "string?",
+                "message": "string?",
+                "meta": "Meta?",
+                "constraints": {
+                    "optional": true,
+                    "constraints": [{"type": "list", "of": "Constraint"}]
+                }
+            }
+        }
+    }
 }

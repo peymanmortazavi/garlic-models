@@ -4,6 +4,7 @@
 #include "models.h"
 #include "layer.h"
 #include "parsing/constraints.h"
+#include "utility.h"
 
 
 namespace garlic {
@@ -324,6 +325,10 @@ namespace garlic {
           });
         }
       });
+
+      get_member(value, "ignore_details", [&props](const auto& item){
+          props.ignore_details = item.get_bool();
+          });
 
       get_member(value, "optional", [&optional](const auto& item) {
           optional = item.get_bool();
