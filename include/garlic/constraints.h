@@ -390,27 +390,23 @@ namespace garlic {
       for (const auto& item : value.get_list()) {
         if (IgnoreDetails) {
           if (!constraint_->quick_test(item)) {
-            return this->fail("Invalid value found in the list.", {
-                  ConstraintResult {
+            return this->fail("Invalid value found in the list.", {{
                     .valid = false,
                     .name = std::to_string(index),
                     .reason = "invalid value.",
                     .field = true
-                  }
-                });
+                  }});
           }
         } else {
           auto result = constraint_->test(item);
           if (!result.valid) {
-            return this->fail("Invalid value found in the list.", {
-                  ConstraintResult {
+            return this->fail("Invalid value found in the list.", {{
                     .valid = false,
                     .name = std::to_string(index),
                     .reason = "invalid value.",
                     .details = {std::move(result)},
                     .field = true
-                  }
-                });
+                  }});
           }
         }
         index++;
@@ -482,29 +478,23 @@ namespace garlic {
         if (IgnoreDetails) {
           auto result = (*constraint_it)->quick_test(*tuple_it);
           if (!result) {
-            return this->fail(
-                "Invalid value found in the tuple.", {
-                  ConstraintResult {
+            return this->fail("Invalid value found in the tuple.", {{
                     .valid = false,
                     .name = std::to_string(index),
                     .reason = "invalid value.",
                     .field = true
-                  }
-                });
+                  }});
           }
         } else {
           auto result = (*constraint_it)->test(*tuple_it);
           if (!result.valid) {
-            return this->fail(
-                "Invalid value found in the tuple.", {
-                  ConstraintResult {
+            return this->fail("Invalid value found in the tuple.", {{
                     .valid = false,
                     .name = std::to_string(index),
                     .reason = "invalid value.",
                     .details = {std::move(result)},
                     .field = true
-                  }
-                });
+                  }});
           }
         }
         std::advance(tuple_it, 1);
