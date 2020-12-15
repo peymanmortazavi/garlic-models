@@ -124,7 +124,7 @@ namespace garlic {
       for (const auto& member : value.get_object()) {
         auto it = properties_.field_map.find(member.key.get_cstr());
         if (it == properties_.field_map.end()) continue;
-        if (!it->second.field->validate(member.value).is_valid()) {
+        if (!it->second.field->quick_test(member.value)) {
           return false;
         }
         requirements.emplace(it->first);
@@ -145,17 +145,7 @@ namespace garlic {
         for (const auto& member : value.get_object()) {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
-            auto test = it->second.field->validate(member.value);
-            if (!test.is_valid()) {
-              const char* reason = it->second.field->get_message();
-              result.details.push_back({
-                    .valid = false,
-                    .name = member.key.get_cstr(),
-                    .reason = (reason == nullptr ? "" : reason),
-                    .details = std::move(test.failures),
-                    .field = true
-                  });
-            }
+            this->test_field(result, member.key, member.value, it->second.field);
             requirements.emplace(it->first);
           }
         }
@@ -188,6 +178,39 @@ namespace garlic {
 
   protected:
     Properties properties_;
+
+  private:
+    inline void
+    test_field(
+        ConstraintResult& result,
+        const LayerType& key,
+        const LayerType& value,
+        const FieldPtr& field) const {
+      if (field->get_properties().ignore_details) {
+        auto test = field->quick_test(value);
+        if (!test) {
+          const char* reason = field->get_message();
+          result.details.push_back({
+                .valid = false,
+                .name = key.get_cstr(),
+                .reason = (reason == nullptr ? "" : reason),
+                .field = true
+              });
+        }
+      } else {
+        auto test = field->validate(value);
+        if (!test.is_valid()) {
+          const char* reason = field->get_message();
+          result.details.push_back({
+                .valid = false,
+                .name = key.get_cstr(),
+                .reason = (reason == nullptr ? "" : reason),
+                .details = std::move(test.failures),
+                .field = true
+              });
+        }
+      }
+    }
   };
 
 

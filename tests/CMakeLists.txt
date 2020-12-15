@@ -6,7 +6,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." OFF)
-set(GARLIC_BUILD_PERFORMANCE_TESTS ON)
+set(GARLIC_BUILD_PERFORMANCE_TESTS OFF)
 
 enable_testing()
 
