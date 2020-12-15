@@ -223,7 +223,7 @@ namespace garlic {
     ModelConstraint(
         std::shared_ptr<ModelType> model
     ) : model_(std::move(model)), Constraint<LayerType>({
-      .leaf = false, .fatal = true, .name = model->get_properties().name
+      .fatal = true, .name = model->get_properties().name
       }) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -262,10 +262,11 @@ namespace garlic {
     FieldConstraint(
         FieldReference field,
         ConstraintProperties&& props,
-        bool hide = false
+        bool hide = false,
+        bool ignore_details = false
     ) : field_(std::move(field)),
         Constraint<LayerType>(std::move(props)),
-        hide_(hide) {
+        hide_(hide), ignore_details_(ignore_details) {
       this->update_name();
     }
 
@@ -274,7 +275,7 @@ namespace garlic {
         return test_constraints_first_failure(value, (*field_)->get_properties().constraints);
       }
       const auto& field = *field_;
-      if (field->get_properties().ignore_details) {
+      if (ignore_details_ || field->get_properties().ignore_details) {
         if (field->quick_test(value)) return this->ok();
         return this->custom_message_fail(field);
       }
@@ -295,6 +296,7 @@ namespace garlic {
   protected:
     FieldReference field_;
     bool hide_;
+    bool ignore_details_;
 
     void update_name() {
       if (*field_ && this->props_.name.empty()) {

@@ -24,7 +24,6 @@ namespace garlic {
 
 
   struct ConstraintProperties {
-    bool leaf = false;  // should avoid storing details.
     bool fatal = false;  // should stop looking at other constraints.
     std::string name;  // constraint name.
     std::string message;  // custom rejection reason.
@@ -71,7 +70,6 @@ namespace garlic {
 
 
   void set_constraint_properties(const ViewLayer auto& value, ConstraintProperties& props) noexcept {
-    get_member(value, "leaf", [&props](const auto& item) { props.leaf = item.get_bool(); });
     get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
     get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
     get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
@@ -121,7 +119,7 @@ namespace garlic {
           .valid = false,
           .name = this->props_.name,
           .reason = props_.message,
-          .details = (props_.leaf ? std::vector<ConstraintResult>{} : std::move(details)),
+          .details = std::move(details),
           .field = field,
         };
       } else {
@@ -129,7 +127,7 @@ namespace garlic {
           .valid = false,
           .name = this->props_.name,
           .reason = message,
-          .details = (props_.leaf ? std::vector<ConstraintResult>{} : std::move(details)),
+          .details = std::move(details),
           .field = field
         };
       }
@@ -152,7 +150,7 @@ namespace garlic {
         TypeFlag required_type,
         std::string&& name="type_constraint"
     ) : flag_(required_type), Constraint<LayerType>({
-      .leaf = false, .fatal = true, .name = std::move(name)
+      .fatal = true, .name = std::move(name)
       }) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -217,7 +215,7 @@ namespace garlic {
         SizeType max,
         std::string&& name="range_constraint"
     ) : min_(min), max_(max), Constraint<LayerType>({
-      .leaf = false, .fatal = false, .name = std::move(name)
+      .fatal = false, .name = std::move(name)
       }) {}
 
     RangeConstraint(
@@ -283,7 +281,7 @@ namespace garlic {
         std::string pattern,
         std::string name="regex_constraint"
     ) : pattern_(std::move(pattern)), Constraint<LayerType>({
-      .leaf = false, .fatal = false, .name = std::move(name)
+      .fatal = false, .name = std::move(name)
       }) {}
 
     RegexConstraint(
@@ -354,17 +352,23 @@ namespace garlic {
 
     ListConstraint(
       ConstraintPtr&& constraint,
-      ConstraintProperties&& props
-    ) : constraint_(std::move(constraint)), Constraint<LayerType>(std::move(props)) {}
+      ConstraintProperties&& props,
+      bool ignore_details = false
+    ) : constraint_(std::move(constraint)),
+        Constraint<LayerType>(std::move(props)),
+        ignore_details_(ignore_details) {}
 
     ListConstraint(
       const ConstraintPtr& constraint,
-      ConstraintProperties&& props
-    ) : constraint_(constraint), Constraint<LayerType>(std::move(props)) {}
+      ConstraintProperties&& props,
+      bool ignore_details = false
+    ) : constraint_(constraint),
+        Constraint<LayerType>(std::move(props)),
+        ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_list()) return this->fail("Expected a list.");
-      if (this->props_.leaf) return this->test<true>(value);
+      if (ignore_details_) return this->test<true>(value);
       return this->test<false>(value);
     }
 
@@ -378,12 +382,13 @@ namespace garlic {
 
   private:
     ConstraintPtr constraint_;
+    bool ignore_details_;
 
-    template<bool IsLeaf>
+    template<bool IgnoreDetails>
     inline ConstraintResult test(const LayerType& value) const noexcept {
       int index = 0;
       for (const auto& item : value.get_list()) {
-        if (IsLeaf) {
+        if (IgnoreDetails) {
           if (!constraint_->quick_test(item)) {
             return this->fail("Invalid value found in the list.", {
                   ConstraintResult {
@@ -420,23 +425,31 @@ namespace garlic {
   public:
 
   TupleConstraint() : Constraint<LayerType>({
-      .leaf = false, .fatal = false, .name = "tuple_constraint"
+      .fatal = false, .name = "tuple_constraint"
       }) {}
 
   TupleConstraint(
     std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
     bool strict,
-    ConstraintProperties&& props
-  ) : constraints_(std::move(constraints)), strict_(strict), Constraint<LayerType>(std::move(props)) {}
+    ConstraintProperties&& props,
+    bool ignore_details = false
+  ) : constraints_(std::move(constraints)),
+      strict_(strict),
+      Constraint<LayerType>(std::move(props)),
+      ignore_details_(ignore_details) {}
 
   TupleConstraint(
     const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
     bool strict,
-    ConstraintProperties&& props
-  ) : constraints_(constraints), strict_(strict), Constraint<LayerType>(std::move(props)) {}
+    ConstraintProperties&& props,
+    bool ignore_details = false
+  ) : constraints_(constraints),
+      strict_(strict),
+      Constraint<LayerType>(std::move(props)),
+      ignore_details_(ignore_details) {}
 
   ConstraintResult test(const LayerType& value) const noexcept override {
-    if (this->props_.leaf) return this->test<true>(value);
+    if (ignore_details_) return this->test<true>(value);
     return this->test<false>(value);
   }
 
@@ -457,15 +470,16 @@ namespace garlic {
   private:
     std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
     bool strict_;
+    bool ignore_details_;
 
-    template<bool IsLeaf>
+    template<bool IgnoreDetails>
     inline ConstraintResult test(const LayerType& value) const noexcept {
       if (!value.is_list()) return this->fail("Expected a list (tuple).");
       int index = 0;
       auto tuple_it = value.begin_list();
       auto constraint_it = constraints_.begin();
       while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
-        if (IsLeaf) {
+        if (IgnoreDetails) {
           auto result = (*constraint_it)->quick_test(*tuple_it);
           if (!result) {
             return this->fail(
@@ -514,20 +528,22 @@ namespace garlic {
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
     MapConstraint() : Constraint<LayerType>({
-        .leaf = false, .fatal = false, .name = "map_constraint"
+        .fatal = false, .name = "map_constraint"
         }) {}
 
     MapConstraint(
       ConstraintPtr key_constraint,
       ConstraintPtr value_constraint,
-      ConstraintProperties&& props
+      ConstraintProperties&& props,
+      bool ignore_details = false
     ) : key_constraint_(std::move(key_constraint)),
         value_constraint_(std::move(value_constraint)),
-        Constraint<LayerType>(std::move(props)) {}
+        Constraint<LayerType>(std::move(props)),
+        ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_object()) return this->fail("Expected an object.");
-      if (this->props_.leaf) return this->test<true>(value);
+      if (ignore_details_) return this->test<true>(value);
       return this->test<false>(value);
     }
 
@@ -543,21 +559,22 @@ namespace garlic {
   private:
     ConstraintPtr key_constraint_;
     ConstraintPtr value_constraint_;
+    bool ignore_details_;
 
-    template<bool IsLeaf>
+    template<bool IgnoreDetails>
     inline ConstraintResult test(const LayerType& value) const noexcept {
       if (key_constraint_) {
-        if (value_constraint_) return test<IsLeaf, true, true>(value);
-        return test<IsLeaf, true, false>(value);
-      } else if (value_constraint_) return test<IsLeaf, false, true>(value);
+        if (value_constraint_) return test<IgnoreDetails, true, true>(value);
+        return test<IgnoreDetails, true, false>(value);
+      } else if (value_constraint_) return test<IgnoreDetails, false, true>(value);
       return this->ok();  // meaning there is no key or value constraint.
     }
 
-    template<bool IsLeaf, bool HasKeyConstraint, bool HasValueConstraint>
+    template<bool IgnoreDetails, bool HasKeyConstraint, bool HasValueConstraint>
     inline ConstraintResult test(const LayerType& value) const noexcept {
       for (const auto& item : value.get_object()) {
         if (HasKeyConstraint) {
-          if (IsLeaf && !key_constraint_->quick_test(item.key)) {
+          if (IgnoreDetails && !key_constraint_->quick_test(item.key)) {
             return this->fail("Object contains invalid key.");
           } else {
             if (auto result = key_constraint_->test(item.key); !result.valid) {
@@ -566,7 +583,7 @@ namespace garlic {
           }
         }
         if (HasValueConstraint) {
-          if (IsLeaf && !value_constraint_->quick_test(item.value)) {
+          if (IgnoreDetails && !value_constraint_->quick_test(item.value)) {
             return this->fail("Object contains invalid value.");
           } else {
             if (auto result = value_constraint_->test(item.value); !result.valid) {
@@ -598,21 +615,20 @@ namespace garlic {
 
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
-    AllConstraint() : Constraint<LayerType>({
-        .leaf = false, .fatal = true
-        }) {}
+    AllConstraint() : Constraint<LayerType>({ .fatal = true }) {}
 
     AllConstraint(
         std::vector<ConstraintPtr>&& constraints,
         ConstraintProperties&& props,
-        bool hide = true
+        bool hide = true,
+        bool ignore_details = false
     ) : constraints_(std::move(constraints)),
         Constraint<LayerType>(std::move(props)),
-        hide_(hide) {}
+        hide_(hide), ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (hide_) return this->test_hide(value);
-      if (this->props_.leaf) {
+      if (ignore_details_) {
         if (test_constraints_quick(value, constraints_)) return this->ok();
         else return this->fail("Some of the constraints fail on this value.");
       }
@@ -629,6 +645,7 @@ namespace garlic {
   private:
     std::vector<ConstraintPtr> constraints_;
     bool hide_;
+    bool ignore_details_;
 
     inline ConstraintResult test_hide(const LayerType& value) const noexcept {
       return test_constraints_first_failure(value, constraints_);

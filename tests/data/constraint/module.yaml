@@ -4,7 +4,7 @@ fields:
             - type: field
               field: Email
               message: Invalid Email!
-              leaf: true
+              ignore_details: true
 
     RegularEmail:
         constraints:
