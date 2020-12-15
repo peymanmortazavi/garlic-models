@@ -192,13 +192,13 @@ namespace garlic {
 
     bool quick_test(const LayerType& value) const noexcept override {
       switch (flag_) {
-        case TypeFlag::Null: if (value.is_null()) return true;
-        case TypeFlag::Boolean: if (value.is_bool()) return true;
-        case TypeFlag::Double: if (value.is_double()) return true;
-        case TypeFlag::Integer: if (value.is_int()) return true;
-        case TypeFlag::String: if (value.is_string()) return true;
-        case TypeFlag::List: if (value.is_list()) return true;
-        case TypeFlag::Object: if (value.is_object()) return true;
+        case TypeFlag::Null: if (value.is_null()) return true; else return false;
+        case TypeFlag::Boolean: if (value.is_bool()) return true; else return false;
+        case TypeFlag::Double: if (value.is_double()) return true; else return false;
+        case TypeFlag::Integer: if (value.is_int()) return true; else return false;
+        case TypeFlag::String: if (value.is_string()) return true; else return false;
+        case TypeFlag::List: if (value.is_list()) return true; else return false;
+        case TypeFlag::Object: if (value.is_object()) return true; else return false;
         default: return false;
       }
     }
