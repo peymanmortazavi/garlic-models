@@ -49,7 +49,7 @@ namespace garlic {
 
     ValidationResult validate(const LayerType& value, bool concise = false) const {
       if (concise || properties_.ignore_details) {
-        return { .valid = test_constraints_concise(value, properties_.constraints) };
+        return { .valid = test_constraints_quick(value, properties_.constraints) };
       }
       ValidationResult result;
       test_constraints(value, properties_.constraints, result.failures);
@@ -117,7 +117,7 @@ namespace garlic {
       return nullptr;
     }
 
-    bool quick_validate(const LayerType& value) const {
+    bool quick_test(const LayerType& value) const {
       if (!value.is_object()) return false;
       std::set<std::string_view> requirements;
       for (const auto& member : value.get_object()) {
@@ -202,9 +202,12 @@ namespace garlic {
       .leaf = false, .fatal = true, .name = model->get_properties().name
       }) {}
 
-    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
-      if (concise) return { .valid = model_->quick_validate(value) };
+    ConstraintResult test(const LayerType& value) const noexcept override {
       return model_->validate(value);
+    }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      return model_->quick_test(value);
     }
 
   private:
@@ -242,20 +245,17 @@ namespace garlic {
       this->update_name();
     }
 
-    ConstraintResult test(const LayerType& value, bool concise = false) const noexcept override {
-      if (hide_) {
-        for (const auto& constraint : (*field_)->get_properties().constraints) {
-          if (auto result = constraint->test(value, concise); !result.valid) {
-            return std::move(result);
-          }
-        }
-        return this->ok();
-      }
-      auto result = (*field_)->validate(value, concise);
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (hide_) return this->test_hide(value);
+      auto result = (*field_)->validate(value);
       if (result.valid) return this->ok();
       auto reason = (*field_)->get_message();
-      if (reason == nullptr) return this ->fail("", std::move(result.failures), concise);
-      return this->fail(reason, std::move(result.failures), concise);
+      if (reason == nullptr) return this ->fail("", std::move(result.failures));
+      return this->fail(reason, std::move(result.failures));
+    }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      return test_constraints_quick(value, (*field_)->get_properties().constraints);
     }
 
     void set_field(FieldPtr field) {
@@ -271,6 +271,15 @@ namespace garlic {
       if (*field_ && this->props_.name.empty()) {
         this->props_.name = (*field_)->get_name();
       }
+    }
+
+    inline ConstraintResult test_hide(const LayerType& value) const noexcept {
+      for (const auto& constraint : (*field_)->get_properties().constraints) {
+        if (auto result = constraint->test(value); !result.valid) {
+          return std::move(result);
+        }
+      }
+      return this->ok();
     }
   };
 
