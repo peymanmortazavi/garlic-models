@@ -175,8 +175,8 @@ TEST(ModuleParsing, OptionalFields) {
 
   for (const auto& name : valid_names) {
     auto path = "data/optional_fields/" + name + ".json";
-    assert_jsonfile_valid(module, "User", path.data(), true);
-    assert_jsonfile_valid(module, "Staff", path.data(), true);
+    assert_jsonfile_valid(module, "User", path.data());
+    assert_jsonfile_valid(module, "Staff", path.data());
   }
 
   for (const auto& name : invalid_names) {
