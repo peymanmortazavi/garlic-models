@@ -7,9 +7,10 @@
 
 
 static void BM_LibYamlModuleLoad(benchmark::State& state) {
+  auto doc = get_libyaml_document("data/performance/module.yaml");
   for (auto _ : state) {
     garlic::Module<garlic::providers::libyaml::YamlView> module;
-    load_libyaml_module(module, "data/performance/module.yaml");
+    module.parse(doc.get_view());
   }
 }
 BENCHMARK(BM_LibYamlModuleLoad);
