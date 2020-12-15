@@ -93,5 +93,13 @@ TEST(Constraints, StopFeature) {
 
   load_libyaml_module(module, "data/constraint/module.yaml");
 
-  assert_jsonfile_invalid(module, "User", "data/constraint/bad1.json", true);
+  auto result = validate_jsonfile(module, "User", "data/constraint/bad1.json");
+  ASSERT_STREQ(result.details[0].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[0].details[0].details.size(), 0);
+
+  ASSERT_STREQ(result.details[1].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[1].details[0].details.size(), 1);
+
+  ASSERT_STREQ(result.details[2].reason.c_str(), "Invalid Email!");
+  ASSERT_EQ(result.details[2].details.size(), 0);
 }

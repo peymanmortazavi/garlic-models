@@ -130,10 +130,11 @@ namespace garlic::parsing {
     get_member(value, "ignore_details", [&ignore_details](const auto& item) {
         ignore_details = item.get_bool();
         });
-    get_member(value, "field", [&parser, &result, &props, &hide](const auto& field) {
+    get_member(value, "field", [&](const auto& field) {
         auto ptr = parser.resolve_field_reference(field.get_cstr());
         result = std::make_shared<FieldConstraint<Destination>>(
-            std::make_shared<FieldPtr>(ptr), std::move(props), hide
+            std::make_shared<FieldPtr>(ptr), std::move(props),
+            hide, ignore_details
         );
         if (!ptr) {
           parser.add_field_dependency(field.get_cstr(), result);
