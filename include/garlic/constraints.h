@@ -32,7 +32,7 @@ namespace garlic {
 
 
   template<typename ConstraintPtrType>
-  void test_constraints(
+  inline void test_constraints(
       const ViewLayer auto& value,
       const std::vector<ConstraintPtrType>& constraints,
       std::vector<ConstraintResult>& results) {
@@ -56,18 +56,17 @@ namespace garlic {
   }
 
 
-  template<typename ConstraintPtrType, typename Callback>
-  void test_constraints_first_failure(
+  template<typename ConstraintPtrType>
+  inline ConstraintResult test_constraints_first_failure(
       const ViewLayer auto& value,
-      std::vector<ConstraintPtrType> constraints,
-      const Callback& cb
+      std::vector<ConstraintPtrType> constraints
       ) {
     for (const auto& constraint : constraints) {
       if (auto result = constraint->test(value); !result.valid) {
-        cb(std::move(result));
-        return;
+        return std::move(result);
       }
     }
+    return { .valid = true };
   }
 
 
@@ -632,10 +631,7 @@ namespace garlic {
     bool hide_;
 
     inline ConstraintResult test_hide(const LayerType& value) const noexcept {
-      for (const auto& constraint : constraints_) {
-        if (auto result = constraint->test(value); !result.valid) return result;
-      }
-      return this->ok();
+      return test_constraints_first_failure(value, constraints_);
     }
   };
 

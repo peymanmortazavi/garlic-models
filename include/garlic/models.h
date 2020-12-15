@@ -23,8 +23,9 @@ namespace garlic {
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
 
     struct ValidationResult {
-      bool valid;
       std::vector<ConstraintResult> failures;
+
+      inline bool is_valid() const noexcept { return !failures.size(); }
     };
 
     struct Properties {
@@ -47,14 +48,14 @@ namespace garlic {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    ValidationResult validate(const LayerType& value, bool concise = false) const {
-      if (concise || properties_.ignore_details) {
-        return { .valid = test_constraints_quick(value, properties_.constraints) };
-      }
+    ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
       test_constraints(value, properties_.constraints, result.failures);
-      result.valid = !result.failures.size();
       return result;
+    }
+
+    bool quick_test(const LayerType& value) const noexcept {
+      return test_constraints_quick(value, properties_.constraints);
     }
 
     const char* get_message() const noexcept {
@@ -123,7 +124,7 @@ namespace garlic {
       for (const auto& member : value.get_object()) {
         auto it = properties_.field_map.find(member.key.get_cstr());
         if (it == properties_.field_map.end()) continue;
-        if (!it->second.field->validate(member.value, true).valid) {
+        if (!it->second.field->validate(member.value).is_valid()) {
           return false;
         }
         requirements.emplace(it->first);
@@ -145,7 +146,7 @@ namespace garlic {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
             auto test = it->second.field->validate(member.value);
-            if (!test.valid) {
+            if (!test.is_valid()) {
               const char* reason = it->second.field->get_message();
               result.details.push_back({
                     .valid = false,
@@ -246,16 +247,21 @@ namespace garlic {
     }
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      if (hide_) return this->test_hide(value);
+      if (hide_) {
+        return test_constraints_first_failure(value, (*field_)->get_properties().constraints);
+      }
+      const auto& field = *field_;
+      if (field->get_properties().ignore_details) {
+        if (field->quick_test(value)) return this->ok();
+        return this->custom_message_fail(field);
+      }
       auto result = (*field_)->validate(value);
-      if (result.valid) return this->ok();
-      auto reason = (*field_)->get_message();
-      if (reason == nullptr) return this ->fail("", std::move(result.failures));
-      return this->fail(reason, std::move(result.failures));
+      if (result.is_valid()) return this->ok();
+      return this->custom_message_fail(field, std::move(result.failures));
     }
 
     bool quick_test(const LayerType& value) const noexcept override {
-      return test_constraints_quick(value, (*field_)->get_properties().constraints);
+      return (*field_)->quick_test(value);
     }
 
     void set_field(FieldPtr field) {
@@ -273,13 +279,11 @@ namespace garlic {
       }
     }
 
-    inline ConstraintResult test_hide(const LayerType& value) const noexcept {
-      for (const auto& constraint : (*field_)->get_properties().constraints) {
-        if (auto result = constraint->test(value); !result.valid) {
-          return std::move(result);
-        }
-      }
-      return this->ok();
+    template<typename... Args>
+    inline ConstraintResult custom_message_fail(const FieldPtr& field, Args&&... args) const noexcept {
+      if (auto message = field->get_message(); message != nullptr)
+        return this->fail(message, std::forward<Args>(args)...);
+      return this->fail("", std::forward<Args>(args)...);
     }
   };
 
