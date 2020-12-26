@@ -114,3 +114,18 @@ models:
         fields:
             hide_constraint: ThreeItemsTable
             hide_constraint_precise: ThreeItemsTablePrecise
+
+    LiteralTest:
+        fields:
+            integer:
+                constraints: [{type: literal, value: 5}]
+            double:
+                constraints: [{type: literal, value: 5.5}]
+            string:
+                constraints: [{type: literal, value: "Developer"}]
+            yes:
+                constraints: [{type: literal, value: true}]
+            no:
+                constraints: [{type: literal, value: false}]
+            none:
+                constraints: [{type: literal}]

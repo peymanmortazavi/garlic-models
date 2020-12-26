@@ -2,6 +2,7 @@
 #define GARLIC_LIBYAML_H
 
 #include "yaml.h"
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
@@ -84,7 +85,7 @@ namespace garlic::providers::libyaml {
       return (
         node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
         node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
-        (std::atoi(scalar_data()) != 0 || strcmp(scalar_data(), "0"))
+        check_int(scalar_data(), [](auto){})
       );
     }
     bool is_string() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
@@ -106,7 +107,11 @@ namespace garlic::providers::libyaml {
     }
 
     char* scalar_data() const noexcept { return (char*)node_->data.scalar.value; }
-    int get_int() const noexcept { return std::atoi(scalar_data()); }
+    int get_int() const noexcept {
+      int result;
+      check_int(scalar_data(), [&result](auto r){result = r;});
+      return result;
+    }
     std::string get_string() const noexcept { return std::string{scalar_data()}; }
     std::string_view get_string_view() const noexcept { return std::string_view{scalar_data()}; }
     const char* get_cstr() const noexcept { return scalar_data(); }
@@ -147,6 +152,16 @@ namespace garlic::providers::libyaml {
   private:
     yaml_document_t* doc_;
     yaml_node_t* node_;
+
+    template<typename Callable>
+    bool check_int(const char* input, const Callable& cb) const {
+      auto result = (int)strtol(input, nullptr, 10);
+      if (!errno) {
+        cb(result);
+        return true;
+      }
+      return false;
+    }
 
     template<typename Callable>
     bool check_double(const char* input, const Callable& cb) const {

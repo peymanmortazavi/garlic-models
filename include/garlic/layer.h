@@ -4,6 +4,7 @@
 #include <concepts>
 #include <string>
 #include <iterator>
+#include <type_traits>
 
 
 namespace garlic {

@@ -1,0 +1,5 @@
+1. Use enable_if and type traits to use a single value literal constraint.
+   So we'd basically have a LiteralConstraint<JsonView, int>(24, ConstraintProperties{});
+   and this way we would not have a run-time check of the literal value we're supposed to check.
+2. Use constraints to check if a type supports TypeFlag in order to optimize type checking.
+3. Produce some learning for the enable_if and other type traits.

@@ -1,0 +1,8 @@
+{
+    "integer": 6,
+    "double": 6.5,
+    "string": "eveloper",
+    "yes": false,
+    "no": 10,
+    "none": [12, 13, 14]
+}

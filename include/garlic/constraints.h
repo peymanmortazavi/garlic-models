@@ -4,6 +4,7 @@
 #include "layer.h"
 #include "utility.h"
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <regex>
@@ -189,13 +190,13 @@ namespace garlic {
 
     bool quick_test(const LayerType& value) const noexcept override {
       switch (flag_) {
-        case TypeFlag::Null: if (value.is_null()) return true; else return false;
-        case TypeFlag::Boolean: if (value.is_bool()) return true; else return false;
-        case TypeFlag::Double: if (value.is_double()) return true; else return false;
-        case TypeFlag::Integer: if (value.is_int()) return true; else return false;
-        case TypeFlag::String: if (value.is_string()) return true; else return false;
-        case TypeFlag::List: if (value.is_list()) return true; else return false;
-        case TypeFlag::Object: if (value.is_object()) return true; else return false;
+        case TypeFlag::Null: return value.is_null();
+        case TypeFlag::Boolean: return value.is_bool();
+        case TypeFlag::Double: return value.is_double();
+        case TypeFlag::Integer: return value.is_int();
+        case TypeFlag::String: return value.is_string();
+        case TypeFlag::List: return value.is_list();
+        case TypeFlag::Object: return value.is_object();
         default: return false;
       }
     }
@@ -522,8 +523,8 @@ namespace garlic {
         }) {}
 
     MapConstraint(
-      ConstraintPtr key_constraint,
-      ConstraintPtr value_constraint,
+      ConstraintPtr&& key_constraint,
+      ConstraintPtr&& value_constraint,
       ConstraintProperties&& props,
       bool ignore_details = false
     ) : key_constraint_(std::move(key_constraint)),
@@ -639,6 +640,86 @@ namespace garlic {
 
     inline ConstraintResult test_hide(const LayerType& value) const noexcept {
       return test_constraints_first_failure(value, constraints_);
+    }
+  };
+
+
+  template<ViewLayer LayerType>
+  class LiteralConstraint : public Constraint<LayerType> {
+  public:
+
+    LiteralConstraint() : Constraint<LayerType>({
+        .fatal = false, .name = "literal_constraint"
+        }), type_(TypeFlag::Null) {}
+
+    LiteralConstraint(
+      ConstraintProperties&& props
+    ) : Constraint<LayerType>(std::move(props)), type_(TypeFlag::Null) {
+          printf("Making a null\n");
+    }
+
+    LiteralConstraint(bool value, ConstraintProperties&& props)
+      : Constraint<LayerType>(std::move(props)),
+        type_(TypeFlag::Boolean) {
+          data_.integer = (int)value;
+          printf("Making a bool: %d\n", data_.integer);
+        }
+
+    LiteralConstraint(int value, ConstraintProperties&& props)
+      : Constraint<LayerType>(std::move(props)),
+        type_(TypeFlag::Integer) {
+          data_.integer = value;
+          printf("Making an int: %d\n", data_.integer);
+        }
+
+    LiteralConstraint(double value, ConstraintProperties&& props)
+      : Constraint<LayerType>(std::move(props)),
+        type_(TypeFlag::Double) {
+          data_.floating_number = value;
+          printf("Making a double: %f\n", data_.floating_number);
+        }
+
+    LiteralConstraint(std::string&& value, ConstraintProperties&& props)
+      : Constraint<LayerType>(std::move(props)),
+        type_(TypeFlag::String) {
+          data_.text = static_cast<char*>(std::malloc(sizeof(char) * value.size()));
+          strcpy(data_.text, value.data());
+          printf("Making a string: %s\n", data_.text);
+        }
+
+    ~LiteralConstraint() { if (type_ == TypeFlag::String) free(data_.text); }
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      return (this->validate(value) ? this->ok() : this->fail("invalid value."));
+    }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      return this->validate(value);
+    }
+
+  private:
+    union LiteralData {
+      char* text;
+      long integer;
+      double floating_number;
+    };
+
+    TypeFlag type_;
+    LiteralData data_;
+
+    inline bool validate(const LayerType& value) const noexcept {
+      switch (type_) {
+        case TypeFlag::Null: return value.is_null();
+        case TypeFlag::String:
+          return (value.is_string() && strcmp(data_.text, value.get_cstr()) == 0);
+        case TypeFlag::Double:
+          return (value.is_double() && data_.floating_number == value.get_double());
+        case TypeFlag::Integer:
+          return (value.is_int() && (int)data_.integer == value.get_int());
+        case TypeFlag::Boolean:
+          return (value.is_bool() && (bool)data_.integer == value.get_bool());
+      }
+      return false;
     }
   };
 

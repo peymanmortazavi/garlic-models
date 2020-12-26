@@ -103,3 +103,15 @@ TEST(Constraints, StopFeature) {
   ASSERT_STREQ(result.details[2].reason.c_str(), "Invalid Email!");
   ASSERT_EQ(result.details[2].details.size(), 0);
 }
+
+TEST(Constraints, LiteralConstraint) {
+  auto module = Module<JsonView>();
+
+  load_libyaml_module(module, "data/special_constraints/module.yaml");
+
+  assert_jsonfile_valid(module, "LiteralTest", "data/special_constraints/literal_good1.json");
+
+  auto result = validate_jsonfile(module, "LiteralTest", "data/special_constraints/literal_bad1.json");
+  print_constraint_result(result);
+  ASSERT_EQ(result.details.size(), 6);
+}

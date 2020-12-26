@@ -145,7 +145,7 @@ namespace garlic::parsing {
 
 
   template<ViewLayer Destination, typename Parser>
-  static std::shared_ptr<Constraint<Destination>>
+  static ConstraintPtrOf<Destination>
   parse_map(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props { .fatal = false, .name = "map_constraint"};
     set_constraint_properties(value, props);
@@ -162,6 +162,29 @@ namespace garlic::parsing {
         std::move(props), ignore_details
         );
   }
+
+  template<ViewLayer Destination, typename Parser>
+  static ConstraintPtrOf<Destination>
+  parse_literal(const ViewLayer auto& value, Parser parser) noexcept {
+    ConstraintProperties props { .fatal = false, .name = "literal_constraint" };
+    set_constraint_properties(value, props);
+    ConstraintPtrOf<Destination> result;
+    get_member(value, "value", [&props, &result](const auto& item) {
+        if (item.is_int())
+          result = std::make_shared<LiteralConstraint<Destination>>(item.get_int(), std::move(props));
+        else if (item.is_double())
+          result = std::make_shared<LiteralConstraint<Destination>>(item.get_double(), std::move(props));
+        else if (item.is_bool())
+          result = std::make_shared<LiteralConstraint<Destination>>(item.get_bool(), std::move(props));
+        else if (item.is_string())
+          result = std::make_shared<LiteralConstraint<Destination>>(item.get_string(), std::move(props));
+        else if (item.is_null())
+          result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
+        });
+    if (!result) result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
+    return result;
+  }
+
 
 
   template<ViewLayer Destination, typename ParserType>
