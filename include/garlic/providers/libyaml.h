@@ -91,10 +91,11 @@ namespace garlic::providers::libyaml {
     }
     bool is_string() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
     bool is_double() const noexcept {
+      double holder;
       return (
         node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
         node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
-        check_double(scalar_data(), [](auto){})
+        parsing::ParseDouble(scalar_data(), holder)
       );
     }
     bool is_object() const noexcept { return node_->type == yaml_node_type_t::YAML_MAPPING_NODE; }
@@ -118,7 +119,7 @@ namespace garlic::providers::libyaml {
     const char* get_cstr() const noexcept { return scalar_data(); }
     double get_double() const noexcept {
       double result;
-      check_double(scalar_data(), [&result](auto r){result = r;});
+      parsing::ParseDouble(scalar_data(), result);
       return result;
     }
     bool get_bool() const noexcept {
@@ -153,14 +154,6 @@ namespace garlic::providers::libyaml {
   private:
     yaml_document_t* doc_;
     yaml_node_t* node_;
-
-    template<typename Callable>
-    bool check_double(const char* input, const Callable& cb) const {
-      char* end;
-      double result = strtod(input, &end);
-      cb(result);
-      return !(end == input || *end != '\0');
-    }
 
     template<typename Callable>
     bool check_bool(const char* input, const Callable& cb) const {
