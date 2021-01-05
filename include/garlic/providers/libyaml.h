@@ -80,7 +80,11 @@ namespace garlic::providers::libyaml {
     YamlView (yaml_document_t* doc, yaml_node_t* node) : doc_(doc), node_(node) {}
     YamlView (yaml_document_t* doc) : doc_(doc) { node_ = yaml_document_get_root_node(doc); }
 
-    bool is_null() const { return node_->type == yaml_node_type_t::YAML_NO_NODE; }
+    bool is_null() const {
+      return node_->type == yaml_node_type_t::YAML_NO_NODE || (
+          is_string() && strcmp("null", get_cstr()) == 0
+          );
+    }
     bool is_int() const noexcept {
       int holder;
       return (

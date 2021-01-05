@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cstdio>
+#include <functional>
+#include <deque>
 #include <gtest/gtest.h>
 #include "yaml.h"
 #include <garlic/garlic.h>
@@ -46,4 +48,18 @@ TEST(YamlCpp, ProtocolTest) {
   auto node = yaml_document_get_root_node(&document);
 
   YamlView doc {&document};
+
+  auto assertions = std::deque<std::function<bool(const YamlView&)>> {
+    [](const auto& value) { return value.is_double() && value.get_double() == 1.1; },
+    [](const auto& value) { return value.is_int() && value.get_int() == 25; },
+    [](const auto& value) { return value.is_string() && value.get_string() == "Test"; },
+    [](const auto& value) { return value.is_bool() && value.get_bool(); },
+    [](const auto& value) { return value.is_null(); },
+  };
+
+  auto values = *doc.get_view().find_member("values");
+  for (const auto& value : values.value.get_list()) {
+    ASSERT_TRUE(assertions.front()(value));
+    assertions.pop_front();
+  }
 }
