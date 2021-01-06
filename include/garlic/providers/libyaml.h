@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iterator>
 #include <string>
+#include "../parsing/numbers.h"
 #include "../layer.h"
 
 
@@ -79,20 +80,26 @@ namespace garlic::providers::libyaml {
     YamlView (yaml_document_t* doc, yaml_node_t* node) : doc_(doc), node_(node) {}
     YamlView (yaml_document_t* doc) : doc_(doc) { node_ = yaml_document_get_root_node(doc); }
 
-    bool is_null() const { return node_->type == yaml_node_type_t::YAML_NO_NODE; }
+    bool is_null() const {
+      return node_->type == yaml_node_type_t::YAML_NO_NODE || (
+          is_string() && strcmp("null", get_cstr()) == 0
+          );
+    }
     bool is_int() const noexcept {
+      int holder;
       return (
         node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
         node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
-        (std::atoi(scalar_data()) != 0 || strcmp(scalar_data(), "0"))
+        parsing::ParseInt(scalar_data(), holder)
       );
     }
     bool is_string() const noexcept { return node_->type == yaml_node_type_t::YAML_SCALAR_NODE; }
     bool is_double() const noexcept {
+      double holder;
       return (
         node_->type == yaml_node_type_t::YAML_SCALAR_NODE &&
         node_->data.scalar.style == yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE &&
-        check_double(scalar_data(), [](auto){})
+        parsing::ParseDouble(scalar_data(), holder)
       );
     }
     bool is_object() const noexcept { return node_->type == yaml_node_type_t::YAML_MAPPING_NODE; }
@@ -106,13 +113,17 @@ namespace garlic::providers::libyaml {
     }
 
     char* scalar_data() const noexcept { return (char*)node_->data.scalar.value; }
-    int get_int() const noexcept { return std::atoi(scalar_data()); }
+    int get_int() const noexcept {
+      int result = 0;
+      parsing::ParseInt(scalar_data(), result);
+      return result;
+    }
     std::string get_string() const noexcept { return std::string{scalar_data()}; }
     std::string_view get_string_view() const noexcept { return std::string_view{scalar_data()}; }
     const char* get_cstr() const noexcept { return scalar_data(); }
     double get_double() const noexcept {
       double result;
-      check_double(scalar_data(), [&result](auto r){result = r;});
+      parsing::ParseDouble(scalar_data(), result);
       return result;
     }
     bool get_bool() const noexcept {
@@ -147,14 +158,6 @@ namespace garlic::providers::libyaml {
   private:
     yaml_document_t* doc_;
     yaml_node_t* node_;
-
-    template<typename Callable>
-    bool check_double(const char* input, const Callable& cb) const {
-      char* end;
-      double result = strtod(input, &end);
-      cb(result);
-      return !(end == input || *end != '\0');
-    }
 
     template<typename Callable>
     bool check_bool(const char* input, const Callable& cb) const {

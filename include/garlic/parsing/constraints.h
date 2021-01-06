@@ -11,7 +11,7 @@ namespace garlic::parsing {
   template<typename T> using ConstraintPtrOf = std::shared_ptr<Constraint<T>>;
 
   template<ViewLayer Destination, typename Parser>
-  static std::shared_ptr<Constraint<Destination>>
+  static ConstraintPtrOf<Destination>
   parse_any(const ViewLayer auto& value, Parser parser) noexcept {
     ConstraintProperties props {};
     set_constraint_properties(value, props);
