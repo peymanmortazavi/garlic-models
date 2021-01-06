@@ -655,28 +655,24 @@ namespace garlic {
     LiteralConstraint(
       ConstraintProperties&& props
     ) : Constraint<LayerType>(std::move(props)), type_(TypeFlag::Null) {
-          printf("Making a null\n");
     }
 
     LiteralConstraint(bool value, ConstraintProperties&& props)
       : Constraint<LayerType>(std::move(props)),
         type_(TypeFlag::Boolean) {
           data_.integer = (int)value;
-          printf("Making a bool: %d\n", data_.integer);
         }
 
     LiteralConstraint(int value, ConstraintProperties&& props)
       : Constraint<LayerType>(std::move(props)),
         type_(TypeFlag::Integer) {
           data_.integer = value;
-          printf("Making an int: %d\n", data_.integer);
         }
 
     LiteralConstraint(double value, ConstraintProperties&& props)
       : Constraint<LayerType>(std::move(props)),
         type_(TypeFlag::Double) {
           data_.floating_number = value;
-          printf("Making a double: %f\n", data_.floating_number);
         }
 
     LiteralConstraint(std::string&& value, ConstraintProperties&& props)
@@ -684,7 +680,6 @@ namespace garlic {
         type_(TypeFlag::String) {
           data_.text = static_cast<char*>(std::malloc(sizeof(char) * value.size()));
           strcpy(data_.text, value.data());
-          printf("Making a string: %s\n", data_.text);
         }
 
     ~LiteralConstraint() { if (type_ == TypeFlag::String) free(data_.text); }
