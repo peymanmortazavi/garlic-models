@@ -112,6 +112,5 @@ TEST(Constraints, LiteralConstraint) {
   assert_jsonfile_valid(module, "LiteralTest", "data/special_constraints/literal_good1.json");
 
   auto result = validate_jsonfile(module, "LiteralTest", "data/special_constraints/literal_bad1.json");
-  print_constraint_result(result);
   ASSERT_EQ(result.details.size(), 6);
 }
