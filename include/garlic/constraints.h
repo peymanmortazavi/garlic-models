@@ -3,12 +3,14 @@
 
 #include "layer.h"
 #include "utility.h"
+#include "meta.h"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <regex>
 #include <string>
+#include <type_traits>
 
 
 namespace garlic {
@@ -643,78 +645,72 @@ namespace garlic {
     }
   };
 
-
-  template<ViewLayer LayerType>
+  template<ViewLayer LayerType, typename ValueType = VoidType>
   class LiteralConstraint : public Constraint<LayerType> {
   public:
 
-    LiteralConstraint() : Constraint<LayerType>({
-        .fatal = false, .name = "literal_constraint"
-        }), type_(TypeFlag::Null) {}
+    template<typename V = ValueType>
+    LiteralConstraint(
+        ConstraintProperties&& props,
+        std::enable_if_t<std::is_same<V, VoidType>::value, VoidType> = VoidType {}
+        ) : Constraint<LayerType>(std::move(props)) {}
 
     LiteralConstraint(
-      ConstraintProperties&& props
-    ) : Constraint<LayerType>(std::move(props)), type_(TypeFlag::Null) {
-    }
-
-    LiteralConstraint(bool value, ConstraintProperties&& props)
-      : Constraint<LayerType>(std::move(props)),
-        type_(TypeFlag::Boolean) {
-          data_.integer = (int)value;
-        }
-
-    LiteralConstraint(int value, ConstraintProperties&& props)
-      : Constraint<LayerType>(std::move(props)),
-        type_(TypeFlag::Integer) {
-          data_.integer = value;
-        }
-
-    LiteralConstraint(double value, ConstraintProperties&& props)
-      : Constraint<LayerType>(std::move(props)),
-        type_(TypeFlag::Double) {
-          data_.floating_number = value;
-        }
-
-    LiteralConstraint(std::string&& value, ConstraintProperties&& props)
-      : Constraint<LayerType>(std::move(props)),
-        type_(TypeFlag::String) {
-          data_.text = static_cast<char*>(std::malloc(sizeof(char) * value.size()));
-          strcpy(data_.text, value.data());
-        }
-
-    ~LiteralConstraint() { if (type_ == TypeFlag::String) free(data_.text); }
+        ConstraintProperties&& props,
+        ValueType value
+        ) : Constraint<LayerType>(std::move(props)), value_(value) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
-      return (this->validate(value) ? this->ok() : this->fail("invalid value."));
+      return (this->validate(value, value_) ? this->ok() : this->fail("invalid value."));
     }
 
     bool quick_test(const LayerType& value) const noexcept override {
-      return this->validate(value);
+      return this->validate(value, value_);
     }
 
   private:
-    union LiteralData {
-      char* text;
-      long integer;
-      double floating_number;
-    };
+    ValueType value_;
 
-    TypeFlag type_;
-    LiteralData data_;
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, int>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_int() && expectation == value.get_int();
+    }
 
-    inline bool validate(const LayerType& value) const noexcept {
-      switch (type_) {
-        case TypeFlag::Null: return value.is_null();
-        case TypeFlag::String:
-          return (value.is_string() && strcmp(data_.text, value.get_cstr()) == 0);
-        case TypeFlag::Double:
-          return (value.is_double() && data_.floating_number == value.get_double());
-        case TypeFlag::Integer:
-          return (value.is_int() && (int)data_.integer == value.get_int());
-        case TypeFlag::Boolean:
-          return (value.is_bool() && (bool)data_.integer == value.get_bool());
-      }
-      return false;
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_floating_point<V>::value, bool>
+    validate(const LayerType& value, const V& expectation) noexcept {
+      return value.is_double() && expectation == value.get_double();
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<is_std_string<V>::value, bool>
+    validate(const LayerType& value, const V& expectation) noexcept {
+      return value.is_string() && !expectation.compare(value.get_cstr());
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, const char*>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_string() && !strcmp(expectation, value.get_cstr());
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, bool>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_bool() && expectation == value.get_bool();
+    }
+
+    template<typename V>
+    static inline 
+    std::enable_if_t<std::is_same<V, VoidType>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_null();
     }
   };
 
