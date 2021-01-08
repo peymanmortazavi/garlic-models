@@ -171,17 +171,22 @@ namespace garlic::parsing {
     ConstraintPtrOf<Destination> result;
     get_member(value, "value", [&props, &result](const auto& item) {
         if (item.is_int())
-          result = std::make_shared<LiteralConstraint<Destination, int>>(std::move(props), item.get_int());
+          result = std::make_shared<LiteralConstraint<Destination, int>>(
+              std::move(props), item.get_int());
         else if (item.is_double())
-          result = std::make_shared<LiteralConstraint<Destination, double>>(std::move(props), item.get_double());
+          result = std::make_shared<LiteralConstraint<Destination, double>>(
+              std::move(props), item.get_double());
         else if (item.is_bool())
-          result = std::make_shared<LiteralConstraint<Destination, bool>>(std::move(props), item.get_bool());
+          result = std::make_shared<LiteralConstraint<Destination, bool>>(
+              std::move(props), item.get_bool());
         else if (item.is_string())
-          result = std::make_shared<LiteralConstraint<Destination, std::string>>(std::move(props), item.get_string());
+          result = std::make_shared<LiteralConstraint<Destination, std::string>>(
+              std::move(props), item.get_string());
         else if (item.is_null())
           result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
         });
-    if (!result) result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
+    if (!result)
+      result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
     return result;
   }
 
