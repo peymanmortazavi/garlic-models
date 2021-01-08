@@ -3,11 +3,14 @@
 
 #include "layer.h"
 #include "utility.h"
+#include "meta.h"
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <regex>
 #include <string>
+#include <type_traits>
 
 
 namespace garlic {
@@ -189,13 +192,13 @@ namespace garlic {
 
     bool quick_test(const LayerType& value) const noexcept override {
       switch (flag_) {
-        case TypeFlag::Null: if (value.is_null()) return true; else return false;
-        case TypeFlag::Boolean: if (value.is_bool()) return true; else return false;
-        case TypeFlag::Double: if (value.is_double()) return true; else return false;
-        case TypeFlag::Integer: if (value.is_int()) return true; else return false;
-        case TypeFlag::String: if (value.is_string()) return true; else return false;
-        case TypeFlag::List: if (value.is_list()) return true; else return false;
-        case TypeFlag::Object: if (value.is_object()) return true; else return false;
+        case TypeFlag::Null: return value.is_null();
+        case TypeFlag::Boolean: return value.is_bool();
+        case TypeFlag::Double: return value.is_double();
+        case TypeFlag::Integer: return value.is_int();
+        case TypeFlag::String: return value.is_string();
+        case TypeFlag::List: return value.is_list();
+        case TypeFlag::Object: return value.is_object();
         default: return false;
       }
     }
@@ -522,8 +525,8 @@ namespace garlic {
         }) {}
 
     MapConstraint(
-      ConstraintPtr key_constraint,
-      ConstraintPtr value_constraint,
+      ConstraintPtr&& key_constraint,
+      ConstraintPtr&& value_constraint,
       ConstraintProperties&& props,
       bool ignore_details = false
     ) : key_constraint_(std::move(key_constraint)),
@@ -639,6 +642,75 @@ namespace garlic {
 
     inline ConstraintResult test_hide(const LayerType& value) const noexcept {
       return test_constraints_first_failure(value, constraints_);
+    }
+  };
+
+  template<ViewLayer LayerType, typename ValueType = VoidType>
+  class LiteralConstraint : public Constraint<LayerType> {
+  public:
+
+    template<typename V = ValueType>
+    LiteralConstraint(
+        ConstraintProperties&& props,
+        std::enable_if_t<std::is_same<V, VoidType>::value, VoidType> = VoidType {}
+        ) : Constraint<LayerType>(std::move(props)) {}
+
+    LiteralConstraint(
+        ConstraintProperties&& props,
+        ValueType value
+        ) : Constraint<LayerType>(std::move(props)), value_(value) {}
+
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      return (this->validate(value, value_) ? this->ok() : this->fail("invalid value."));
+    }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      return this->validate(value, value_);
+    }
+
+  private:
+    ValueType value_;
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, int>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_int() && expectation == value.get_int();
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_floating_point<V>::value, bool>
+    validate(const LayerType& value, const V& expectation) noexcept {
+      return value.is_double() && expectation == value.get_double();
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<is_std_string<V>::value, bool>
+    validate(const LayerType& value, const V& expectation) noexcept {
+      return value.is_string() && !expectation.compare(value.get_cstr());
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, const char*>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_string() && !strcmp(expectation, value.get_cstr());
+    }
+
+    template<typename V>
+    static inline
+    std::enable_if_t<std::is_same<V, bool>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_bool() && expectation == value.get_bool();
+    }
+
+    template<typename V>
+    static inline 
+    std::enable_if_t<std::is_same<V, VoidType>::value, bool>
+    validate(const LayerType& value, V expectation) noexcept {
+      return value.is_null();
     }
   };
 
