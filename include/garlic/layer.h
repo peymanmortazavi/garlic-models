@@ -48,8 +48,8 @@ namespace garlic {
 
     { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
     { t.end_member() } -> std::forward_iterator;  // todo: same as above.
-    { t.find_member("") } -> std::forward_iterator;
-    { t.find_member(std::string_view("")) } -> std::forward_iterator;
+    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
     { t.get_object() } -> std::ranges::range;
   };
 
@@ -57,21 +57,21 @@ namespace garlic {
     typename ValueIterator<T>;
     typename MemberIterator<T>;
 
-    { t.set_string("") };
-    { t.set_string(std::string{}) };
-    { t.set_string(std::string_view{""}) };
-    { t.set_bool(true) };
-    { t.set_int(25) };
-    { t.set_double(0.25) };
+    { t.set_string(std::declval<const char*>()) };
+    { t.set_string(std::declval<std::string>()) };
+    { t.set_string(std::declval<std::string_view>()) };
+    { t.set_bool(std::declval<bool>()) };
+    { t.set_int(std::declval<int>()) };
+    { t.set_double(std::declval<double>()) };
     { t.set_null() };
     { t.set_list() };
     { t.set_object() };
-    { t = "" };
-    { t = std::string{} };
-    { t = std::string_view{""} };
-    { t = true };
-    { t = 25 };
-    { t = 0.25 };
+    { t = std::declval<const char*>() };
+    { t = std::declval<std::string>() };
+    { t = std::declval<std::string_view>() };
+    { t = std::declval<bool>() };
+    { t = std::declval<int>() };
+    { t = std::declval<double>() };
 
     { t.begin_list() } -> std::forward_iterator;
     { t.end_list() } -> std::forward_iterator;
@@ -79,27 +79,27 @@ namespace garlic {
 
     { t.begin_member() } -> std::forward_iterator;
     { t.end_member() } -> std::forward_iterator;
-    { t.find_member("") } -> std::forward_iterator;
-    { t.find_member(std::string_view("")) } -> std::forward_iterator;
+    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
     { t.get_object() } -> std::ranges::range;
 
     { t.clear() };
     { t.push_back() };
-    { t.push_back("") };
-    { t.push_back(true) };
-    { t.push_back(25) };
-    { t.push_back(0.25) };
+    { t.push_back(std::declval<const char*>()) };
+    { t.push_back(std::declval<bool>()) };
+    { t.push_back(std::declval<int>()) };
+    { t.push_back(std::declval<double>()) };
     { t.pop_back() };
-    { t.erase(t.begin_list()) };
-    { t.erase(t.begin_list(), t.end_list()) };
+    { t.erase(std::declval<ValueIterator<T>>()) };
+    { t.erase(std::declval<ValueIterator<T>>(), std::declval<ValueIterator<T>>()) };
 
-    { t.add_member("") };
-    { t.add_member("", "") };
-    { t.add_member("", true) };
-    { t.add_member("", 25) };
-    { t.add_member("", 0.25) };
-    { t.remove_member("") };
-    { t.erase_member(t.begin_member()) };
+    { t.add_member(std::declval<const char*>()) };
+    { t.add_member(std::declval<const char*>(), std::declval<const char*>()) };
+    { t.add_member(std::declval<const char*>(), std::declval<bool>()) };
+    { t.add_member(std::declval<const char*>(), std::declval<int>()) };
+    { t.add_member(std::declval<const char*>(), std::declval<double>()) };
+    { t.remove_member(std::declval<const char*>()) };
+    { t.erase_member(std::declval<MemberIterator<T>>()) };
   };
 
   template<typename ValueType, typename Iterator>
