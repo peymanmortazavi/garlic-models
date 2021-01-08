@@ -397,6 +397,7 @@ namespace garlic {
         {"list", &parsing::parse_list<Destination>},
         {"tuple", &parsing::parse_tuple<Destination>},
         {"map", &parsing::parse_map<Destination>},
+        {"literal", &parsing::parse_literal<Destination>},
       };
 
       if (value.is_string()) {

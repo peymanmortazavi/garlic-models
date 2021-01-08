@@ -1,0 +1,8 @@
+{
+    "integer": 5,
+    "double": 5.5,
+    "string": "Developer",
+    "yes": true,
+    "no": false,
+    "none": null
+}
