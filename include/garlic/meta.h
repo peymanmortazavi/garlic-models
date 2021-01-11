@@ -7,7 +7,7 @@
 
 namespace garlic {
 
-  enum VoidType : std::uint8_t {};
+  struct VoidType {};
 
   template<typename Left, typename Right>
   using comparable = decltype(std::declval<Left>() == std::declval<Right>());
