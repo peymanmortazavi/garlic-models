@@ -49,7 +49,7 @@ namespace garlic::providers::yamlcpp {
   class YamlNode {
   public:
     using ValueType = YAML::Node;
-    using ConstValueIterator = ValueIteratorWrapper<YamlNode, typename ValueType::const_iterator>;
+    using ConstValueIterator = IteratorWrapper<YamlNode, typename ValueType::const_iterator>;
     using ConstMemberIterator = MemberIteratorWrapper<YamlNode, typename ValueType::const_iterator>;
     using MemberIterator = MemberIteratorWrapper<YamlNode, typename ValueType::iterator>;
 

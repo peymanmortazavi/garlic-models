@@ -137,7 +137,7 @@ namespace garlic {
   class GenericCloveView {
   public:
     using DataType = GenericData<Allocator>;
-    using ConstValueIterator = ValueIteratorWrapper<GenericCloveView, typename DataType::List::Container>;
+    using ConstValueIterator = IteratorWrapper<GenericCloveView, typename DataType::List::Container>;
     using ConstMemberIterator = CloveMemberIterator<GenericCloveView, typename DataType::Object::Container>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
@@ -191,7 +191,7 @@ namespace garlic {
     using ViewType = GenericCloveView<Allocator>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
-    using ValueIterator = RefValueIteratorWrapper<
+    using ValueIterator = AllocatorIteratorWrapper<
       GenericCloveRef,
       typename DataType::List::Container,
       AllocatorType

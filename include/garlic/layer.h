@@ -103,57 +103,74 @@ namespace garlic {
     { t.erase_member(std::declval<MemberIterator<T>>()) };
   };
 
+  /* TODO:  Use concepts to restrict the iterator to a forward iterator. */
   template<typename ValueType, typename Iterator>
-  class ValueIteratorWrapper {
+  class IteratorWrapper {
   public:
     using difference_type = std::ptrdiff_t;
     using value_type = ValueType;
     using reference = ValueType&;
-    using pointer = ValueType&;
+    using pointer = ValueType*;
     using iterator_category = std::forward_iterator_tag;
 
-    explicit ValueIteratorWrapper() {}
-    explicit ValueIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-    explicit ValueIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    IteratorWrapper() = default;
+    explicit IteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
+    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
 
-    ValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    ValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const ValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const ValueIteratorWrapper& other) const { return !(other == *this); }
+    IteratorWrapper& operator ++ () { ++iterator_; return *this; }
+    IteratorWrapper operator ++ (int) { auto it = *this; ++iterator_; return it; }
+    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
 
     Iterator& get_inner_iterator() { return iterator_; }
     const Iterator& get_inner_iterator() const { return iterator_; }
 
     ValueType operator * () const { return ValueType{*this->iterator_}; }
 
-  private:
+  protected:
     Iterator iterator_;
   };
 
-
   template<typename ValueType, typename Iterator, typename AllocatorType>
-  class RefValueIteratorWrapper {
+  class AllocatorIteratorWrapper : public IteratorWrapper<ValueType, Iterator> {
   public:
-    using difference_type = int;
-    using value_type = ValueType;
-    using iterator_category = std::forward_iterator_tag;
+    using Base = IteratorWrapper<ValueType, Iterator>;
 
-    explicit RefValueIteratorWrapper() {}
-    explicit RefValueIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
-    explicit RefValueIteratorWrapper(const Iterator& iterator, AllocatorType& allocator) : iterator_(iterator), allocator_(&allocator) {}
+    AllocatorIteratorWrapper() = default;
 
-    RefValueIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    RefValueIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const RefValueIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const RefValueIteratorWrapper& other) const { return !(other == *this); }
+    AllocatorIteratorWrapper(
+        const Iterator& iterator,
+        AllocatorType& allocator
+        ) : allocator_(&allocator), Base(iterator) {}
 
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
+    AllocatorIteratorWrapper(
+        Iterator&& iterator,
+        AllocatorType& allocator
+        ) : allocator_(&allocator), Base(std::move(iterator)) {}
 
-    ValueType operator * () const { return ValueType{*this->iterator_, *allocator_}; }
+    AllocatorIteratorWrapper& operator ++ () {
+      ++this->iterator_; return *this;
+    }
+
+    AllocatorIteratorWrapper operator ++ (int) {
+      auto it = *this;
+      ++this->iterator_;
+      return it;
+    }
+
+    bool operator == (const AllocatorIteratorWrapper& other) const {
+      return other.iterator_ == this->iterator_;
+    }
+
+    bool operator != (const AllocatorIteratorWrapper& other) const {
+      return !(other == *this);
+    }
+
+    ValueType operator * () const {
+      return ValueType{*this->iterator_, *allocator_};
+    }
 
   private:
-    Iterator iterator_;
     AllocatorType* allocator_;
   };
 
