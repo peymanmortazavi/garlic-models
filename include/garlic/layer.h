@@ -2,6 +2,7 @@
 #define GARLIC_LAYER_H
 
 #include <concepts>
+#include <cstddef>
 #include <string>
 #include <iterator>
 
@@ -105,7 +106,7 @@ namespace garlic {
   template<typename ValueType, typename Iterator>
   class ValueIteratorWrapper {
   public:
-    using difference_type = int;
+    using difference_type = std::ptrdiff_t;
     using value_type = ValueType;
     using reference = ValueType&;
     using pointer = ValueType&;
