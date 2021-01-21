@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <iterator>
+#include <type_traits>
 
 
 namespace garlic {
@@ -19,14 +20,14 @@ namespace garlic {
     List    = 0x1 << 6,
   };
 
-  template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
-  template<typename T> using ValueIterator = typename T::ValueIterator;
-  template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
-  template<typename T> using MemberIterator = typename T::MemberIterator;
+  template<typename T> using ConstValueIteratorOf = typename T::ConstValueIterator;
+  template<typename T> using ValueIteratorOf = typename T::ValueIterator;
+  template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
+  template<typename T> using MemberIteratorOf = typename T::MemberIterator;
 
   template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
-    typename ConstValueIterator<T>;
-    typename ConstMemberIterator<T>;
+    typename ConstValueIteratorOf<T>;
+    typename ConstMemberIteratorOf<T>;
 
     { t.is_null() } -> std::convertible_to<bool>;
     { t.is_int() } -> std::convertible_to<bool>;
@@ -55,8 +56,8 @@ namespace garlic {
   };
 
   template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
-    typename ValueIterator<T>;
-    typename MemberIterator<T>;
+    typename ValueIteratorOf<T>;
+    typename MemberIteratorOf<T>;
 
     { t.set_string(std::declval<const char*>()) };
     { t.set_string(std::declval<std::string>()) };
@@ -91,8 +92,8 @@ namespace garlic {
     { t.push_back(std::declval<int>()) };
     { t.push_back(std::declval<double>()) };
     { t.pop_back() };
-    { t.erase(std::declval<ValueIterator<T>>()) };
-    { t.erase(std::declval<ValueIterator<T>>(), std::declval<ValueIterator<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>(), std::declval<ValueIteratorOf<T>>()) };
 
     { t.add_member(std::declval<const char*>()) };
     { t.add_member(std::declval<const char*>(), std::declval<const char*>()) };
@@ -100,10 +101,15 @@ namespace garlic {
     { t.add_member(std::declval<const char*>(), std::declval<int>()) };
     { t.add_member(std::declval<const char*>(), std::declval<double>()) };
     { t.remove_member(std::declval<const char*>()) };
-    { t.erase_member(std::declval<MemberIterator<T>>()) };
+    { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
   };
 
-  /* TODO:  Use concepts to restrict the iterator to a forward iterator. */
+  template<typename ValueType, typename KeyType = ValueType>
+  struct MemberWrapper {
+    KeyType key;
+    ValueType value;
+  };
+
   template<typename ValueType, typename Iterator>
   class IteratorWrapper {
   public:
@@ -112,6 +118,9 @@ namespace garlic {
     using reference = ValueType&;
     using pointer = ValueType*;
     using iterator_category = std::forward_iterator_tag;
+
+    template<typename ExportType>
+    using ExportIterator = IteratorWrapper<ExportType, Iterator>;
 
     IteratorWrapper() = default;
     explicit IteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
@@ -124,8 +133,14 @@ namespace garlic {
 
     Iterator& get_inner_iterator() { return iterator_; }
     const Iterator& get_inner_iterator() const { return iterator_; }
+    auto GetInnerValue() const { return *this->iterator_; }
 
-    ValueType operator * () const { return ValueType{*this->iterator_}; }
+    template<typename ExportType>
+    inline auto Export() const -> ExportIterator<ExportType> {
+      return ExportIterator<ExportType>(iterator_);
+    }
+
+    ValueType operator * () const { return ValueType { *this->iterator_ }; }
 
   protected:
     Iterator iterator_;
@@ -135,6 +150,9 @@ namespace garlic {
   class AllocatorIteratorWrapper : public IteratorWrapper<ValueType, Iterator> {
   public:
     using Base = IteratorWrapper<ValueType, Iterator>;
+
+    template<typename ExportType>
+    using ExportIterator = AllocatorIteratorWrapper<ExportType, Iterator, AllocatorType>;
 
     AllocatorIteratorWrapper() = default;
 
@@ -170,6 +188,11 @@ namespace garlic {
       return ValueType{*this->iterator_, *allocator_};
     }
 
+    template<typename ExportType>
+    inline auto Export() const -> ExportIterator<ExportType> {
+      return ExportIterator<ExportType>(this->iterator_, *allocator_);
+    }
+
   private:
     AllocatorType* allocator_;
   };
@@ -179,32 +202,168 @@ namespace garlic {
   struct ConstListRange {
     const LayerType& layer;
 
-    ConstValueIterator<LayerType> begin() const { return layer.begin_list(); }
-    ConstValueIterator<LayerType> end() const { return layer.end_list(); }
+    ConstValueIteratorOf<LayerType> begin() const { return layer.begin_list(); }
+    ConstValueIteratorOf<LayerType> end() const { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ListRange {
     LayerType& layer;
 
-    ValueIterator<LayerType> begin() { return layer.begin_list(); }
-    ValueIterator<LayerType> end() { return layer.end_list(); }
+    ValueIteratorOf<LayerType> begin() { return layer.begin_list(); }
+    ValueIteratorOf<LayerType> end() { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ConstMemberRange {
     const LayerType& layer;
 
-    ConstMemberIterator<LayerType> begin() const { return layer.begin_member(); }
-    ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
+    ConstMemberIteratorOf<LayerType> begin() const { return layer.begin_member(); }
+    ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
   };
 
   template <typename LayerType>
   struct MemberRange {
     LayerType& layer;
 
-    MemberIterator<LayerType> begin() { return layer.begin_member(); }
-    MemberIterator<LayerType> end() { return layer.end_member(); }
+    MemberIteratorOf<LayerType> begin() { return layer.begin_member(); }
+    MemberIteratorOf<LayerType> end() { return layer.end_member(); }
+  };
+
+  template<class, class = void>
+  struct has_string_view_support : std::false_type {};
+
+  template<typename T>
+  struct has_string_view_support<T, 
+        std::void_t<decltype(std::declval<T>().get_string_view())>
+      > : std::true_type {};
+
+  template<class, class = void>
+  struct has_string_support : std::false_type {};
+
+  template<typename T>
+  struct has_string_support<T, 
+        std::void_t<decltype(std::declval<T>().get_string())>
+      > : std::true_type {};
+
+  template<class Bridge>
+  class ObjectView : public Bridge {
+  public:
+    using ConstValueIterator =
+      typename Bridge::ConstValueIterator::template ExportIterator<ObjectView>;
+    using ConstMemberIterator =
+      typename Bridge::ConstMemberIterator::template ExportIterator<ObjectView>;
+
+    using Bridge::Bridge;
+
+    // get_string_view
+    template<typename T = Bridge>
+    std::enable_if_t<has_string_view_support<T>::value, std::string_view>
+    get_string_view() const {
+      return Bridge::get_string_view();
+    }
+
+    template<typename T = Bridge>
+    std::enable_if_t<!has_string_view_support<T>::value, std::string_view>
+    get_string_view() const noexcept {
+      return std::string_view{this->get_cstr()};
+    }
+
+    // get_string
+    template<typename T = Bridge>
+    std::enable_if_t<has_string_support<T>::value, std::string>
+    get_string() const {
+      return Bridge::get_string();
+    }
+
+    template<typename T = Bridge>
+    std::enable_if_t<!has_string_support<T>::value, std::string>
+    get_string() const noexcept {
+      return std::string{this->get_cstr()};
+    }
+
+    // List Methods
+    inline ConstValueIterator begin_list() const {
+      return Bridge::begin_list().template Export<ObjectView>();
+    }
+
+    inline ConstValueIterator end_list() const {
+      return Bridge::end_list().template Export<ObjectView>();
+    }
+
+    auto get_list() const { return ConstListRange<ObjectView>{*this}; }
+
+    // Member Methods
+    inline ConstMemberIterator begin_member() const {
+      return Bridge::begin_member().template Export<ObjectView>();
+    }
+
+    inline ConstMemberIterator end_member() const {
+      return Bridge::end_member().template Export<ObjectView>();
+    }
+
+    inline ConstMemberIterator find_member(const char* key) const {
+      return Bridge::find_member(key).template Export<ObjectView>();
+    }
+
+    inline ConstMemberIterator find_member(std::string_view key) const {
+      return Bridge::find_member(key).template Export<ObjectView>();
+    }
+
+    auto get_object() const { return ConstMemberRange<ObjectView>{*this}; }
+  };
+
+  template<class Bridge>
+  class ObjectHelper : public Bridge {
+  public:
+    using Bridge::Bridge;
+    using Bridge::begin_list;
+    using Bridge::end_list;
+    using Bridge::begin_member;
+    using Bridge::end_member;
+    using Bridge::find_member;
+    using Bridge::get_list;
+    using Bridge::get_object;
+
+    using ValueIterator =
+      typename Bridge::ValueIterator::template ExportIterator<ObjectHelper>;
+    using MemberIterator =
+      typename Bridge::MemberIterator::template ExportIterator<ObjectHelper>;
+
+    inline ValueIterator begin_list() {
+      return Bridge::begin_list().template Export<ObjectHelper>();
+    }
+
+    inline ValueIterator end_list() {
+      return Bridge::end_list().template Export<ObjectHelper>();
+    }
+
+    auto get_list() { return ListRange<ObjectHelper>{*this}; }
+
+    inline MemberIterator begin_member() {
+      return Bridge::begin_member().template Export<ObjectHelper>();
+    }
+
+    inline MemberIterator end_member() {
+      return Bridge::end_member().template Export<ObjectHelper>();
+    }
+
+    inline MemberIterator find_member(const char* key) {
+      return Bridge::find_member(key).template Export<ObjectHelper>();
+    }
+
+    inline MemberIterator find_member(std::string_view key) {
+      return Bridge::find_member(key).template Export<ObjectHelper>();
+    }
+
+    auto get_object() { return MemberRange<ObjectHelper>{*this}; }
+
+    ObjectHelper& operator = (double value) { this->set_double(value); return *this; }
+    ObjectHelper& operator = (int value) { this->set_int(value); return *this; }
+    ObjectHelper& operator = (const char* value) { this->set_string(value); return *this; }
+    ObjectHelper& operator = (const std::string& value) { this->set_string(value); return *this; }
+    ObjectHelper& operator = (std::string_view value) { this->set_string(value); return *this; }
+    ObjectHelper& operator = (bool value) { this->set_bool(value); return *this; }
   };
 
 }

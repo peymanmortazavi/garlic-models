@@ -2,6 +2,7 @@
 #include <iostream>
 #include <benchmark/benchmark.h>
 #include <garlic/garlic.h>
+#include "garlic/layer.h"
 #include "garlic/providers/libyaml.h"
 #include "garlic/providers/rapidjson.h"
 #include "rapidjson/document.h"
@@ -27,24 +28,27 @@ static void BM_LoadRapidJsonModule(benchmark::State& state) {
 }
 BENCHMARK(BM_LoadRapidJsonModule);
 
-static auto CreateLargeRapidJsonDocument() {
-  rapidjson::Document d;
-  d.SetArray();
-  for (size_t i = 0; i < 1000; i++) {
-    auto object = rapidjson::Value();
-    object.SetObject();
-    object.AddMember(
-        "text",
-        "This is a long text just for the purpose of testing.",
-        d.GetAllocator());
-    object.AddMember("value", 18231, d.GetAllocator());
-    d.PushBack(std::move(object), d.GetAllocator());
+static rapidjson::Document& CreateLargeRapidJsonDocument() {
+  static rapidjson::Document* d;
+  if (!d) {
+    d = new rapidjson::Document();
+    d->SetArray();
+    for (size_t i = 0; i < 1000; i++) {
+      auto object = rapidjson::Value();
+      object.SetObject();
+      object.AddMember(
+          "text",
+          "This is a long text just for the purpose of testing.",
+          d->GetAllocator());
+      object.AddMember("value", 18231, d->GetAllocator());
+      d->PushBack(std::move(object), d->GetAllocator());
+    }
   }
-  return d;
+  return *d;
 }
 
 static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
-  auto doc = CreateLargeRapidJsonDocument();
+  auto& doc = CreateLargeRapidJsonDocument();
   long long character_count = 0;
   long long total = 0;
   for (auto _ : state) {
@@ -62,14 +66,14 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
 BENCHMARK(BM_LoadRapidJsonDocument_Native);
 
 static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
-  garlic::providers::rapidjson::JsonDocument doc {CreateLargeRapidJsonDocument()};
+  garlic::providers::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
   long long character_count = 0;
   long long total = 0;
   for (auto _ : state) {
-    auto view = doc.get_view();
     for (const auto& object_it : view.get_list()) {
       if (auto y = object_it.find_member("text"); y != object_it.end_member()) {
-        character_count += strlen((*y).value.get_cstr());
+        //character_count += strlen((*y).value.get_cstr());
+        character_count += (*y).value.get_string_view().size();
       }
       if (auto y = object_it.find_member("value"); y != object_it.end_member()) {
         total += (*y).value.get_int();
@@ -79,5 +83,24 @@ static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   printf("%lld - %lld\n", character_count, total);
 }
 BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
+
+static void BM_LoadRapidJsonDocument_GarlicObject(benchmark::State& state) {
+  auto view = garlic::ObjectView<garlic::providers::rapidjson::JsonView2>(CreateLargeRapidJsonDocument());
+  long long character_count = 0;
+  long long total = 0;
+  for (auto _ : state) {
+    for (const auto& object_it : view.get_list()) {
+      if (auto y = object_it.find_member("text"); y != object_it.end_member()) {
+        //character_count += strlen((*y).value.get_cstr());
+        character_count += (*y).value.get_string_view().size();
+      }
+      if (auto y = object_it.find_member("value"); y != object_it.end_member()) {
+        total += (*y).value.get_int();
+      }
+    }
+  }
+  printf("%lld - %lld\n", character_count, total);
+}
+BENCHMARK(BM_LoadRapidJsonDocument_GarlicObject);
 
 BENCHMARK_MAIN();

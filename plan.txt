@@ -1,5 +1,51 @@
-1. Use enable_if and type traits to use a single value literal constraint.
-   So we'd basically have a LiteralConstraint<JsonView, int>(24, ConstraintProperties{});
-   and this way we would not have a run-time check of the literal value we're supposed to check.
-2. Use constraints to check if a type supports TypeFlag in order to optimize type checking.
-3. Produce some learning for the enable_if and other type traits.
+1. Use constraints to check if a type supports TypeFlag in order to optimize type checking.
+2. Produce some learning for the enable_if and other type traits.
+
+There are a couple of ways to achieve the Bridge
+
+1. Using Interim Class:
+
+    This way the user would have to create a class, then an interim one to add iterators.
+
+    class Accessor {
+    public:
+        Accessor(rapidjson::Document& doc) : doc_(doc) {}
+
+        int get_int() const { return doc_.GetInt(); }
+        ...
+
+    private:
+        rapidjson::Document& doc_;
+    }
+
+    class Final : public ObjectWrapper<Accessor> {
+    public:
+        using ObjectWrapper<Accessor>::ObjectWrapper;
+
+        Iterator begin_list() const {}
+        Iterator end_list() const {}
+    };
+
+    NOTE: the problem with this is that user would have to understand more stuff to be able
+          to produce such design. It's confusing and it would not have the ranges by default.
+          but the user gets to produce any iterator they like.
+
+    
+2. Using Bridge iterators.
+
+    This way we can actually wrap around the iterators that user provides.
+    This has too many wrappers. We are going to wrap around a wrapper iterator.
+    In order to simplify this, we can create some methods for the expected iterator
+    to give access to the underlying value before getting wrapped. This way we could
+    produce the wrapper. And this is mainly okay because we can only offer these nicities
+    if the user is willing to conform to these limitations. Otherwise, they can produce
+    the rest of the methods on their own.
+
+    We just really have to make sure these iterators DO get optimized away easily.
+
+
+
+IMPORTANT:
+
+1. Figure out how to utilize tuple and check its performance.
+2. Figure out how to use a simpler iterator that handlers variety of cases to stop making a million iterators.
