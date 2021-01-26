@@ -6,6 +6,7 @@
 #include <string>
 #include <iterator>
 #include <type_traits>
+#include <utility>
 
 
 namespace garlic {
@@ -110,8 +111,8 @@ namespace garlic {
     ValueType value;
   };
 
-  template<typename ValueType, typename Iterator>
-  class IteratorWrapper {
+  template<typename ValueType, typename IteratorType>
+  class IteratorWrapperBase {
   public:
     using difference_type = std::ptrdiff_t;
     using value_type = ValueType;
@@ -119,84 +120,129 @@ namespace garlic {
     using pointer = ValueType*;
     using iterator_category = std::forward_iterator_tag;
 
-    template<typename ExportType>
-    using ExportIterator = IteratorWrapper<ExportType, Iterator>;
+    IteratorWrapperBase() = default;
+    explicit IteratorWrapperBase(const IteratorType& iterator)
+      : iterator_(iterator) {}
+    explicit IteratorWrapperBase(IteratorType&& iterator)
+      : iterator_(std::move(iterator)) {}
 
-    IteratorWrapper() = default;
-    explicit IteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-
-    IteratorWrapper& operator ++ () { ++iterator_; return *this; }
-    IteratorWrapper operator ++ (int) { auto it = *this; ++iterator_; return it; }
-    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
+    IteratorType& get_inner_iterator() { return iterator_; }
+    const IteratorType& get_inner_iterator() const { return iterator_; }
     auto GetInnerValue() const { return *this->iterator_; }
 
-    template<typename ExportType>
-    inline auto Export() const -> ExportIterator<ExportType> {
-      return ExportIterator<ExportType>(iterator_);
-    }
-
-    ValueType operator * () const { return ValueType { *this->iterator_ }; }
-
   protected:
-    Iterator iterator_;
+    IteratorType iterator_;
   };
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class AllocatorIteratorWrapper : public IteratorWrapper<ValueType, Iterator> {
+  template<
+    template <typename, typename, typename...> class T,
+    typename ValueType,
+    typename Iterator,
+    typename... Args>
+  class IteratorWrapperOperators : public T<ValueType, Iterator, Args...> {
   public:
-    using Base = IteratorWrapper<ValueType, Iterator>;
+    using Base = T<ValueType, Iterator, Args...>;
+    using Base::Base;
 
-    template<typename ExportType>
-    using ExportIterator = AllocatorIteratorWrapper<ExportType, Iterator, AllocatorType>;
-
-    AllocatorIteratorWrapper() = default;
-
-    AllocatorIteratorWrapper(
-        const Iterator& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), Base(iterator) {}
-
-    AllocatorIteratorWrapper(
-        Iterator&& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), Base(std::move(iterator)) {}
-
-    AllocatorIteratorWrapper& operator ++ () {
-      ++this->iterator_; return *this;
+    IteratorWrapperOperators& operator ++ () {
+      ++this->iterator_;
+      return *this;
     }
 
-    AllocatorIteratorWrapper operator ++ (int) {
+    IteratorWrapperOperators operator ++ (int) {
       auto it = *this;
       ++this->iterator_;
       return it;
     }
 
-    bool operator == (const AllocatorIteratorWrapper& other) const {
+    bool operator == (const IteratorWrapperOperators& other) const {
       return other.iterator_ == this->iterator_;
     }
 
-    bool operator != (const AllocatorIteratorWrapper& other) const {
+    bool operator != (const IteratorWrapperOperators& other) const {
       return !(other == *this);
     }
 
-    ValueType operator * () const {
-      return ValueType{*this->iterator_, *allocator_};
-    }
+    template<typename ExportType>
+    using ExportIterator = IteratorWrapperOperators<T, ExportType, Iterator, Args...>;
 
     template<typename ExportType>
     inline auto Export() const -> ExportIterator<ExportType> {
-      return ExportIterator<ExportType>(this->iterator_, *allocator_);
+      return Base::template Export<ExportIterator<ExportType>>();
     }
 
-  private:
-    AllocatorType* allocator_;
   };
 
+  template<
+    template <typename, typename, typename...> class T,
+    typename ValueType,
+    typename IteratorType,
+    typename... Args>
+  using add_iterator_wrapper_operators = IteratorWrapperOperators<
+    T, ValueType, IteratorType, Args...
+    >;
+
+  namespace internal {
+    template<typename ValueType, typename Iterator>
+    class IteratorWrapperImpl : public IteratorWrapperBase<ValueType, Iterator> {
+    public:
+      using IteratorWrapperBase<ValueType, Iterator>::IteratorWrapperBase;
+
+      template<typename ExportType>
+      inline auto Export() const -> ExportType {
+        return ExportType(this->iterator_);
+      }
+
+      ValueType operator * () const {
+        return ValueType { *this->iterator_ };
+      }
+    };
+
+    template<typename ValueType, typename Iterator, typename AllocatorType>
+    class AllocatorIteratorWrapperImpl : public IteratorWrapperBase<ValueType, Iterator> {
+    public:
+      using Base = IteratorWrapperBase<ValueType, Iterator>;
+
+      AllocatorIteratorWrapperImpl() = default;
+
+      AllocatorIteratorWrapperImpl(
+          const Iterator& iterator,
+          AllocatorType& allocator
+          ) : allocator_(&allocator), Base(iterator) {}
+
+      AllocatorIteratorWrapperImpl(
+          Iterator&& iterator,
+          AllocatorType& allocator
+          ) : allocator_(&allocator), Base(std::move(iterator)) {}
+
+      template<typename ExportType>
+      inline auto Export() const -> ExportType {
+        return ExportType(this->iterator_);
+      }
+
+      ValueType operator * () const {
+        return ValueType { *this->iterator_, *this->allocator_ };
+      }
+
+    protected:
+      AllocatorType* allocator_;
+    };
+  }
+
+  template<typename ValueType, typename Iterator>
+  using IteratorWrapper = add_iterator_wrapper_operators<
+    internal::IteratorWrapperImpl,
+    ValueType,
+    Iterator
+    >;
+
+  template<typename ValueType, typename Iterator, typename Allocator>
+  using AllocatorIteratorWrapper = add_iterator_wrapper_operators<
+    internal::AllocatorIteratorWrapperImpl,
+    ValueType,
+    Iterator,
+    Allocator
+    >;
 
   template <typename LayerType>
   struct ConstListRange {

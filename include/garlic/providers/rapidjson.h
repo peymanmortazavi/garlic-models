@@ -11,8 +11,58 @@
 
 namespace garlic::providers::rapidjson {
 
+  template<typename ValueType, typename Iterator>
+  class ConstMemberIteratorWrapperImpl : 
+    public IteratorWrapperBase<MemberWrapper<ValueType>, Iterator> {
+  public:
+    using Base = IteratorWrapperBase<MemberWrapper<ValueType>, Iterator>;
+    using Base::Base;
+
+    template<typename ExportType>
+    auto Export() const {
+      return ExportType(this->iterator_);
+    }
+
+    MemberWrapper<ValueType> operator * () const {
+      return MemberWrapper<ValueType> {
+        ValueType(this->iterator_->name),
+        ValueType(this->iterator_->value)
+      };
+    }
+  };
+
+  template<typename ValueType, typename Iterator, typename AllocatorType>
+  class MemberIteratorWrapperImpl : 
+    public AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, AllocatorType> {
+  public:
+    using Base = AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, AllocatorType>;
+    using Base::Base;
+
+    template<typename ExportType>
+    auto Export() const {
+      return ExportType(this->iterator_, *this->allocator_);
+    }
+
+    MemberWrapper<ValueType> operator * () const {
+      return MemberWrapper<ValueType> {
+        ValueType(this->iterator_->name, *this->allocator_),
+        ValueType(this->iterator_->value, *this->allocator_)
+      };
+    }
+  };
+
+  template<typename ValueType, typename Iterator>
+  using ConstMemberIteratorWrapper = add_iterator_wrapper_operators<
+    ConstMemberIteratorWrapperImpl, ValueType, Iterator
+    >;
+
+  template<typename ValueType, typename Iterator, typename AllocatorType>
+  using MemberIteratorWrapper = add_iterator_wrapper_operators<
+    MemberIteratorWrapperImpl, ValueType, Iterator, AllocatorType
+    >;
+
   template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class MemberIteratorWrapper {
+  class LegacyMemberIteratorWrapper {
   public:
     struct MemberWrapper {
       KeyType key;
@@ -26,16 +76,16 @@ namespace garlic::providers::rapidjson {
     using iterator_category = std::forward_iterator_tag;
 
     template<typename ExportType>
-    using ExportIterator = MemberIteratorWrapper<ExportType, Iterator>;
+    using ExportIterator = LegacyMemberIteratorWrapper<ExportType, Iterator>;
 
-    explicit MemberIteratorWrapper() {}
-    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit MemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
+    explicit LegacyMemberIteratorWrapper() {}
+    explicit LegacyMemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    explicit LegacyMemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
 
-    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
+    LegacyMemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
+    LegacyMemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const LegacyMemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const LegacyMemberIteratorWrapper& other) const { return !(other == *this); }
 
     MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->name}, ValueType{this->iterator_->value}}; }
 
@@ -62,7 +112,7 @@ namespace garlic::providers::rapidjson {
     using iterator_category = std::forward_iterator_tag;
 
     template<typename ExportType>
-    using ExportIterator = MemberIteratorWrapper<ExportType, Iterator, AllocatorType>;
+    using ExportIterator = LegacyMemberIteratorWrapper<ExportType, Iterator, AllocatorType>;
 
     explicit RefMemberIteratorWrapper() {}
     explicit RefMemberIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
@@ -93,7 +143,7 @@ namespace garlic::providers::rapidjson {
   public:
     using ValueType = ::rapidjson::Value;
     using ConstValueIterator = IteratorWrapper<JsonView, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
+    using ConstMemberIterator = LegacyMemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
 
@@ -140,7 +190,7 @@ namespace garlic::providers::rapidjson {
   public:
     using ValueType = ::rapidjson::Value;
     using ConstValueIterator = IteratorWrapper<JsonView2, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = MemberIteratorWrapper<JsonView2, typename ::rapidjson::Value::ConstMemberIterator>;
+    using ConstMemberIterator = ConstMemberIteratorWrapper<JsonView2, typename ::rapidjson::Value::ConstMemberIterator>;
 
     JsonView2 (const ValueType& value) : value_(value) {}
 
@@ -183,7 +233,7 @@ namespace garlic::providers::rapidjson {
     using DocumentType = ::rapidjson::Document;
     using AllocatorType = DocumentType::AllocatorType;
     using ValueIterator = AllocatorIteratorWrapper<JsonRef2, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
-    using MemberIterator = RefMemberIteratorWrapper<JsonRef2, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
+    using MemberIterator = MemberIteratorWrapper<JsonRef2, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
     using NewJsonView::begin_list;
     using NewJsonView::end_list;
     using NewJsonView::begin_member;

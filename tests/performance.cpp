@@ -54,7 +54,7 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto& object_it : doc.GetArray()) {
       if (auto y = object_it.FindMember("text"); y != object_it.MemberEnd()) {
-        character_count += strlen(y->value.GetString());
+        character_count += std::string_view(y->value.GetString()).size();
       }
       if (auto y = object_it.FindMember("value"); y != object_it.MemberEnd()) {
         total += y->value.GetInt();
@@ -63,7 +63,6 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
   }
   printf("%lld - %lld\n", character_count, total);
 }
-BENCHMARK(BM_LoadRapidJsonDocument_Native);
 
 static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   garlic::providers::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
@@ -82,7 +81,6 @@ static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   }
   printf("%lld - %lld\n", character_count, total);
 }
-BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
 
 static void BM_LoadRapidJsonDocument_GarlicObject(benchmark::State& state) {
   auto view = garlic::ObjectView<garlic::providers::rapidjson::JsonView2>(CreateLargeRapidJsonDocument());
@@ -101,6 +99,8 @@ static void BM_LoadRapidJsonDocument_GarlicObject(benchmark::State& state) {
   }
   printf("%lld - %lld\n", character_count, total);
 }
+BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
 BENCHMARK(BM_LoadRapidJsonDocument_GarlicObject);
+BENCHMARK(BM_LoadRapidJsonDocument_Native);
 
 BENCHMARK_MAIN();
