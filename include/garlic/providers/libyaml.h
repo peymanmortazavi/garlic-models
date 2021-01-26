@@ -12,65 +12,45 @@
 
 namespace garlic::providers::libyaml {
 
-  template<typename ValueType, typename KeyType = ValueType>
-  class MemberIterator {
+  template<typename ValueType>
+  class MemberIteratorImpl : public IteratorWrapper<MemberWrapper<ValueType>, yaml_node_pair_t*> {
   public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
+    using Base = IteratorWrapper<MemberWrapper<ValueType>, yaml_node_pair_t*>;
+    MemberIteratorImpl() = default;
+    MemberIteratorImpl(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), Base(ptr) {}
 
-    MemberIterator() = default;
-    MemberIterator(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), ptr_(ptr) {}
-
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference_type = MemberWrapper&;
-    using pointer_type = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
-
-    MemberIterator& operator ++ () { ptr_++; return *this; }
-    MemberIterator operator ++ (int) { auto it = *this; ptr_++; return it; }
-    bool operator == (const MemberIterator& other) const { return ptr_ == other.ptr_; }
-    bool operator != (const MemberIterator& other) const { return ptr_ != other.ptr_; }
-
-    MemberWrapper operator * () const {
-      return MemberWrapper {
-        KeyType{doc_, yaml_document_get_node(doc_, ptr_->key)},
-        ValueType{doc_, yaml_document_get_node(doc_, ptr_->value)}
+    MemberWrapper<ValueType> operator * () const {
+      return MemberWrapper<ValueType> {
+        ValueType{doc_, yaml_document_get_node(doc_, this->iterator_->key)},
+        ValueType{doc_, yaml_document_get_node(doc_, this->iterator_->value)}
       };
     }
 
   private:
-    yaml_node_pair_t* ptr_;
     yaml_document_t* doc_;
   };
 
   template<typename ValueType>
-  class ValueIterator {
+  class ValueIteratorImpl : public IteratorWrapper<ValueType, yaml_node_item_t*> {
   public:
-    ValueIterator() = default;
-    ValueIterator(yaml_document_t* doc, yaml_node_item_t* ptr) : doc_(doc), ptr_(ptr) {}
+    using Base = IteratorWrapper<ValueType, yaml_node_item_t*>;
 
-    using difference_type = int;
-    using value_type = ValueType;
-    using reference_type = ValueType&;
-    using pointer_type = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
-
-    ValueIterator& operator ++ () { ptr_++; return *this; }
-    ValueIterator operator ++ (int) { auto it = *this; ptr_++; return it; }
-    bool operator == (const ValueIterator& other) const { return ptr_ == other.ptr_; }
-    bool operator != (const ValueIterator& other) const { return ptr_ != other.ptr_; }
+    ValueIteratorImpl() = default;
+    ValueIteratorImpl(yaml_document_t* doc, yaml_node_item_t* ptr) : doc_(doc), Base(ptr) {}
 
     ValueType operator * () const {
-      return ValueType{doc_, yaml_document_get_node(doc_, *ptr_)};
+      return ValueType{doc_, yaml_document_get_node(doc_, *this->iterator_)};
     }
 
   private:
-    yaml_node_item_t* ptr_;
     yaml_document_t* doc_;
   };
+
+  template<typename ValueType>
+  using MemberIterator = add_iterator_operators<MemberIteratorImpl<ValueType>>;
+
+  template<typename ValueType>
+  using ValueIterator = add_iterator_operators<ValueIteratorImpl<ValueType>>;
 
   class YamlView {
   public:
