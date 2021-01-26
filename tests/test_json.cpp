@@ -118,10 +118,3 @@ TEST(RapidJson, ProtocolTest) {
   // the writable object.
   test_full_layer(JsonRef{doc});
 }
-
-TEST(RapidJson, NewWorld) {
-  Document doc = get_test_document();
-  ObjectHelper<JsonRef2> ref(doc);
-  JsonRef2 ref2(doc);
-  ref = "Peyman";
-}

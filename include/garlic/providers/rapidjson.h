@@ -11,139 +11,56 @@
 
 namespace garlic::providers::rapidjson {
 
-  template<typename ValueType, typename Iterator>
-  class ConstMemberIteratorWrapperImpl : 
-    public IteratorWrapperBase<MemberWrapper<ValueType>, Iterator> {
-  public:
-    using Base = IteratorWrapperBase<MemberWrapper<ValueType>, Iterator>;
-    using Base::Base;
+  namespace internal {
 
-    template<typename ExportType>
-    auto Export() const {
-      return ExportType(this->iterator_);
-    }
+    template<typename ValueType, typename Iterator>
+    class ConstMemberIteratorImpl : 
+      public IteratorWrapper<MemberWrapper<ValueType>, Iterator> {
+    public:
+      using IteratorWrapper<MemberWrapper<ValueType>, Iterator>::IteratorWrapper;
 
-    MemberWrapper<ValueType> operator * () const {
-      return MemberWrapper<ValueType> {
-        ValueType(this->iterator_->name),
-        ValueType(this->iterator_->value)
-      };
-    }
-  };
+      MemberWrapper<ValueType> operator * () const {
+        return MemberWrapper<ValueType> {
+          ValueType(this->iterator_->name),
+          ValueType(this->iterator_->value)
+        };
+      }
+    };
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class MemberIteratorWrapperImpl : 
-    public AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, AllocatorType> {
-  public:
-    using Base = AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, AllocatorType>;
-    using Base::Base;
+    template<typename ValueType, typename Iterator, typename Allocator>
+    class MemberIteratorImpl : 
+      public AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, Allocator> {
+    using Base = AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, Allocator>;
+    public:
+      using Base::Base;
 
-    template<typename ExportType>
-    auto Export() const {
-      return ExportType(this->iterator_, *this->allocator_);
-    }
+      MemberWrapper<ValueType> operator * () const {
+        return MemberWrapper<ValueType> {
+          ValueType(this->iterator_->name, *this->allocator_),
+          ValueType(this->iterator_->value, *this->allocator_)
+        };
+      }
+    };
 
-    MemberWrapper<ValueType> operator * () const {
-      return MemberWrapper<ValueType> {
-        ValueType(this->iterator_->name, *this->allocator_),
-        ValueType(this->iterator_->value, *this->allocator_)
-      };
-    }
-  };
+  }
 
   template<typename ValueType, typename Iterator>
-  using ConstMemberIteratorWrapper = add_iterator_wrapper_operators<
-    ConstMemberIteratorWrapperImpl, ValueType, Iterator
+  using ConstMemberIteratorWrapper = add_iterator_operators<
+    internal::ConstMemberIteratorImpl<ValueType, Iterator>
     >;
 
   template<typename ValueType, typename Iterator, typename AllocatorType>
-  using MemberIteratorWrapper = add_iterator_wrapper_operators<
-    MemberIteratorWrapperImpl, ValueType, Iterator, AllocatorType
+  using MemberIteratorWrapper = add_iterator_operators<
+    internal::MemberIteratorImpl<ValueType, Iterator, AllocatorType>
     >;
-
-  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class LegacyMemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
-
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = MemberWrapper&;
-    using pointer = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
-
-    template<typename ExportType>
-    using ExportIterator = LegacyMemberIteratorWrapper<ExportType, Iterator>;
-
-    explicit LegacyMemberIteratorWrapper() {}
-    explicit LegacyMemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit LegacyMemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-
-    LegacyMemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    LegacyMemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const LegacyMemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const LegacyMemberIteratorWrapper& other) const { return !(other == *this); }
-
-    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->name}, ValueType{this->iterator_->value}}; }
-
-    template<typename ExportType>
-    inline auto Export() const -> ExportIterator<ExportType> {
-      return ExportIterator<ExportType>(iterator_);
-    }
-
-  private:
-    Iterator iterator_;
-  };
-
-
-  template<typename ValueType, typename Iterator, typename AllocatorType, typename KeyType = ValueType>
-  class RefMemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
-
-    using difference_type = int;
-    using value_type = MemberWrapper;
-    using iterator_category = std::forward_iterator_tag;
-
-    template<typename ExportType>
-    using ExportIterator = LegacyMemberIteratorWrapper<ExportType, Iterator, AllocatorType>;
-
-    explicit RefMemberIteratorWrapper() {}
-    explicit RefMemberIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
-
-    RefMemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    RefMemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const RefMemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const RefMemberIteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    MemberWrapper operator * () const {
-      return MemberWrapper{KeyType{this->iterator_->name, *allocator_}, ValueType{this->iterator_->value, *allocator_}};
-    }
-
-    template<typename ExportType>
-    inline auto Export() const -> ExportIterator<ExportType> {
-      return ExportIterator<ExportType>(iterator_, *allocator_);
-    }
-
-  private:
-    Iterator iterator_;
-    AllocatorType* allocator_;
-  };
 
   class JsonView {
   public:
     using ValueType = ::rapidjson::Value;
-    using ConstValueIterator = IteratorWrapper<JsonView, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = LegacyMemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
+    using ConstValueIterator = IteratorWrapper<
+      JsonView,typename ::rapidjson::Value::ConstValueIterator>;
+    using ConstMemberIterator = ConstMemberIteratorWrapper<
+      JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
 
     JsonView (const ValueType& value) : value_(value) {}
 
@@ -186,185 +103,14 @@ namespace garlic::providers::rapidjson {
     const ValueType& value_;
   };
 
-  class JsonView2 {
-  public:
-    using ValueType = ::rapidjson::Value;
-    using ConstValueIterator = IteratorWrapper<JsonView2, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = ConstMemberIteratorWrapper<JsonView2, typename ::rapidjson::Value::ConstMemberIterator>;
-
-    JsonView2 (const ValueType& value) : value_(value) {}
-
-    bool is_null() const noexcept { return value_.IsNull(); }
-    bool is_int() const noexcept { return value_.IsInt(); }
-    bool is_string() const noexcept { return value_.IsString(); }
-    bool is_double() const noexcept { return value_.IsDouble(); }
-    bool is_object() const noexcept { return value_.IsObject(); }
-    bool is_list() const noexcept { return value_.IsArray(); }
-    bool is_bool() const noexcept { return value_.IsBool(); }
-
-    int get_int() const noexcept { return value_.GetInt(); }
-    const char* get_cstr() const noexcept { return value_.GetString(); }
-    double get_double() const noexcept { return value_.GetDouble(); }
-    bool get_bool() const noexcept { return value_.GetBool(); }
-
-    ConstValueIterator begin_list() const { return ConstValueIterator(value_.Begin()); }
-    ConstValueIterator end_list() const { return ConstValueIterator(value_.End()); }
-
-    ConstMemberIterator begin_member() const { return ConstMemberIterator(value_.MemberBegin()); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
-    ConstMemberIterator find_member(const char* key) const { return ConstMemberIterator{value_.FindMember(key)}; }
-    ConstMemberIterator find_member(std::string_view key) const {
-      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
-          return key.compare(item.key.get_cstr()) == 0;
-          });
-    }
-
-    const ValueType& get_inner_value() const { return value_; }
-    JsonView2 get_view() const { return JsonView2{value_}; }
-  
-  private:
-    const ValueType& value_;
-  };
-
-  using NewJsonView = ObjectView<JsonView2>;
-
-  class JsonRef2 : public NewJsonView {
-  public:
-    using DocumentType = ::rapidjson::Document;
-    using AllocatorType = DocumentType::AllocatorType;
-    using ValueIterator = AllocatorIteratorWrapper<JsonRef2, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
-    using MemberIterator = MemberIteratorWrapper<JsonRef2, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
-    using NewJsonView::begin_list;
-    using NewJsonView::end_list;
-    using NewJsonView::begin_member;
-    using NewJsonView::end_member;
-    using NewJsonView::find_member;
-    using NewJsonView::get_list;
-    using NewJsonView::get_object;
-
-    JsonRef2(
-        ValueType& value,
-        DocumentType::AllocatorType& allocator
-    ) : NewJsonView(value), value_(value), allocator_(allocator) {}
-
-    JsonRef2(DocumentType& doc) : NewJsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
-
-    void set_string(const char* value) { value_.SetString(value, allocator_); }
-    void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
-    void set_string(std::string_view value) { value_.SetString(value.data(), value.length(), allocator_); }
-    void set_int(int value) { value_.SetInt(value); }
-    void set_double(double value) { value_.SetDouble(value); }
-    void set_bool(bool value) { value_.SetBool(value); }
-    void set_null() { value_.SetNull(); }
-    void set_list() { value_.SetArray(); }
-    void set_object() { value_.SetObject(); }
-
-    ValueIterator begin_list() { return ValueIterator(value_.Begin(), allocator_); }
-    ValueIterator end_list() { return ValueIterator(value_.End(), allocator_); }
-
-    MemberIterator begin_member() { return MemberIterator(value_.MemberBegin(), allocator_); }
-    MemberIterator end_member() { return MemberIterator(value_.MemberEnd(), allocator_); }
-
-    JsonRef2 get_reference() { return JsonRef2{value_, allocator_}; }
-
-    // list functions.
-    void clear() { value_.Clear(); }
-    void push_back() { value_.PushBack(ValueType().Move(), allocator_); }
-    void push_back(const NewJsonView& value) {
-      value_.PushBack(ValueType(value.get_inner_value(), allocator_), allocator_);
-    }
-    void push_back(const char* value) {
-      value_.PushBack(ValueType().SetString(value, allocator_), allocator_);
-    }
-    void push_back(const std::string& value) {
-      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
-    }
-    void push_back(std::string_view value) {
-      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
-    }
-    void push_back(int value) { value_.PushBack(ValueType(value).Move(), allocator_); }
-    void push_back(double value) { value_.PushBack(ValueType(value).Move(), allocator_); }
-    void push_back(bool value) { value_.PushBack(ValueType(value).Move(), allocator_); }
-    void pop_back() { value_.PopBack(); }
-    void erase(const ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator first, const ValueIterator last) {
-      value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
-    }
-    void erase(const ConstValueIterator first, const ConstValueIterator last) {
-      value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
-    }
-
-    // member functions.
-    MemberIterator find_member(const char* key) { return MemberIterator{value_.FindMember(key), allocator_}; }
-    MemberIterator find_member(std::string_view key) {
-      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
-          return key.compare(item.key.get_cstr()) == 0;
-          });
-    }
-    MemberIterator find_member(const NewJsonView& value) { return MemberIterator{value_.FindMember(value.get_inner_value()), allocator_}; }
-    void add_member(const NewJsonView& key, const NewJsonView& value) {
-      value_.AddMember(
-        ValueType(key.get_inner_value(), allocator_),
-        ValueType(value.get_inner_value(), allocator_),
-        allocator_
-      );
-    }
-
-    void add_member(const NewJsonView& key) {
-      value_.AddMember(
-        ValueType(key.get_inner_value(), allocator_),
-        ValueType().Move(),
-        allocator_
-      );
-    }
-
-    void add_member(const char* key) { this->add_member(ValueType().SetString(key, allocator_)); }
-    void add_member(const char* key, const JsonRef2& value) {
-      this->add_member(ValueType().SetString(key, allocator_), value.get_inner_value());
-    }
-    void add_member(const char* key, const char* value) {
-      this->add_member(key, JsonRef2{ValueType().SetString(value, allocator_), allocator_});
-    }
-    void add_member(const char* key, const std::string& value) {
-      this->add_member(
-          key,
-          JsonRef2{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
-      );
-    }
-    void add_member(const char* key, std::string_view value) {
-      this->add_member(
-          key,
-          JsonRef2{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
-      );
-    }
-    void add_member(const char* key, double value) {
-      this->add_member(key, JsonRef2{ValueType().SetDouble(value), allocator_});
-    }
-    void add_member(const char* key, int value) {
-      this->add_member(key, JsonRef2{ValueType().SetInt(value), allocator_});
-    }
-    void add_member(const char* key, bool value) {
-      this->add_member(key, JsonRef2{ValueType().SetBool(value), allocator_});
-    }
-
-    void remove_member(const char* key) { value_.RemoveMember(key); }
-    void remove_member(const NewJsonView& key) { value_.RemoveMember(key.get_inner_value()); }
-    void erase_member(MemberIterator position) { value_.EraseMember(position.get_inner_iterator()); }
-
-    AllocatorType& get_allocator() { return allocator_; }
-
-  private:
-    ValueType& value_;
-    AllocatorType& allocator_;
-  };
-
   class JsonRef : public JsonView {
   public:
     using DocumentType = ::rapidjson::Document;
     using AllocatorType = DocumentType::AllocatorType;
-    using ValueIterator = AllocatorIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
-    using MemberIterator = RefMemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
+    using ValueIterator = AllocatorIteratorWrapper<
+      JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
+    using MemberIterator = MemberIteratorWrapper<
+      JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
     using JsonView::begin_list;
     using JsonView::end_list;
     using JsonView::begin_member;

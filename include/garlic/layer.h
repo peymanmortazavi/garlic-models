@@ -111,97 +111,78 @@ namespace garlic {
     ValueType value;
   };
 
-  template<typename ValueType, typename IteratorType>
-  class IteratorWrapperBase {
-  public:
-    using difference_type = std::ptrdiff_t;
-    using value_type = ValueType;
-    using reference = ValueType&;
-    using pointer = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
-
-    IteratorWrapperBase() = default;
-    explicit IteratorWrapperBase(const IteratorType& iterator)
-      : iterator_(iterator) {}
-    explicit IteratorWrapperBase(IteratorType&& iterator)
-      : iterator_(std::move(iterator)) {}
-
-    IteratorType& get_inner_iterator() { return iterator_; }
-    const IteratorType& get_inner_iterator() const { return iterator_; }
-    auto GetInnerValue() const { return *this->iterator_; }
-
-  protected:
-    IteratorType iterator_;
-  };
-
-  template<
-    template <typename, typename, typename...> class T,
-    typename ValueType,
-    typename Iterator,
-    typename... Args>
-  class IteratorWrapperOperators : public T<ValueType, Iterator, Args...> {
-  public:
-    using Base = T<ValueType, Iterator, Args...>;
-    using Base::Base;
-
-    IteratorWrapperOperators& operator ++ () {
-      ++this->iterator_;
-      return *this;
-    }
-
-    IteratorWrapperOperators operator ++ (int) {
-      auto it = *this;
-      ++this->iterator_;
-      return it;
-    }
-
-    bool operator == (const IteratorWrapperOperators& other) const {
-      return other.iterator_ == this->iterator_;
-    }
-
-    bool operator != (const IteratorWrapperOperators& other) const {
-      return !(other == *this);
-    }
-
-    template<typename ExportType>
-    using ExportIterator = IteratorWrapperOperators<T, ExportType, Iterator, Args...>;
-
-    template<typename ExportType>
-    inline auto Export() const -> ExportIterator<ExportType> {
-      return Base::template Export<ExportIterator<ExportType>>();
-    }
-
-  };
-
-  template<
-    template <typename, typename, typename...> class T,
-    typename ValueType,
-    typename IteratorType,
-    typename... Args>
-  using add_iterator_wrapper_operators = IteratorWrapperOperators<
-    T, ValueType, IteratorType, Args...
-    >;
-
   namespace internal {
-    template<typename ValueType, typename Iterator>
-    class IteratorWrapperImpl : public IteratorWrapperBase<ValueType, Iterator> {
+    template<typename ValueType, typename IteratorType>
+    class IteratorWrapperImpl {
     public:
-      using IteratorWrapperBase<ValueType, Iterator>::IteratorWrapperBase;
+      using difference_type = std::ptrdiff_t;
+      using value_type = ValueType;
+      using reference = ValueType&;
+      using pointer = ValueType*;
+      using iterator_category = std::forward_iterator_tag;
 
-      template<typename ExportType>
-      inline auto Export() const -> ExportType {
-        return ExportType(this->iterator_);
-      }
+      IteratorWrapperImpl() = default;
+      explicit IteratorWrapperImpl(const IteratorType& iterator)
+        : iterator_(iterator) {}
+      explicit IteratorWrapperImpl(IteratorType&& iterator)
+        : iterator_(std::move(iterator)) {}
+
+      IteratorType& get_inner_iterator() { return iterator_; }
+      const IteratorType& get_inner_iterator() const { return iterator_; }
+      auto GetInnerValue() const { return *this->iterator_; }
 
       ValueType operator * () const {
-        return ValueType { *this->iterator_ };
+        return ValueType { *iterator_ };
+      }
+
+    protected:
+      IteratorType iterator_;
+    };
+
+    template<typename T>
+    class IteratorWrapperOperators : public T {
+    public:
+      using T::T;
+
+      IteratorWrapperOperators& operator ++ () {
+        ++this->iterator_;
+        return *this;
+      }
+
+      IteratorWrapperOperators operator ++ (int) {
+        auto it = *this;
+        ++this->iterator_;
+        return it;
+      }
+
+      bool operator == (const IteratorWrapperOperators& other) const {
+        return other.iterator_ == this->iterator_;
+      }
+
+      bool operator != (const IteratorWrapperOperators& other) const {
+        return !(other == *this);
+      }
+
+    };
+
+    template<typename ValueType, typename Iterator>
+    class LayerMemberIteratorImpl
+      : public IteratorWrapperImpl<MemberWrapper<ValueType>, Iterator> {
+    public:
+      using IteratorWrapperImpl<MemberWrapper<ValueType>, Iterator>::IteratorWrapperBase;
+
+      MemberWrapper<ValueType> operator * () const {
+        return MemberWrapper<ValueType> {
+          ValueType{ (*this->iterator_).key },
+          ValueType{ (*this->iterator_).value }
+        };
       }
     };
 
     template<typename ValueType, typename Iterator, typename AllocatorType>
-    class AllocatorIteratorWrapperImpl : public IteratorWrapperBase<ValueType, Iterator> {
+    class AllocatorIteratorWrapperImpl : public IteratorWrapperImpl<ValueType, Iterator> {
     public:
-      using Base = IteratorWrapperBase<ValueType, Iterator>;
+      using Base = IteratorWrapperImpl<ValueType, Iterator>;
 
       AllocatorIteratorWrapperImpl() = default;
 
@@ -215,11 +196,6 @@ namespace garlic {
           AllocatorType& allocator
           ) : allocator_(&allocator), Base(std::move(iterator)) {}
 
-      template<typename ExportType>
-      inline auto Export() const -> ExportType {
-        return ExportType(this->iterator_);
-      }
-
       ValueType operator * () const {
         return ValueType { *this->iterator_, *this->allocator_ };
       }
@@ -229,19 +205,22 @@ namespace garlic {
     };
   }
 
+  template<typename T>
+  using add_iterator_operators = internal::IteratorWrapperOperators<T>;
+
   template<typename ValueType, typename Iterator>
-  using IteratorWrapper = add_iterator_wrapper_operators<
-    internal::IteratorWrapperImpl,
-    ValueType,
-    Iterator
+  using IteratorWrapper = add_iterator_operators<
+    internal::IteratorWrapperImpl<ValueType, Iterator>
     >;
 
+  template<typename ValueType, typename Iterator>
+  using LayerMemberIterator = add_iterator_operators<
+    internal::LayerMemberIteratorImpl<ValueType, Iterator>
+  >;
+
   template<typename ValueType, typename Iterator, typename Allocator>
-  using AllocatorIteratorWrapper = add_iterator_wrapper_operators<
-    internal::AllocatorIteratorWrapperImpl,
-    ValueType,
-    Iterator,
-    Allocator
+  using AllocatorIteratorWrapper = add_iterator_operators<
+    internal::AllocatorIteratorWrapperImpl<ValueType, Iterator, Allocator>
     >;
 
   template <typename LayerType>
@@ -274,142 +253,6 @@ namespace garlic {
 
     MemberIteratorOf<LayerType> begin() { return layer.begin_member(); }
     MemberIteratorOf<LayerType> end() { return layer.end_member(); }
-  };
-
-  template<class, class = void>
-  struct has_string_view_support : std::false_type {};
-
-  template<typename T>
-  struct has_string_view_support<T, 
-        std::void_t<decltype(std::declval<T>().get_string_view())>
-      > : std::true_type {};
-
-  template<class, class = void>
-  struct has_string_support : std::false_type {};
-
-  template<typename T>
-  struct has_string_support<T, 
-        std::void_t<decltype(std::declval<T>().get_string())>
-      > : std::true_type {};
-
-  template<class Bridge>
-  class ObjectView : public Bridge {
-  public:
-    using ConstValueIterator =
-      typename Bridge::ConstValueIterator::template ExportIterator<ObjectView>;
-    using ConstMemberIterator =
-      typename Bridge::ConstMemberIterator::template ExportIterator<ObjectView>;
-
-    using Bridge::Bridge;
-
-    // get_string_view
-    template<typename T = Bridge>
-    std::enable_if_t<has_string_view_support<T>::value, std::string_view>
-    get_string_view() const {
-      return Bridge::get_string_view();
-    }
-
-    template<typename T = Bridge>
-    std::enable_if_t<!has_string_view_support<T>::value, std::string_view>
-    get_string_view() const noexcept {
-      return std::string_view{this->get_cstr()};
-    }
-
-    // get_string
-    template<typename T = Bridge>
-    std::enable_if_t<has_string_support<T>::value, std::string>
-    get_string() const {
-      return Bridge::get_string();
-    }
-
-    template<typename T = Bridge>
-    std::enable_if_t<!has_string_support<T>::value, std::string>
-    get_string() const noexcept {
-      return std::string{this->get_cstr()};
-    }
-
-    // List Methods
-    inline ConstValueIterator begin_list() const {
-      return Bridge::begin_list().template Export<ObjectView>();
-    }
-
-    inline ConstValueIterator end_list() const {
-      return Bridge::end_list().template Export<ObjectView>();
-    }
-
-    auto get_list() const { return ConstListRange<ObjectView>{*this}; }
-
-    // Member Methods
-    inline ConstMemberIterator begin_member() const {
-      return Bridge::begin_member().template Export<ObjectView>();
-    }
-
-    inline ConstMemberIterator end_member() const {
-      return Bridge::end_member().template Export<ObjectView>();
-    }
-
-    inline ConstMemberIterator find_member(const char* key) const {
-      return Bridge::find_member(key).template Export<ObjectView>();
-    }
-
-    inline ConstMemberIterator find_member(std::string_view key) const {
-      return Bridge::find_member(key).template Export<ObjectView>();
-    }
-
-    auto get_object() const { return ConstMemberRange<ObjectView>{*this}; }
-  };
-
-  template<class Bridge>
-  class ObjectHelper : public Bridge {
-  public:
-    using Bridge::Bridge;
-    using Bridge::begin_list;
-    using Bridge::end_list;
-    using Bridge::begin_member;
-    using Bridge::end_member;
-    using Bridge::find_member;
-    using Bridge::get_list;
-    using Bridge::get_object;
-
-    using ValueIterator =
-      typename Bridge::ValueIterator::template ExportIterator<ObjectHelper>;
-    using MemberIterator =
-      typename Bridge::MemberIterator::template ExportIterator<ObjectHelper>;
-
-    inline ValueIterator begin_list() {
-      return Bridge::begin_list().template Export<ObjectHelper>();
-    }
-
-    inline ValueIterator end_list() {
-      return Bridge::end_list().template Export<ObjectHelper>();
-    }
-
-    auto get_list() { return ListRange<ObjectHelper>{*this}; }
-
-    inline MemberIterator begin_member() {
-      return Bridge::begin_member().template Export<ObjectHelper>();
-    }
-
-    inline MemberIterator end_member() {
-      return Bridge::end_member().template Export<ObjectHelper>();
-    }
-
-    inline MemberIterator find_member(const char* key) {
-      return Bridge::find_member(key).template Export<ObjectHelper>();
-    }
-
-    inline MemberIterator find_member(std::string_view key) {
-      return Bridge::find_member(key).template Export<ObjectHelper>();
-    }
-
-    auto get_object() { return MemberRange<ObjectHelper>{*this}; }
-
-    ObjectHelper& operator = (double value) { this->set_double(value); return *this; }
-    ObjectHelper& operator = (int value) { this->set_int(value); return *this; }
-    ObjectHelper& operator = (const char* value) { this->set_string(value); return *this; }
-    ObjectHelper& operator = (const std::string& value) { this->set_string(value); return *this; }
-    ObjectHelper& operator = (std::string_view value) { this->set_string(value); return *this; }
-    ObjectHelper& operator = (bool value) { this->set_bool(value); return *this; }
   };
 
 }
