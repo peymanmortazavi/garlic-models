@@ -54,53 +54,38 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto& object_it : doc.GetArray()) {
       if (auto y = object_it.FindMember("text"); y != object_it.MemberEnd()) {
-        character_count += std::string_view(y->value.GetString()).size();
+        character_count += strlen(y->value.GetString());
       }
       if (auto y = object_it.FindMember("value"); y != object_it.MemberEnd()) {
         total += y->value.GetInt();
       }
     }
   }
-  printf("%lld - %lld\n", character_count, total);
+  state.counters["CharacterCount"] = character_count;
+  state.counters["Total"] = total;
 }
 
 static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   garlic::providers::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
   long long character_count = 0;
   long long total = 0;
+  const char* text = "text";
+  const char* value = "value";
   for (auto _ : state) {
     for (const auto& object_it : view.get_list()) {
-      if (auto y = object_it.find_member("text"); y != object_it.end_member()) {
-        //character_count += strlen((*y).value.get_cstr());
-        character_count += (*y).value.get_string_view().size();
+      if (auto y = object_it.find_member(text); y != object_it.end_member()) {
+        character_count += strlen((*y).value.get_cstr());
       }
-      if (auto y = object_it.find_member("value"); y != object_it.end_member()) {
+      if (auto y = object_it.find_member(value); y != object_it.end_member()) {
         total += (*y).value.get_int();
       }
     }
   }
-  printf("%lld - %lld\n", character_count, total);
+  state.counters["CharacterCount"] = character_count;
+  state.counters["Total"] = total;
 }
 
-static void BM_LoadRapidJsonDocument_GarlicObject(benchmark::State& state) {
-  auto view = garlic::ObjectView<garlic::providers::rapidjson::JsonView2>(CreateLargeRapidJsonDocument());
-  long long character_count = 0;
-  long long total = 0;
-  for (auto _ : state) {
-    for (const auto& object_it : view.get_list()) {
-      if (auto y = object_it.find_member("text"); y != object_it.end_member()) {
-        //character_count += strlen((*y).value.get_cstr());
-        character_count += (*y).value.get_string_view().size();
-      }
-      if (auto y = object_it.find_member("value"); y != object_it.end_member()) {
-        total += (*y).value.get_int();
-      }
-    }
-  }
-  printf("%lld - %lld\n", character_count, total);
-}
-BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
-BENCHMARK(BM_LoadRapidJsonDocument_GarlicObject);
 BENCHMARK(BM_LoadRapidJsonDocument_Native);
+BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
 
 BENCHMARK_MAIN();

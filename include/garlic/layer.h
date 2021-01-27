@@ -112,31 +112,20 @@ namespace garlic {
   };
 
   namespace internal {
-    template<typename ValueType, typename IteratorType>
+    template<typename ValueType, typename Iterator>
     class IteratorWrapperImpl {
     public:
-      using difference_type = std::ptrdiff_t;
-      using value_type = ValueType;
-      using reference = ValueType&;
-      using pointer = ValueType*;
-      using iterator_category = std::forward_iterator_tag;
 
       IteratorWrapperImpl() = default;
-      explicit IteratorWrapperImpl(const IteratorType& iterator)
-        : iterator_(iterator) {}
-      explicit IteratorWrapperImpl(IteratorType&& iterator)
-        : iterator_(std::move(iterator)) {}
-
-      IteratorType& get_inner_iterator() { return iterator_; }
-      const IteratorType& get_inner_iterator() const { return iterator_; }
-      auto GetInnerValue() const { return *this->iterator_; }
+      IteratorWrapperImpl(Iterator& iterator) : iterator_(iterator) {}
+      IteratorWrapperImpl(const Iterator& iterator) : iterator_(iterator) {}
 
       ValueType operator * () const {
         return ValueType { *iterator_ };
       }
 
     protected:
-      IteratorType iterator_;
+      Iterator iterator_;
     };
 
     template<typename T>
@@ -163,6 +152,9 @@ namespace garlic {
         return !(other == *this);
       }
 
+      auto& get_inner_iterator() { return this->iterator_; }
+      const auto& get_inner_iterator() const { return this->iterator_; }
+      auto GetInnerValue() const { return *this->iterator_; }
     };
 
     template<typename ValueType, typename Iterator>

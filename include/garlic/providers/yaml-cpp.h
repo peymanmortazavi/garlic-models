@@ -17,34 +17,25 @@
 
 namespace garlic::providers::yamlcpp {
 
-  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class MemberIteratorWrapper {
+  template<typename ValueType, typename Iterator>
+  class MemberIteratorWrapperImpl
+    : public IteratorWrapper<MemberWrapper<ValueType>, Iterator> {
   public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
-    
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = MemberWrapper&;
-    using pointer = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
+    using Base = IteratorWrapper<MemberWrapper<ValueType>, Iterator>;
+    using Base::Base;
 
-    explicit MemberIteratorWrapper() {}
-    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit MemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-
-    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
-
-    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->first}, ValueType{this->iterator_->second}}; }
-
-  private:
-    Iterator iterator_;
+    MemberWrapper<ValueType> operator * () const {
+      return MemberWrapper<ValueType>{
+        ValueType{this->iterator_->first},
+        ValueType{this->iterator_->second}
+      };
+    }
   };
+
+  template<typename ValueType, typename Iterator>
+  using MemberIteratorWrapper = add_iterator_operators<
+    MemberIteratorWrapperImpl<ValueType, Iterator>
+    >;
 
   class YamlNode {
   public:

@@ -11,48 +11,80 @@
 
 namespace garlic::providers::rapidjson {
 
-  namespace internal {
+  //template<typename ValueType, typename Iterator>
+  //using ConstMemberIteratorWrapper = add_iterator_operators<
+  //  internal::ConstMemberIteratorImpl<ValueType, Iterator>
+  //  >;
 
-    template<typename ValueType, typename Iterator>
-    class ConstMemberIteratorImpl : 
-      public IteratorWrapper<MemberWrapper<ValueType>, Iterator> {
-    public:
-      using IteratorWrapper<MemberWrapper<ValueType>, Iterator>::IteratorWrapper;
-
-      MemberWrapper<ValueType> operator * () const {
-        return MemberWrapper<ValueType> {
-          ValueType(this->iterator_->name),
-          ValueType(this->iterator_->value)
-        };
-      }
-    };
-
-    template<typename ValueType, typename Iterator, typename Allocator>
-    class MemberIteratorImpl : 
-      public AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, Allocator> {
-    using Base = AllocatorIteratorWrapper<MemberWrapper<ValueType>, Iterator, Allocator>;
-    public:
-      using Base::Base;
-
-      MemberWrapper<ValueType> operator * () const {
-        return MemberWrapper<ValueType> {
-          ValueType(this->iterator_->name, *this->allocator_),
-          ValueType(this->iterator_->value, *this->allocator_)
-        };
-      }
-    };
-
-  }
+  //template<typename ValueType, typename Iterator, typename AllocatorType>
+  //using MemberIteratorWrapper = add_iterator_operators<
+  //  internal::MemberIteratorImpl<ValueType, Iterator, AllocatorType>
+  //  >;
 
   template<typename ValueType, typename Iterator>
-  using ConstMemberIteratorWrapper = add_iterator_operators<
-    internal::ConstMemberIteratorImpl<ValueType, Iterator>
-    >;
+  class ConstMemberIteratorWrapper2 {
+  public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = MemberWrapper<ValueType>;
+    using reference = MemberWrapper<ValueType>&;
+    using pointer = MemberWrapper<ValueType>*;
+    using iterator_category = std::forward_iterator_tag;
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  using MemberIteratorWrapper = add_iterator_operators<
-    internal::MemberIteratorImpl<ValueType, Iterator, AllocatorType>
-    >;
+    explicit ConstMemberIteratorWrapper2() {}
+    explicit ConstMemberIteratorWrapper2(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    explicit ConstMemberIteratorWrapper2(const Iterator& iterator) : iterator_(iterator) {}
+
+    ConstMemberIteratorWrapper2& operator ++ () { iterator_++; return *this; }
+    ConstMemberIteratorWrapper2& operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const ConstMemberIteratorWrapper2& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const ConstMemberIteratorWrapper2& other) const { return !(other == *this); }
+
+    MemberWrapper<ValueType> operator * () const {
+      return MemberWrapper<ValueType>{
+        ValueType{this->iterator_->name},
+        ValueType{this->iterator_->value}
+      };
+    }
+
+  protected:
+    Iterator iterator_;
+  };
+
+  template<typename ValueType, typename Iterator>
+  using ConstMemberIteratorWrapper = ConstMemberIteratorWrapper2<ValueType, Iterator>;
+
+
+  template<typename ValueType, typename Iterator, typename AllocatorType, typename KeyType = ValueType>
+  class MemberIteratorWrapper {
+  public:
+    struct MemberWrapper {
+      KeyType key;
+      ValueType value;
+    };
+
+    using difference_type = int;
+    using value_type = MemberWrapper;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit MemberIteratorWrapper() {}
+    explicit MemberIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
+
+    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
+    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
+    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
+    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
+
+    Iterator& get_inner_iterator() { return iterator_; }
+    const Iterator& get_inner_iterator() const { return iterator_; }
+
+    MemberWrapper operator * () const {
+      return MemberWrapper{KeyType{this->iterator_->name, *allocator_}, ValueType{this->iterator_->value, *allocator_}};
+    }
+
+  private:
+    Iterator iterator_;
+    AllocatorType* allocator_;
+  };
 
   class JsonView {
   public:
