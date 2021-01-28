@@ -19,14 +19,14 @@ namespace garlic {
     List    = 0x1 << 6,
   };
 
-  template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
-  template<typename T> using ValueIterator = typename T::ValueIterator;
-  template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
-  template<typename T> using MemberIterator = typename T::MemberIterator;
+  template<typename T> using ConstValueIteratorOf = typename T::ConstValueIterator;
+  template<typename T> using ValueIteratorOf = typename T::ValueIterator;
+  template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
+  template<typename T> using MemberIteratorOf = typename T::MemberIterator;
 
   template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
-    typename ConstValueIterator<T>;
-    typename ConstMemberIterator<T>;
+    typename ConstValueIteratorOf<T>;
+    typename ConstMemberIteratorOf<T>;
 
     { t.is_null() } -> std::convertible_to<bool>;
     { t.is_int() } -> std::convertible_to<bool>;
@@ -55,8 +55,8 @@ namespace garlic {
   };
 
   template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
-    typename ValueIterator<T>;
-    typename MemberIterator<T>;
+    typename ValueIteratorOf<T>;
+    typename MemberIteratorOf<T>;
 
     { t.set_string(std::declval<const char*>()) };
     { t.set_string(std::declval<std::string>()) };
@@ -91,8 +91,8 @@ namespace garlic {
     { t.push_back(std::declval<int>()) };
     { t.push_back(std::declval<double>()) };
     { t.pop_back() };
-    { t.erase(std::declval<ValueIterator<T>>()) };
-    { t.erase(std::declval<ValueIterator<T>>(), std::declval<ValueIterator<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>(), std::declval<ValueIteratorOf<T>>()) };
 
     { t.add_member(std::declval<const char*>()) };
     { t.add_member(std::declval<const char*>(), std::declval<const char*>()) };
@@ -100,7 +100,7 @@ namespace garlic {
     { t.add_member(std::declval<const char*>(), std::declval<int>()) };
     { t.add_member(std::declval<const char*>(), std::declval<double>()) };
     { t.remove_member(std::declval<const char*>()) };
-    { t.erase_member(std::declval<MemberIterator<T>>()) };
+    { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
   };
 
   /* TODO:  Use concepts to restrict the iterator to a forward iterator. */
@@ -179,32 +179,32 @@ namespace garlic {
   struct ConstListRange {
     const LayerType& layer;
 
-    ConstValueIterator<LayerType> begin() const { return layer.begin_list(); }
-    ConstValueIterator<LayerType> end() const { return layer.end_list(); }
+    ConstValueIteratorOf<LayerType> begin() const { return layer.begin_list(); }
+    ConstValueIteratorOf<LayerType> end() const { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ListRange {
     LayerType& layer;
 
-    ValueIterator<LayerType> begin() { return layer.begin_list(); }
-    ValueIterator<LayerType> end() { return layer.end_list(); }
+    ValueIteratorOf<LayerType> begin() { return layer.begin_list(); }
+    ValueIteratorOf<LayerType> end() { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ConstMemberRange {
     const LayerType& layer;
 
-    ConstMemberIterator<LayerType> begin() const { return layer.begin_member(); }
-    ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
+    ConstMemberIteratorOf<LayerType> begin() const { return layer.begin_member(); }
+    ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
   };
 
   template <typename LayerType>
   struct MemberRange {
     LayerType& layer;
 
-    MemberIterator<LayerType> begin() { return layer.begin_member(); }
-    MemberIterator<LayerType> end() { return layer.end_member(); }
+    MemberIteratorOf<LayerType> begin() { return layer.begin_member(); }
+    MemberIteratorOf<LayerType> end() { return layer.end_member(); }
   };
 
 }
