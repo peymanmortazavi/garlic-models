@@ -132,45 +132,55 @@ namespace garlic {
   };
 
   template<typename ValueType, typename Iterator, typename AllocatorType>
-  class AllocatorIteratorWrapper : public IteratorWrapper<ValueType, Iterator> {
+  class AllocatorIteratorWrapper {
   public:
-    using Base = IteratorWrapper<ValueType, Iterator>;
+    using difference_type = std::ptrdiff_t;
+    using value_type = ValueType;
+    using reference = ValueType&;
+    using pointer = ValueType*;
+    using iterator_category = std::forward_iterator_tag;
+
+    using self = AllocatorIteratorWrapper;
 
     AllocatorIteratorWrapper() = default;
 
     AllocatorIteratorWrapper(
         const Iterator& iterator,
         AllocatorType& allocator
-        ) : allocator_(&allocator), Base(iterator) {}
+        ) : allocator_(&allocator), iterator_(iterator) {}
 
     AllocatorIteratorWrapper(
         Iterator&& iterator,
         AllocatorType& allocator
-        ) : allocator_(&allocator), Base(std::move(iterator)) {}
+        ) : allocator_(&allocator), iterator_(std::move(iterator)) {}
 
-    AllocatorIteratorWrapper& operator ++ () {
+    self& operator ++ () {
       ++this->iterator_; return *this;
     }
 
-    AllocatorIteratorWrapper operator ++ (int) {
+    self operator ++ (int) {
       auto it = *this;
       ++this->iterator_;
       return it;
     }
 
-    bool operator == (const AllocatorIteratorWrapper& other) const {
+    bool operator == (const self& other) const {
       return other.iterator_ == this->iterator_;
     }
 
-    bool operator != (const AllocatorIteratorWrapper& other) const {
+    bool operator != (const self& other) const {
       return !(other == *this);
     }
+
+    Iterator& get_inner_iterator() { return iterator_; }
+    const Iterator& get_inner_iterator() const { return iterator_; }
 
     ValueType operator * () const {
       return ValueType{*this->iterator_, *allocator_};
     }
 
   private:
+    Iterator iterator_;
     AllocatorType* allocator_;
   };
 
