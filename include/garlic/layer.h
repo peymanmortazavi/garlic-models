@@ -24,9 +24,15 @@ namespace garlic {
   template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
   template<typename T> using MemberIteratorOf = typename T::MemberIterator;
 
-  template<typename T, typename OfType>
-  concept forward_iterator = std::forward_iterator<T> && requires(T it) {
-    { *it } -> std::same_as<OfType>;
+  template<typename T>
+  concept member_pair = requires(T pair) {
+    { pair.key };
+    { pair.value };
+  };
+
+  template<typename T>
+  concept forward_pair_iterator = std::forward_iterator<T> && requires(T it) {
+    { *it } -> member_pair;
   };
 
   template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
@@ -48,14 +54,14 @@ namespace garlic {
     { t.get_double() } -> std::convertible_to<double>;
     { t.get_bool() } -> std::convertible_to<bool>;
 
-    { t.begin_list() } -> forward_iterator<T>;
-    { t.end_list() } -> forward_iterator<T>;
+    { t.begin_list() } -> std::forward_iterator;
+    { t.end_list() } -> std::forward_iterator;
     { t.get_list() } -> std::ranges::range;
 
-    { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
-    { t.end_member() } -> std::forward_iterator;  // todo: same as above.
-    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
+    { t.begin_member() } -> forward_pair_iterator;
+    { t.end_member() } -> forward_pair_iterator;
+    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
   };
 
@@ -77,10 +83,10 @@ namespace garlic {
     { t.end_list() } -> std::forward_iterator;
     { t.get_list() } -> std::ranges::range;
 
-    { t.begin_member() } -> std::forward_iterator;
-    { t.end_member() } -> std::forward_iterator;
-    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
+    { t.begin_member() } -> forward_pair_iterator;
+    { t.end_member() } -> forward_pair_iterator;
+    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
     /* TODO:  <29-01-21, Peyman> Add a constraint to support pushing T. */
@@ -137,7 +143,7 @@ namespace garlic {
     using self = LayerForwardIterator;
 
     LayerForwardIterator() = default;
-    explicit LayerForwardIterator(Container container)
+    LayerForwardIterator(Container container)
       : container_(std::move(container)) {}
 
     self& operator ++ () {
@@ -159,7 +165,7 @@ namespace garlic {
 
     iterator_type& get_inner_iterator() { return container_.iterator; }
     const iterator_type& get_inner_iterator() const { return container_.iterator; }
-    value_type operator * () const { return container_.wrap(); }
+    inline value_type operator * () const { return container_.wrap(); }
 
   private:
     Container container_;

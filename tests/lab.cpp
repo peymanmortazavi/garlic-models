@@ -1,3 +1,4 @@
+#include "garlic/layer.h"
 #include "rapidjson/document.h"
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>

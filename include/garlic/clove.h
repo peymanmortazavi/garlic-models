@@ -71,12 +71,12 @@ namespace garlic {
     using allocator_type = Allocator;
 
     iterator_type iterator;
-    allocator_type& allocator;
+    allocator_type* allocator;
 
     inline output_type wrap() const {
       return output_type {
-        Layer { iterator->key, allocator },
-        Layer { iterator->value, allocator }
+        Layer { iterator->key, *allocator },
+        Layer { iterator->value, *allocator }
       };
     }
   };
@@ -88,10 +88,10 @@ namespace garlic {
     using allocator_type = Allocator;
 
     iterator_type iterator;
-    allocator_type& allocator;
+    allocator_type* allocator;
 
     inline output_type wrap() const {
-      return output_type { *iterator };
+      return output_type { *iterator, *allocator };
     }
   };
 
@@ -121,12 +121,12 @@ namespace garlic {
     std::string get_string() const { return std::string{data_.string.data}; }
     std::string_view get_string_view() const { return std::string_view{data_.string.data}; }
 
-    ConstValueIterator begin_list() const { return ConstValueIterator(data_.list.data); }
-    ConstValueIterator end_list() const { return ConstValueIterator(data_.list.data + data_.list.length); }
+    ConstValueIterator begin_list() const { return ConstValueIterator({data_.list.data}); }
+    ConstValueIterator end_list() const { return ConstValueIterator({data_.list.data + data_.list.length}); }
     auto get_list() const { return ConstListRange<GenericCloveView>{*this}; }
 
-    ConstMemberIterator begin_member() const { return ConstMemberIterator(data_.object.data); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator(data_.object.data + data_.object.length); }
+    ConstMemberIterator begin_member() const { return ConstMemberIterator({data_.object.data}); }
+    ConstMemberIterator end_member() const { return ConstMemberIterator({data_.object.data + data_.object.length}); }
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return strcmp(item.key.get_cstr(), key) == 0;
@@ -228,19 +228,19 @@ namespace garlic {
     GenericCloveRef& operator = (const char* value) { this->set_string(value); return *this; }
 
     ValueIterator begin_list() {
-      return ValueIterator({data_.list.data, allocator_});
+      return ValueIterator({data_.list.data, &allocator_});
     }
     ValueIterator end_list() {
-      return ValueIterator({data_.list.data + data_.list.length, allocator_});
+      return ValueIterator({data_.list.data + data_.list.length, &allocator_});
     }
     ListRange<GenericCloveRef> get_list() { return ListRange<GenericCloveRef>{*this}; }
 
-    MemberIterator begin_member() { return MemberIterator(data_.object.data, allocator_); }
+    MemberIterator begin_member() { return MemberIterator({data_.object.data, &allocator_}); }
     MemberIterator end_member() {
-      return MemberIterator(
+      return MemberIterator({
         data_.object.data + data_.object.length,
-        allocator_
-      );
+        &allocator_
+        });
     }
     MemberRange<GenericCloveRef> get_object() { return MemberRange<GenericCloveRef>{*this}; }
 
@@ -287,7 +287,7 @@ namespace garlic {
       this->push_back(std::move(data));
     }
     void pop_back() {
-      (*ValueIterator{this->data_.list.data + this->data_.list.length - 1, allocator_}).clean();
+      (*ValueIterator({this->data_.list.data + this->data_.list.length - 1, &allocator_})).clean();
       this->data_.list.length--;
     }
     void erase(const ValueIterator& first, const ValueIterator& last) {
