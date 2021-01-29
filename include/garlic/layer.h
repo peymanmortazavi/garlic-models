@@ -19,14 +19,25 @@ namespace garlic {
     List    = 0x1 << 6,
   };
 
-  template<typename T> using ConstValueIterator = typename T::ConstValueIterator;
-  template<typename T> using ValueIterator = typename T::ValueIterator;
-  template<typename T> using ConstMemberIterator = typename T::ConstMemberIterator;
-  template<typename T> using MemberIterator = typename T::MemberIterator;
+  template<typename T> using ConstValueIteratorOf = typename T::ConstValueIterator;
+  template<typename T> using ValueIteratorOf = typename T::ValueIterator;
+  template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
+  template<typename T> using MemberIteratorOf = typename T::MemberIterator;
+
+  template<typename T>
+  concept member_pair = requires(T pair) {
+    { pair.key };
+    { pair.value };
+  };
+
+  template<typename T>
+  concept forward_pair_iterator = std::forward_iterator<T> && requires(T it) {
+    { *it } -> member_pair;
+  };
 
   template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
-    typename ConstValueIterator<T>;
-    typename ConstMemberIterator<T>;
+    typename ConstValueIteratorOf<T>;
+    typename ConstMemberIteratorOf<T>;
 
     { t.is_null() } -> std::convertible_to<bool>;
     { t.is_int() } -> std::convertible_to<bool>;
@@ -43,20 +54,20 @@ namespace garlic {
     { t.get_double() } -> std::convertible_to<double>;
     { t.get_bool() } -> std::convertible_to<bool>;
 
-    { t.begin_list() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
-    { t.end_list() } -> std::forward_iterator;  // todo: same as above.
+    { t.begin_list() } -> std::forward_iterator;
+    { t.end_list() } -> std::forward_iterator;
     { t.get_list() } -> std::ranges::range;
 
-    { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
-    { t.end_member() } -> std::forward_iterator;  // todo: same as above.
-    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
+    { t.begin_member() } -> forward_pair_iterator;
+    { t.end_member() } -> forward_pair_iterator;
+    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
   };
 
   template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
-    typename ValueIterator<T>;
-    typename MemberIterator<T>;
+    typename ValueIteratorOf<T>;
+    typename MemberIteratorOf<T>;
 
     { t.set_string(std::declval<const char*>()) };
     { t.set_string(std::declval<std::string>()) };
@@ -67,23 +78,18 @@ namespace garlic {
     { t.set_null() };
     { t.set_list() };
     { t.set_object() };
-    { t = std::declval<const char*>() };
-    { t = std::declval<std::string>() };
-    { t = std::declval<std::string_view>() };
-    { t = std::declval<bool>() };
-    { t = std::declval<int>() };
-    { t = std::declval<double>() };
 
     { t.begin_list() } -> std::forward_iterator;
     { t.end_list() } -> std::forward_iterator;
     { t.get_list() } -> std::ranges::range;
 
-    { t.begin_member() } -> std::forward_iterator;
-    { t.end_member() } -> std::forward_iterator;
-    { t.find_member(std::declval<const char*>()) } -> std::forward_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
+    { t.begin_member() } -> forward_pair_iterator;
+    { t.end_member() } -> forward_pair_iterator;
+    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
+    /* TODO:  <29-01-21, Peyman> Add a constraint to support pushing T. */
     { t.clear() };
     { t.push_back() };
     { t.push_back(std::declval<const char*>()) };
@@ -91,8 +97,8 @@ namespace garlic {
     { t.push_back(std::declval<int>()) };
     { t.push_back(std::declval<double>()) };
     { t.pop_back() };
-    { t.erase(std::declval<ValueIterator<T>>()) };
-    { t.erase(std::declval<ValueIterator<T>>(), std::declval<ValueIterator<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>()) };
+    { t.erase(std::declval<ValueIteratorOf<T>>(), std::declval<ValueIteratorOf<T>>()) };
 
     { t.add_member(std::declval<const char*>()) };
     { t.add_member(std::declval<const char*>(), std::declval<const char*>()) };
@@ -100,111 +106,112 @@ namespace garlic {
     { t.add_member(std::declval<const char*>(), std::declval<int>()) };
     { t.add_member(std::declval<const char*>(), std::declval<double>()) };
     { t.remove_member(std::declval<const char*>()) };
-    { t.erase_member(std::declval<MemberIterator<T>>()) };
+    { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
   };
 
-  /* TODO:  Use concepts to restrict the iterator to a forward iterator. */
+  template<typename T>
+  concept IteratorWrapper = requires(T container) {
+    typename T::output_type;
+    typename T::iterator_type;
+
+    { container.iterator };
+    /* TODO:  <28-01-21, Peyman> Figure out why the next line doesn't compile. */
+    // { container.wrap() } -> std::same_as<typename T::output_type>;
+  };
+
   template<typename ValueType, typename Iterator>
-  class IteratorWrapper {
-  public:
-    using difference_type = std::ptrdiff_t;
-    using value_type = ValueType;
-    using reference = ValueType&;
-    using pointer = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
+  struct BasicIteratorWrapper {
+    using output_type = ValueType;
+    using iterator_type = Iterator;
 
-    IteratorWrapper() = default;
-    explicit IteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
+    iterator_type iterator;
 
-    IteratorWrapper& operator ++ () { ++iterator_; return *this; }
-    IteratorWrapper operator ++ (int) { auto it = *this; ++iterator_; return it; }
-    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    ValueType operator * () const { return ValueType{*this->iterator_}; }
-
-  protected:
-    Iterator iterator_;
+    inline ValueType wrap() const {
+      return ValueType { *iterator };
+    }
   };
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class AllocatorIteratorWrapper : public IteratorWrapper<ValueType, Iterator> {
+  template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
+  class LayerForwardIterator {
   public:
-    using Base = IteratorWrapper<ValueType, Iterator>;
+    using difference_type = DifferenceType;
+    using value_type = typename Container::output_type;
+    using reference = typename Container::output_type&;
+    using pointer = typename Container::output_type*;
+    using iterator_category = std::forward_iterator_tag;
+    using iterator_type = typename Container::iterator_type;
+    using self = LayerForwardIterator;
 
-    AllocatorIteratorWrapper() = default;
+    LayerForwardIterator() = default;
+    LayerForwardIterator(Container container)
+      : container_(std::move(container)) {}
 
-    AllocatorIteratorWrapper(
-        const Iterator& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), Base(iterator) {}
-
-    AllocatorIteratorWrapper(
-        Iterator&& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), Base(std::move(iterator)) {}
-
-    AllocatorIteratorWrapper& operator ++ () {
-      ++this->iterator_; return *this;
+    self& operator ++ () {
+      ++container_.iterator;
+      return *this;
     }
 
-    AllocatorIteratorWrapper operator ++ (int) {
+    self operator ++ (int) {
       auto it = *this;
-      ++this->iterator_;
+      ++container_.iterator;
       return it;
     }
 
-    bool operator == (const AllocatorIteratorWrapper& other) const {
-      return other.iterator_ == this->iterator_;
+    bool operator == (const self& other) const { 
+      return other.container_.iterator == container_.iterator;
     }
 
-    bool operator != (const AllocatorIteratorWrapper& other) const {
-      return !(other == *this);
-    }
+    bool operator != (const self& other) const { return !(other == *this); }
 
-    ValueType operator * () const {
-      return ValueType{*this->iterator_, *allocator_};
-    }
+    iterator_type& get_inner_iterator() { return container_.iterator; }
+    const iterator_type& get_inner_iterator() const { return container_.iterator; }
+    inline value_type operator * () const { return container_.wrap(); }
 
   private:
-    AllocatorType* allocator_;
+    Container container_;
   };
 
+  template<typename ValueType, typename Iterator>
+  using BasicLayerForwardIterator = LayerForwardIterator<
+    BasicIteratorWrapper<ValueType, Iterator>
+    >;
+
+  template<typename ValueType, typename KeyType = ValueType>
+  struct MemberPair {
+    KeyType key;
+    ValueType value;
+  };
 
   template <typename LayerType>
   struct ConstListRange {
     const LayerType& layer;
 
-    ConstValueIterator<LayerType> begin() const { return layer.begin_list(); }
-    ConstValueIterator<LayerType> end() const { return layer.end_list(); }
+    ConstValueIteratorOf<LayerType> begin() const { return layer.begin_list(); }
+    ConstValueIteratorOf<LayerType> end() const { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ListRange {
     LayerType& layer;
 
-    ValueIterator<LayerType> begin() { return layer.begin_list(); }
-    ValueIterator<LayerType> end() { return layer.end_list(); }
+    ValueIteratorOf<LayerType> begin() { return layer.begin_list(); }
+    ValueIteratorOf<LayerType> end() { return layer.end_list(); }
   };
 
   template <typename LayerType>
   struct ConstMemberRange {
     const LayerType& layer;
 
-    ConstMemberIterator<LayerType> begin() const { return layer.begin_member(); }
-    ConstMemberIterator<LayerType> end() const { return layer.end_member(); }
+    ConstMemberIteratorOf<LayerType> begin() const { return layer.begin_member(); }
+    ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
   };
 
   template <typename LayerType>
   struct MemberRange {
     LayerType& layer;
 
-    MemberIterator<LayerType> begin() { return layer.begin_member(); }
-    MemberIterator<LayerType> end() { return layer.end_member(); }
+    MemberIteratorOf<LayerType> begin() { return layer.begin_member(); }
+    MemberIteratorOf<LayerType> end() { return layer.end_member(); }
   };
 
 }
