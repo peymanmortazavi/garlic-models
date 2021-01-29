@@ -103,87 +103,78 @@ namespace garlic {
     { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
   };
 
-  /* TODO:  Use concepts to restrict the iterator to a forward iterator. */
-  template<typename ValueType, typename Iterator>
-  class IteratorWrapper {
-  public:
-    using difference_type = std::ptrdiff_t;
-    using value_type = ValueType;
-    using reference = ValueType&;
-    using pointer = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
+  template<typename T>
+  concept IteratorWrapper = requires(T container) {
+    typename T::output_type;
+    typename T::iterator_type;
 
-    IteratorWrapper() = default;
-    explicit IteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-    explicit IteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-
-    IteratorWrapper& operator ++ () { ++iterator_; return *this; }
-    IteratorWrapper operator ++ (int) { auto it = *this; ++iterator_; return it; }
-    bool operator == (const IteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const IteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    ValueType operator * () const { return ValueType{*this->iterator_}; }
-
-  protected:
-    Iterator iterator_;
+    { container.iterator };
+    /* TODO:  <28-01-21, Peyman> Figure out why the next line doesn't compile. */
+    // { container.wrap() } -> std::same_as<typename T::output_type>;
   };
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class AllocatorIteratorWrapper {
+  template<typename ValueType, typename Iterator>
+  struct BasicIteratorWrapper {
+    using output_type = ValueType;
+    using iterator_type = Iterator;
+
+    iterator_type iterator;
+
+    inline ValueType wrap() const {
+      return ValueType { *iterator };
+    }
+  };
+
+  template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
+  class LayerForwardIterator {
   public:
-    using difference_type = std::ptrdiff_t;
-    using value_type = ValueType;
-    using reference = ValueType&;
-    using pointer = ValueType*;
+    using difference_type = DifferenceType;
+    using value_type = typename Container::output_type;
+    using reference = typename Container::output_type&;
+    using pointer = typename Container::output_type*;
     using iterator_category = std::forward_iterator_tag;
+    using iterator_type = typename Container::iterator_type;
+    using self = LayerForwardIterator;
 
-    using self = AllocatorIteratorWrapper;
-
-    AllocatorIteratorWrapper() = default;
-
-    AllocatorIteratorWrapper(
-        const Iterator& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), iterator_(iterator) {}
-
-    AllocatorIteratorWrapper(
-        Iterator&& iterator,
-        AllocatorType& allocator
-        ) : allocator_(&allocator), iterator_(std::move(iterator)) {}
+    LayerForwardIterator() = default;
+    explicit LayerForwardIterator(Container container)
+      : container_(std::move(container)) {}
 
     self& operator ++ () {
-      ++this->iterator_; return *this;
+      ++container_.iterator;
+      return *this;
     }
 
     self operator ++ (int) {
       auto it = *this;
-      ++this->iterator_;
+      ++container_.iterator;
       return it;
     }
 
-    bool operator == (const self& other) const {
-      return other.iterator_ == this->iterator_;
+    bool operator == (const self& other) const { 
+      return other.container_.iterator == container_.iterator;
     }
 
-    bool operator != (const self& other) const {
-      return !(other == *this);
-    }
+    bool operator != (const self& other) const { return !(other == *this); }
 
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    ValueType operator * () const {
-      return ValueType{*this->iterator_, *allocator_};
-    }
+    iterator_type& get_inner_iterator() { return container_.iterator; }
+    const iterator_type& get_inner_iterator() const { return container_.iterator; }
+    value_type operator * () const { return container_.wrap(); }
 
   private:
-    Iterator iterator_;
-    AllocatorType* allocator_;
+    Container container_;
   };
 
+  template<typename ValueType, typename Iterator>
+  using BasicLayerForwardIterator = LayerForwardIterator<
+    BasicIteratorWrapper<ValueType, Iterator>
+    >;
+
+  template<typename ValueType, typename KeyType = ValueType>
+  struct MemberPair {
+    KeyType key;
+    ValueType value;
+  };
 
   template <typename LayerType>
   struct ConstListRange {

@@ -11,73 +11,59 @@
 
 namespace garlic::providers::rapidjson {
 
-  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class MemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
+  template<typename Layer, typename Iterator, typename Allocator>
+  struct MemberIteratorWrapper {
+    using output_type = MemberPair<Layer>;
+    using iterator_type = Iterator;
+    using allocator_type = Allocator;
 
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = MemberWrapper&;
-    using pointer = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
+    iterator_type iterator;
+    allocator_type& allocator;
 
-    explicit MemberIteratorWrapper() {}
-    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit MemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-
-    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
-
-    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->name}, ValueType{this->iterator_->value}}; }
-
-  private:
-    Iterator iterator_;
+    inline output_type wrap() const {
+      return output_type {
+        Layer{iterator->name, allocator},
+        Layer{iterator->value, allocator}
+      };
+    }
   };
 
+  template<typename Layer, typename Iterator>
+  struct ConstMemberIteratorWrapper {
+    using output_type = MemberPair<Layer>;
+    using iterator_type = Iterator;
 
-  template<typename ValueType, typename Iterator, typename AllocatorType, typename KeyType = ValueType>
-  class RefMemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
+    iterator_type iterator;
 
-    using difference_type = int;
-    using value_type = MemberWrapper;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit RefMemberIteratorWrapper() {}
-    explicit RefMemberIteratorWrapper(Iterator&& iterator, AllocatorType& allocator) : iterator_(std::move(iterator)), allocator_(&allocator) {}
-
-    RefMemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    RefMemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const RefMemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const RefMemberIteratorWrapper& other) const { return !(other == *this); }
-
-    Iterator& get_inner_iterator() { return iterator_; }
-    const Iterator& get_inner_iterator() const { return iterator_; }
-
-    MemberWrapper operator * () const {
-      return MemberWrapper{KeyType{this->iterator_->name, *allocator_}, ValueType{this->iterator_->value, *allocator_}};
+    inline output_type wrap() const {
+      return output_type {
+        Layer{iterator->name},
+        Layer{iterator->value}
+      };
     }
+  };
 
-  private:
-    Iterator iterator_;
-    AllocatorType* allocator_;
+  template<typename Layer, typename Iterator, typename Allocator>
+  struct ValueIteratorWrapper {
+    using output_type = Layer;
+    using iterator_type = Iterator;
+    using allocator_type = Allocator;
+
+    iterator_type iterator;
+    allocator_type& allocator;
+
+    inline output_type wrap() const {
+      return output_type { *iterator, allocator };
+    }
   };
 
   class JsonView {
   public:
     using ValueType = ::rapidjson::Value;
-    using ConstValueIterator = IteratorWrapper<JsonView, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = MemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>;
+    using ConstValueIterator = BasicLayerForwardIterator<
+      JsonView, typename ::rapidjson::Value::ConstValueIterator>;
+    using ConstMemberIterator = LayerForwardIterator<
+      ConstMemberIteratorWrapper<JsonView, ::rapidjson::Value::ConstMemberIterator>>;
 
     JsonView (const ValueType& value) : value_(value) {}
 
@@ -98,19 +84,31 @@ namespace garlic::providers::rapidjson {
 
     JsonView operator = (const JsonView& another) { return JsonView(another); }
 
-    ConstValueIterator begin_list() const { return ConstValueIterator(value_.Begin()); }
-    ConstValueIterator end_list() const { return ConstValueIterator(value_.End()); }
+    ConstValueIterator begin_list() const {
+      return ConstValueIterator({value_.Begin()});
+    }
+    ConstValueIterator end_list() const {
+      return ConstValueIterator({value_.End()});
+    }
     auto get_list() const { return ConstListRange<JsonView>{*this}; }
 
-    ConstMemberIterator begin_member() const { return ConstMemberIterator(value_.MemberBegin()); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator(value_.MemberEnd()); }
-    ConstMemberIterator find_member(const char* key) const { return ConstMemberIterator{value_.FindMember(key)}; }
+    ConstMemberIterator begin_member() const {
+      return ConstMemberIterator({value_.MemberBegin()});
+    }
+    ConstMemberIterator end_member() const {
+      return ConstMemberIterator({value_.MemberEnd()});
+    }
+    ConstMemberIterator find_member(const char* key) const {
+      return ConstMemberIterator({value_.FindMember(key)});
+    }
     ConstMemberIterator find_member(std::string_view key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
           return key.compare(item.key.get_cstr()) == 0;
           });
     }
-    ConstMemberIterator find_member(const JsonView& value) const { return ConstMemberIterator{value_.FindMember(value.get_inner_value())}; }
+    ConstMemberIterator find_member(const JsonView& value) const {
+      return ConstMemberIterator({value_.FindMember(value.get_inner_value())});
+    }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
 
     const ValueType& get_inner_value() const { return value_; }
@@ -124,8 +122,10 @@ namespace garlic::providers::rapidjson {
   public:
     using DocumentType = ::rapidjson::Document;
     using AllocatorType = DocumentType::AllocatorType;
-    using ValueIterator = AllocatorIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>;
-    using MemberIterator = RefMemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>;
+    using ValueIterator = LayerForwardIterator<
+      ValueIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>>;
+    using MemberIterator = LayerForwardIterator<
+      MemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>>;
     using JsonView::begin_list;
     using JsonView::end_list;
     using JsonView::begin_member;
@@ -158,12 +158,12 @@ namespace garlic::providers::rapidjson {
     JsonRef& operator = (std::string_view value) { this->set_string(value); return *this; }
     JsonRef& operator = (bool value) { this->set_bool(value); return *this; }
 
-    ValueIterator begin_list() { return ValueIterator(value_.Begin(), allocator_); }
-    ValueIterator end_list() { return ValueIterator(value_.End(), allocator_); }
+    ValueIterator begin_list() { return ValueIterator({value_.Begin(), allocator_}); }
+    ValueIterator end_list() { return ValueIterator({value_.End(), allocator_}); }
     auto get_list() { return ListRange<JsonRef>{*this}; }
 
-    MemberIterator begin_member() { return MemberIterator(value_.MemberBegin(), allocator_); }
-    MemberIterator end_member() { return MemberIterator(value_.MemberEnd(), allocator_); }
+    MemberIterator begin_member() { return MemberIterator({value_.MemberBegin(), allocator_}); }
+    MemberIterator end_member() { return MemberIterator({value_.MemberEnd(), allocator_}); }
     auto get_object() { return MemberRange<JsonRef>{*this}; }
 
     JsonRef get_reference() { return JsonRef{value_, allocator_}; }
@@ -197,13 +197,17 @@ namespace garlic::providers::rapidjson {
     }
 
     // member functions.
-    MemberIterator find_member(const char* key) { return MemberIterator{value_.FindMember(key), allocator_}; }
+    MemberIterator find_member(const char* key) {
+      return MemberIterator({value_.FindMember(key), allocator_});
+    }
     MemberIterator find_member(std::string_view key) {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
           return key.compare(item.key.get_cstr()) == 0;
           });
     }
-    MemberIterator find_member(const JsonView& value) { return MemberIterator{value_.FindMember(value.get_inner_value()), allocator_}; }
+    MemberIterator find_member(const JsonView& value) {
+      return MemberIterator({value_.FindMember(value.get_inner_value()), allocator_});
+    }
     void add_member(const JsonView& key, const JsonView& value) {
       value_.AddMember(
         ValueType(key.get_inner_value(), allocator_),

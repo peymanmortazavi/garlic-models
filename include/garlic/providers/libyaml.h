@@ -12,70 +12,38 @@
 
 namespace garlic::providers::libyaml {
 
-  template<typename ValueType, typename KeyType = ValueType>
-  class MemberIterator {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
+  class YamlView {
+
+    struct ValueIteratorWrapper {
+      using iterator_type = yaml_node_item_t*;
+      using output_type = YamlView;
+
+      iterator_type iterator;
+      yaml_document_t* doc;
+
+      inline YamlView wrap() const {
+        return YamlView(doc, yaml_document_get_node(doc, *iterator));
+      }
     };
 
-    MemberIterator() = default;
-    MemberIterator(yaml_document_t* doc, yaml_node_pair_t* ptr) : doc_(doc), ptr_(ptr) {}
+    struct MemberIteratorWrapper {
+      using iterator_type = yaml_node_pair_t*;
+      using output_type = MemberPair<YamlView>;
 
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference_type = MemberWrapper&;
-    using pointer_type = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
+      iterator_type iterator;
+      yaml_document_t* doc;
 
-    MemberIterator& operator ++ () { ptr_++; return *this; }
-    MemberIterator operator ++ (int) { auto it = *this; ptr_++; return it; }
-    bool operator == (const MemberIterator& other) const { return ptr_ == other.ptr_; }
-    bool operator != (const MemberIterator& other) const { return ptr_ != other.ptr_; }
+      inline output_type wrap() const {
+        return output_type {
+          YamlView{doc, yaml_document_get_node(doc, iterator->key)},
+          YamlView{doc, yaml_document_get_node(doc, iterator->value)},
+        };
+      }
+    };
 
-    MemberWrapper operator * () const {
-      return MemberWrapper {
-        KeyType{doc_, yaml_document_get_node(doc_, ptr_->key)},
-        ValueType{doc_, yaml_document_get_node(doc_, ptr_->value)}
-      };
-    }
-
-  private:
-    yaml_node_pair_t* ptr_;
-    yaml_document_t* doc_;
-  };
-
-  template<typename ValueType>
-  class ValueIterator {
   public:
-    ValueIterator() = default;
-    ValueIterator(yaml_document_t* doc, yaml_node_item_t* ptr) : doc_(doc), ptr_(ptr) {}
-
-    using difference_type = int;
-    using value_type = ValueType;
-    using reference_type = ValueType&;
-    using pointer_type = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
-
-    ValueIterator& operator ++ () { ptr_++; return *this; }
-    ValueIterator operator ++ (int) { auto it = *this; ptr_++; return it; }
-    bool operator == (const ValueIterator& other) const { return ptr_ == other.ptr_; }
-    bool operator != (const ValueIterator& other) const { return ptr_ != other.ptr_; }
-
-    ValueType operator * () const {
-      return ValueType{doc_, yaml_document_get_node(doc_, *ptr_)};
-    }
-
-  private:
-    yaml_node_item_t* ptr_;
-    yaml_document_t* doc_;
-  };
-
-  class YamlView {
-  public:
-    using ConstValueIterator = ValueIterator<YamlView>;
-    using ConstMemberIterator = MemberIterator<YamlView>;
+    using ConstValueIterator = LayerForwardIterator<ValueIteratorWrapper>;
+    using ConstMemberIterator = LayerForwardIterator<MemberIteratorWrapper>;
 
     YamlView (yaml_document_t* doc, yaml_node_t* node) : doc_(doc), node_(node) {}
     YamlView (yaml_document_t* doc) : doc_(doc) { node_ = yaml_document_get_root_node(doc); }
@@ -132,12 +100,12 @@ namespace garlic::providers::libyaml {
       return result;
     }
 
-    ConstValueIterator begin_list() const { return ConstValueIterator(doc_, node_->data.sequence.items.start); }
-    ConstValueIterator end_list() const { return ConstValueIterator(doc_, node_->data.sequence.items.top); }
+    ConstValueIterator begin_list() const { return ConstValueIterator({node_->data.sequence.items.start, doc_}); }
+    ConstValueIterator end_list() const { return ConstValueIterator({node_->data.sequence.items.top, doc_}); }
     auto get_list() const { return ConstListRange<YamlView>{*this}; }
 
-    ConstMemberIterator begin_member() const { return ConstMemberIterator(doc_, node_->data.mapping.pairs.start); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator(doc_, node_->data.mapping.pairs.top); }
+    ConstMemberIterator begin_member() const { return ConstMemberIterator({node_->data.mapping.pairs.start, doc_}); }
+    ConstMemberIterator end_member() const { return ConstMemberIterator({node_->data.mapping.pairs.top, doc_}); }
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
         return strcmp(key, item.key.get_cstr()) == 0;

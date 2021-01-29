@@ -17,41 +17,28 @@
 
 namespace garlic::providers::yamlcpp {
 
-  template<typename ValueType, typename Iterator, typename KeyType = ValueType>
-  class MemberIteratorWrapper {
-  public:
-    struct MemberWrapper {
-      KeyType key;
-      ValueType value;
-    };
-    
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = MemberWrapper&;
-    using pointer = MemberWrapper*;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit MemberIteratorWrapper() {}
-    explicit MemberIteratorWrapper(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit MemberIteratorWrapper(const Iterator& iterator) : iterator_(iterator) {}
-
-    MemberIteratorWrapper& operator ++ () { iterator_++; return *this; }
-    MemberIteratorWrapper operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const MemberIteratorWrapper& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const MemberIteratorWrapper& other) const { return !(other == *this); }
-
-    MemberWrapper operator * () const { return MemberWrapper{KeyType{this->iterator_->first}, ValueType{this->iterator_->second}}; }
-
-  private:
-    Iterator iterator_;
-  };
-
   class YamlNode {
+
+    template<typename Iterator>
+    struct MemberIteratorWrapper {
+      using output_type = MemberPair<YamlNode>;
+      using iterator_type = Iterator;
+
+      iterator_type iterator;
+
+      inline output_type wrap() const {
+        return output_type {
+          YamlNode{this->iterator->first},
+          YamlNode{this->iterator->second}
+        };
+      }
+    };
+
   public:
     using ValueType = YAML::Node;
-    using ConstValueIterator = IteratorWrapper<YamlNode, typename ValueType::const_iterator>;
-    using ConstMemberIterator = MemberIteratorWrapper<YamlNode, typename ValueType::const_iterator>;
-    using MemberIterator = MemberIteratorWrapper<YamlNode, typename ValueType::iterator>;
+    using ConstValueIterator = BasicLayerForwardIterator<YamlNode, typename ValueType::const_iterator>;
+    using ConstMemberIterator = LayerForwardIterator<MemberIteratorWrapper<typename ValueType::const_iterator>>;
+    using MemberIterator = LayerForwardIterator<MemberIteratorWrapper<typename ValueType::iterator>>;
 
     YamlNode () = default;
     YamlNode (const ValueType& node) : node_(node) {}
@@ -94,12 +81,12 @@ namespace garlic::providers::yamlcpp {
     YamlNode& operator = (std::string_view value) { this->set_string(value); return *this; }
     YamlNode& operator = (bool value) { this->set_bool(value); return *this; }
 
-    ConstValueIterator begin_list() const { return ConstValueIterator(node_.begin()); }
-    ConstValueIterator end_list() const { return ConstValueIterator(node_.end()); }
+    ConstValueIterator begin_list() const { return ConstValueIterator({node_.begin()}); }
+    ConstValueIterator end_list() const { return ConstValueIterator({node_.end()}); }
     auto get_list() const { return ConstListRange<YamlNode>{*this}; }
 
-    ConstMemberIterator begin_member() const { return ConstMemberIterator(node_.begin()); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator(node_.end()); }
+    ConstMemberIterator begin_member() const { return ConstMemberIterator({node_.begin()}); }
+    ConstMemberIterator end_member() const { return ConstMemberIterator({node_.end()}); }
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
           return strcmp(key, item.key.get_cstr()) == 0;
@@ -113,8 +100,8 @@ namespace garlic::providers::yamlcpp {
     ConstMemberIterator find_member(const YamlNode& value) const { return this->find_member(value.get_cstr()); }
     auto get_object() const { return ConstMemberRange<YamlNode>{*this}; }
 
-    MemberIterator begin_member() { return MemberIterator(node_.begin()); }
-    MemberIterator end_member() { return MemberIterator(node_.end()); }
+    MemberIterator begin_member() { return MemberIterator({node_.begin()}); }
+    MemberIterator end_member() { return MemberIterator({node_.end()}); }
     auto get_object() { return MemberRange<YamlNode>{*this}; }
 
     // list functions.
