@@ -48,8 +48,8 @@ namespace garlic {
     { t.get_double() } -> std::convertible_to<double>;
     { t.get_bool() } -> std::convertible_to<bool>;
 
-    { t.begin_list() } -> forward_iterator<T>;  // todo: make sure this iterator yields layers.
-    { t.end_list() } -> forward_iterator<T>;  // todo: same as above.
+    { t.begin_list() } -> forward_iterator<T>;
+    { t.end_list() } -> forward_iterator<T>;
     { t.get_list() } -> std::ranges::range;
 
     { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
@@ -72,12 +72,6 @@ namespace garlic {
     { t.set_null() };
     { t.set_list() };
     { t.set_object() };
-    { t = std::declval<const char*>() };
-    { t = std::declval<std::string>() };
-    { t = std::declval<std::string_view>() };
-    { t = std::declval<bool>() };
-    { t = std::declval<int>() };
-    { t = std::declval<double>() };
 
     { t.begin_list() } -> std::forward_iterator;
     { t.end_list() } -> std::forward_iterator;
@@ -89,6 +83,7 @@ namespace garlic {
     { t.find_member(std::declval<std::string_view>()) } -> std::forward_iterator;
     { t.get_object() } -> std::ranges::range;
 
+    /* TODO:  <29-01-21, Peyman> Add a constraint to support pushing T. */
     { t.clear() };
     { t.push_back() };
     { t.push_back(std::declval<const char*>()) };
