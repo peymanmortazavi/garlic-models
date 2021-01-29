@@ -24,6 +24,11 @@ namespace garlic {
   template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
   template<typename T> using MemberIteratorOf = typename T::MemberIterator;
 
+  template<typename T, typename OfType>
+  concept forward_iterator = std::forward_iterator<T> && requires(T it) {
+    { *it } -> std::same_as<OfType>;
+  };
+
   template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
     typename ConstValueIteratorOf<T>;
     typename ConstMemberIteratorOf<T>;
@@ -43,8 +48,8 @@ namespace garlic {
     { t.get_double() } -> std::convertible_to<double>;
     { t.get_bool() } -> std::convertible_to<bool>;
 
-    { t.begin_list() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
-    { t.end_list() } -> std::forward_iterator;  // todo: same as above.
+    { t.begin_list() } -> forward_iterator<T>;  // todo: make sure this iterator yields layers.
+    { t.end_list() } -> forward_iterator<T>;  // todo: same as above.
     { t.get_list() } -> std::ranges::range;
 
     { t.begin_member() } -> std::forward_iterator;  // todo: make sure this iterator yields layers.
