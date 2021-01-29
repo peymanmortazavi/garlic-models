@@ -49,96 +49,60 @@ namespace garlic {
     };
   };
 
-  template<typename ValueType, typename Iterator>
-  class CloveMemberIterator {
-  public:
-    struct MemberWrapper {
-      ValueType key;
-      ValueType value;
-    };
+  template<typename Layer, typename Iterator>
+  struct ConstMemberIteratorWrapper {
+    using output_type = MemberPair<Layer>;
+    using iterator_type = Iterator;
 
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = ValueType&;
-    using pointer = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
+    iterator_type iterator;
 
-    explicit CloveMemberIterator() {}
-    explicit CloveMemberIterator(Iterator&& iterator) : iterator_(std::move(iterator)) {}
-    explicit CloveMemberIterator(const Iterator& iterator) : iterator_(iterator) {}
-
-    CloveMemberIterator& operator ++ () { iterator_++; return *this; }
-    CloveMemberIterator operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const CloveMemberIterator& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const CloveMemberIterator& other) const { return !(other == *this); }
-
-    const Iterator& get_inner_iterator() const { return iterator_; }
-    Iterator& get_inner_iterator() { return iterator_; }
-
-    MemberWrapper operator * () const {
-      return MemberWrapper{
-        ValueType{this->iterator_->key},
-        ValueType{this->iterator_->value}
+    inline output_type wrap() const {
+      return output_type {
+        Layer { iterator->key },
+        Layer { iterator->value }
       };
     }
-
-  private:
-    Iterator iterator_;
   };
 
+  template<typename Layer, typename Iterator, typename Allocator>
+  struct MemberIteratorWrapper {
+    using output_type = MemberPair<Layer>;
+    using iterator_type = Iterator;
+    using allocator_type = Allocator;
 
-  template<typename ValueType, typename Iterator, typename AllocatorType>
-  class RefCloveMemberIterator {
-  public:
-    struct MemberWrapper {
-      ValueType key;
-      ValueType value;
-    };
+    iterator_type iterator;
+    allocator_type& allocator;
 
-    using difference_type = ptrdiff_t;
-    using value_type = MemberWrapper;
-    using reference = ValueType&;
-    using pointer = ValueType*;
-    using iterator_category = std::forward_iterator_tag;
-
-    explicit RefCloveMemberIterator() {}
-    explicit RefCloveMemberIterator(
-        Iterator&& iterator,
-        AllocatorType& allocator
-    ) : allocator_(&allocator), iterator_(std::move(iterator)) {}
-
-    explicit RefCloveMemberIterator(
-        const Iterator& iterator,
-        AllocatorType& allocator
-    ) : allocator_(&allocator), iterator_(iterator) {}
-
-    RefCloveMemberIterator& operator ++ () { iterator_++; return *this; }
-    RefCloveMemberIterator operator ++ (int) { auto it = *this; iterator_++; return it; }
-    bool operator == (const RefCloveMemberIterator& other) const { return other.iterator_ == iterator_; }
-    bool operator != (const RefCloveMemberIterator& other) const { return !(other == *this); }
-
-    const Iterator& get_inner_iterator() const { return iterator_; }
-    Iterator& get_inner_iterator() { return iterator_; }
-
-    MemberWrapper operator * () const {
-      return MemberWrapper{
-        ValueType{this->iterator_->key, *allocator_},
-        ValueType{this->iterator_->value, *allocator_}
+    inline output_type wrap() const {
+      return output_type {
+        Layer { iterator->key, allocator },
+        Layer { iterator->value, allocator }
       };
     }
-
-  private:
-    Iterator iterator_;
-    AllocatorType* allocator_;
   };
 
+  template<typename Layer, typename Iterator, typename Allocator>
+  struct ValueIteratorWrapper {
+    using output_type = Layer;
+    using iterator_type = Iterator;
+    using allocator_type = Allocator;
+
+    iterator_type iterator;
+    allocator_type& allocator;
+
+    inline output_type wrap() const {
+      return output_type { *iterator };
+    }
+  };
 
   template<Allocator Allocator>
   class GenericCloveView {
   public:
     using DataType = GenericData<Allocator>;
-    using ConstValueIterator = IteratorWrapper<GenericCloveView, typename DataType::List::Container>;
-    using ConstMemberIterator = CloveMemberIterator<GenericCloveView, typename DataType::Object::Container>;
+    using ConstValueIterator = BasicLayerForwardIterator<
+      GenericCloveView, typename DataType::List::Container>;
+    using ConstMemberIterator = LayerForwardIterator<
+      ConstMemberIteratorWrapper<GenericCloveView, typename DataType::Object::Container>>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
 
@@ -191,16 +155,10 @@ namespace garlic {
     using ViewType = GenericCloveView<Allocator>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
-    using ValueIterator = AllocatorIteratorWrapper<
-      GenericCloveRef,
-      typename DataType::List::Container,
-      AllocatorType
-    >;
-    using MemberIterator = RefCloveMemberIterator<
-      GenericCloveRef,
-      typename DataType::Object::Container,
-      AllocatorType
-    >;
+    using ValueIterator = LayerForwardIterator<
+      ValueIteratorWrapper<GenericCloveRef, typename DataType::List::Container, AllocatorType>>;
+    using MemberIterator = LayerForwardIterator<
+      MemberIteratorWrapper<GenericCloveRef, typename DataType::Object::Container, AllocatorType>>;
     using ViewType::begin_list;
     using ViewType::end_list;
     using ViewType::get_list;
@@ -269,8 +227,12 @@ namespace garlic {
     GenericCloveRef& operator = (const std::string_view& value) { this->set_string(value); return *this; }
     GenericCloveRef& operator = (const char* value) { this->set_string(value); return *this; }
 
-    ValueIterator begin_list() { return ValueIterator(data_.list.data, allocator_); }
-    ValueIterator end_list() { return ValueIterator(data_.list.data + data_.list.length, allocator_); }
+    ValueIterator begin_list() {
+      return ValueIterator({data_.list.data, allocator_});
+    }
+    ValueIterator end_list() {
+      return ValueIterator({data_.list.data + data_.list.length, allocator_});
+    }
     ListRange<GenericCloveRef> get_list() { return ListRange<GenericCloveRef>{*this}; }
 
     MemberIterator begin_member() { return MemberIterator(data_.object.data, allocator_); }
