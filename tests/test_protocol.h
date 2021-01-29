@@ -217,18 +217,6 @@ void test_full_object_value(LayerType& value) {
 }
 
 template<garlic::RefLayer LayerType>
-void test_full_basic_assignment(LayerType& value) {
-  value = 12.5;
-  test_readonly_double_value(value, 12.5);
-  value = 25;
-  test_readonly_int_value(value, 25);
-  value = "some string";
-  test_readonly_string_value(value, "some string");
-  value = false;
-  test_readonly_bool_value(value, false);
-}
-
-template<garlic::RefLayer LayerType>
 void test_full_layer(LayerType&& value) {
   test_full_string_value(value);
   test_full_double_value(value);
@@ -237,5 +225,4 @@ void test_full_layer(LayerType&& value) {
   test_full_null_value(value);
   test_full_list_value(value);
   test_full_object_value(value);
-  test_full_basic_assignment(value);
 }
