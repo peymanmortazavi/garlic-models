@@ -200,7 +200,7 @@ namespace garlic {
 
   template <typename LayerType>
   struct ConstMemberRange {
-    const LayerType& layer;
+    LayerType layer;
 
     ConstMemberIteratorOf<LayerType> begin() const { return layer.begin_member(); }
     ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
@@ -208,10 +208,178 @@ namespace garlic {
 
   template <typename LayerType>
   struct MemberRange {
-    LayerType& layer;
+    LayerType layer;
 
     MemberIteratorOf<LayerType> begin() { return layer.begin_member(); }
     MemberIteratorOf<LayerType> end() { return layer.end_member(); }
+  };
+
+  template<typename ValueType, typename Iterator>
+  struct LayerMemberIteratorWrapper {
+    using output_type = MemberPair<ValueType>;
+    using iterator_type = Iterator;
+    iterator_type iterator;
+    inline output_type wrap() const {
+      return output_type {
+        ValueType{ (*iterator).key },
+        ValueType{ (*iterator).value },
+      };
+    }
+  };
+
+  template<ViewLayer Layer>
+  struct object_view {
+    Layer layer;
+
+    using ConstValueIterator = BasicLayerForwardIterator<
+      object_view, ConstValueIteratorOf<Layer>>;
+    using ConstMemberIterator = LayerForwardIterator<
+      LayerMemberIteratorWrapper<object_view, ConstMemberIteratorOf<Layer>>>;
+
+    ConstValueIterator
+    begin_list() const { return ConstValueIterator({layer.begin_list()}); }
+
+    ConstValueIterator
+    end_list() const { return ConstValueIterator({layer.end_list()}); }
+
+    ConstListRange<object_view>
+    get_list() const { return ConstListRange<object_view>(*this); }
+
+    ConstMemberIterator
+    begin_member() const { return ConstMemberIterator({layer.begin_member()}); }
+
+    ConstMemberIterator
+    end_member() const { return ConstMemberIterator({layer.end_member()}); }
+
+    ConstMemberIterator
+    find_member(const char* key) const {
+      return ConstMemberIterator({layer.find_member(key) });
+    }
+
+    ConstMemberIterator
+    find_member(std::string_view key) const {
+      return ConstMemberIterator({layer.find_member(key)});
+    }
+
+    ConstMemberRange<object_view>
+    get_object() const { return ConstMemberRange<object_view>(*this); }
+
+    bool is_null() const noexcept { return layer.is_null(); }
+    bool is_int() const noexcept { return layer.is_int(); }
+    bool is_string() const noexcept { return layer.is_string(); }
+    bool is_double() const noexcept { return layer.is_double(); }
+    bool is_object() const noexcept { return layer.is_object(); }
+    bool is_list() const noexcept { return layer.is_list(); }
+    bool is_bool() const noexcept { return layer.is_bool(); }
+
+    int
+    get_int() const noexcept { return layer.get_int(); }
+
+    std::string
+    get_string() const noexcept { return layer.get_string(); }
+
+    std::string_view
+    get_string_view() const noexcept { return layer.get_string_view(); }
+
+    const char*
+    get_cstr() const noexcept { return layer.get_cstr(); }
+
+    double
+    get_double() const noexcept { return layer.get_double(); }
+
+    bool
+    get_bool() const noexcept { return layer.get_bool(); }
+  };
+
+  template<RefLayer Layer, ViewLayer V = Layer>
+  struct object : public object_view<V> {
+    Layer layer_;
+
+    object(Layer layer) : layer_(layer), object_view<V>(layer.get_view()) {}
+
+    using ValueIterator = BasicLayerForwardIterator<
+      object, ValueIteratorOf<Layer>>;
+    using MemberIterator = LayerForwardIterator<
+      LayerMemberIteratorWrapper<object, MemberIteratorOf<Layer>>>;
+    using object_view<V>::begin_member;
+    using object_view<V>::end_member;
+    using object_view<V>::find_member;
+    using object_view<V>::begin_list;
+    using object_view<V>::end_list;
+    using object_view<V>::get_list;
+    using object_view<V>::get_object;
+
+    inline void set_string(const char* value) { layer_.set_string(value); }
+    inline void set_string(const std::string& value) { layer_.set_string(value); }
+    inline void set_string(std::string_view value) { layer_.set_string(value); }
+    inline void set_bool(bool value) { layer_.set_bool(value); }
+    inline void set_int(int value) { layer_.set_int(value); }
+    inline void set_double(double value) { layer_.set_double(value); }
+    inline void set_null() { layer_.set_null(); }
+    inline void set_list() { layer_.set_list(); }
+    inline void set_object() { layer_.set_object(); }
+
+    inline ValueIterator
+    begin_list() { return ValueIterator({layer_.begin_list()}); }
+
+    inline ValueIterator
+    end_list() { return ValueIterator({layer_.end_list()}); }
+
+    inline ListRange<object>
+    get_list() { return ListRange<object>(*this); }
+
+    inline MemberIterator
+    begin_member() { return MemberIterator({layer_.begin_member()}); }
+
+    inline MemberIterator
+    end_member() { return MemberIterator({layer_.end_member()}); }
+
+    inline MemberIterator
+    find_member(const char* key) {
+      return MemberIterator({layer_.find_member(key)});
+    }
+
+    inline MemberIterator
+    find_member(std::string_view key) {
+      return MemberIterator({layer_.find_member(key)});
+    }
+
+    inline MemberRange<object>
+    get_object() { return MemberRange<object>(*this); }
+
+    inline void clear() { layer_.clear(); }
+    inline void push_back() { layer_.push_back(); }
+    inline void push_back(const char* value) { layer_.push_back(value); }
+    inline void push_back(bool value) { layer_.push_back(value); }
+    inline void push_back(int value) { layer_.push_back(value); }
+    inline void push_back(double value) { layer_.push_back(value); }
+    inline void pop_back() { layer_.pop_back(); }
+    inline void erase(ValueIterator position) {
+      layer_.erase(position.get_inner_iterator());
+    }
+    inline void erase(ValueIterator start, ValueIterator end) {
+      layer_.erase(start.get_inner_iterator(), end.get_inner_iterator());
+    }
+
+    inline void add_member(const char* key) { layer_.add_member(key); }
+    inline void add_member(const char* key, const char* value) {
+      layer_.add_member(key, value);
+    }
+    inline void add_member(const char* key, bool value) {
+      layer_.add_member(key, value);
+    }
+    inline void add_member(const char* key, int value) {
+      layer_.add_member(key, value);
+    }
+    inline void add_member(const char* key, double value) {
+      layer_.add_member(key, value);
+    }
+    inline void remove_member(const char* key) {
+      layer_.remove_member(key);
+    }
+    inline void erase_member(ValueIterator position) {
+      layer_.erase_member(position.get_inner_iterator());
+    }
   };
 
 }

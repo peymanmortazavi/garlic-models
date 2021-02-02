@@ -38,6 +38,9 @@ static long long native_way(rapidjson::Document& doc) {
 
 static long long garlic_way(rapidjson::Document& doc) {
   garlic::providers::rapidjson::JsonView view {doc};
+  //garlic::object<
+  //  garlic::providers::rapidjson::JsonRef, garlic::providers::rapidjson::JsonView
+  //  > view(view2);
   long long character_count = 0;
   long long total = 0;
   for (const auto& object_it : view.get_list()) {
@@ -50,19 +53,6 @@ static long long garlic_way(rapidjson::Document& doc) {
   }
   return character_count + total;
 }
-
-  template<typename T>
-  concept WrapContainer = requires(T container) {
-    typename T::output_type;
-    typename T::iterator_type;
-
-    { container.iterator };
-    { container.wrap() } -> std::same_as<typename T::output_type>;
-  };
-
-
-  using ConstValueIterator = garlic::BasicLayerForwardIterator<
-    garlic::providers::rapidjson::JsonView, typename ::rapidjson::Value::ConstValueIterator>;
 
 int main()
 {

@@ -1,5 +1,6 @@
 #include <benchmark/benchmark.h>
 #include <garlic/garlic.h>
+#include "garlic/layer.h"
 #include "garlic/providers/libyaml.h"
 #include "garlic/providers/rapidjson.h"
 #include "test_utility.h"
@@ -63,7 +64,8 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
 }
 
 static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
-  garlic::providers::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
+  garlic::providers::rapidjson::JsonView view2 {CreateLargeRapidJsonDocument()};
+  garlic::object_view<garlic::providers::rapidjson::JsonView> view{view2};
   long long character_count = 0;
   long long total = 0;
   const char* text = "text";
