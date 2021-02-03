@@ -16,7 +16,6 @@ enable_testing()
 set(TEST_SOURCES 
     all_tests.cpp
     test_clove.cpp
-    test_yaml.cpp
     test_models.cpp
     test_module.cpp
     test_constraints.cpp
