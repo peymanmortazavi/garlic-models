@@ -113,6 +113,10 @@ namespace garlic::providers::rapidjson {
 
     const ValueType& get_inner_value() const { return value_; }
     JsonView get_view() const { return JsonView{value_}; }
+
+    bool operator == (const JsonView& view) const {
+      return view.value_ == value_;
+    }
   
   private:
     const ValueType& value_;
@@ -157,6 +161,14 @@ namespace garlic::providers::rapidjson {
     JsonRef& operator = (const std::string& value) { this->set_string(value); return *this; }
     JsonRef& operator = (std::string_view value) { this->set_string(value); return *this; }
     JsonRef& operator = (bool value) { this->set_bool(value); return *this; }
+
+    bool operator == (const JsonRef& ref) const {
+      return ref.value_ == value_;
+    }
+
+    bool operator == (const JsonView& view) const {
+      return view.get_inner_value() == value_;
+    }
 
     ValueIterator begin_list() { return ValueIterator({value_.Begin(), &allocator_}); }
     ValueIterator end_list() { return ValueIterator({value_.End(), &allocator_}); }

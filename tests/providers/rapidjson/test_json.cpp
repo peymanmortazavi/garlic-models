@@ -18,6 +18,8 @@
 #include <garlic/providers/rapidjson.h>
 
 #include "../../test_protocol.h"
+#include "garlic/meta.h"
+#include "garlic/utility.h"
 
 using namespace std;
 
@@ -116,4 +118,22 @@ TEST(RapidJson, ProtocolTest) {
 
   // the writable object.
   test_full_layer(JsonRef{doc});
+}
+
+
+TEST(RapidJson, EqualityTest) {
+  Document doc = get_test_document();
+  ASSERT_EQ(JsonView(doc), JsonView(doc));
+  ASSERT_TRUE(cmp_layers(JsonView(doc), JsonView(doc)));
+
+  ASSERT_EQ(JsonRef(doc), JsonRef(doc));
+  ASSERT_TRUE(cmp_layers(JsonRef(doc), JsonRef(doc)));
+ 
+  ASSERT_EQ(JsonRef(doc), JsonRef(doc));
+  ASSERT_TRUE(cmp_layers(JsonRef(doc), JsonRef(doc)));
+
+  ASSERT_EQ(JsonView(doc), JsonRef(doc));
+  ASSERT_EQ(JsonRef(doc), JsonView(doc));
+  ASSERT_TRUE(cmp_layers(JsonRef(doc), JsonView(doc)));
+  ASSERT_TRUE(cmp_layers(JsonView(doc), JsonRef(doc)));
 }
