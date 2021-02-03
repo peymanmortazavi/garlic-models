@@ -81,6 +81,10 @@ namespace garlic::providers::yamlcpp {
     YamlNode& operator = (std::string_view value) { this->set_string(value); return *this; }
     YamlNode& operator = (bool value) { this->set_bool(value); return *this; }
 
+    bool operator == (const YamlNode& node) const {
+      return node.node_ == node_;
+    }
+
     ConstValueIterator begin_list() const { return ConstValueIterator({node_.begin()}); }
     ConstValueIterator end_list() const { return ConstValueIterator({node_.end()}); }
     auto get_list() const { return ConstListRange<YamlNode>{*this}; }

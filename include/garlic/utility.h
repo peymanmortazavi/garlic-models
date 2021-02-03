@@ -2,6 +2,7 @@
 #define GARLIC_UTILITY_H
 
 #include "layer.h"
+#include "meta.h"
 #include <algorithm>
 #include <cstring>
 #include <iterator>
@@ -10,12 +11,14 @@
 #include <charconv>
 #include <system_error>
 #include <memory>
+#include <type_traits>
 
 
 namespace garlic {
 
   template<ViewLayer L1, ViewLayer L2>
-  bool cmp_layers(const L1& layer1, const L2& layer2) {
+  std::enable_if_t<!is_comparable<L1, L2>::value, bool>
+  cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
     else if (layer1.is_string() && layer2.is_string() && std::strcmp(layer1.get_cstr(), layer2.get_cstr()) == 0) {
       return true;
@@ -39,6 +42,12 @@ namespace garlic {
       );
     }
     return false;
+  }
+
+  template<ViewLayer Layer1, ViewLayer Layer2>
+  std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
+  cmp_layers(const Layer1& layer1, const Layer2& layer2) {
+    return layer1 == layer2;
   }
 
 
