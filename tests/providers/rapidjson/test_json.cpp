@@ -17,7 +17,7 @@
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>
 
-#include "test_protocol.h"
+#include "../../test_protocol.h"
 
 using namespace std;
 
