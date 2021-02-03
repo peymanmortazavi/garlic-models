@@ -11,7 +11,7 @@
 #include "test_protocol.h"
 
 
-TEST(BasicValue, ProtocolTest) {
+TEST(CloveValue, ProtocolTest) {
   garlic::CloveDocument doc;
   test_full_layer(doc.get_reference());
 }
