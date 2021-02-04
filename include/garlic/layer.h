@@ -110,6 +110,22 @@ namespace garlic {
   };
 
   template<typename T>
+  concept TypeAbstraction = requires {
+    { T::Null };
+    { T::Boolean };
+    { T::String };
+    { T::Number };
+    { T::Object };
+    { T::List };
+  };
+
+  template<typename T>
+  concept TypeProvider = requires (const T& value) {
+    { T::type_flag } -> TypeAbstraction;
+    { value.get_type() } -> std::same_as<typename T::type_flag>;
+  };
+
+  template<typename T>
   concept IteratorWrapper = requires(T container) {
     typename T::output_type;
     typename T::iterator_type;

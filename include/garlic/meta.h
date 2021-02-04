@@ -19,6 +19,16 @@ namespace garlic {
   struct is_comparable<Left, Right, std::void_t<comparable<Left, Right>>> : std::true_type{};
 
   template<typename, class = void>
+  struct has_generic_type_flag : std::false_type {};
+
+  /* TODO:  <03-02-21, Peyman> Use macros to utilize the concept if it is c++ 20. */
+  template<typename Layer>
+  struct has_generic_type_flag<
+    Layer,
+    std::void_t<decltype(std::declval<Layer>().get_type())>
+    > : std::true_type {};
+
+  template<typename, class = void>
   struct is_std_string : std::false_type {};
 
   template<typename T>
