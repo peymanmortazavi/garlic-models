@@ -9,6 +9,31 @@ namespace garlic {
   template<typename Type, typename Layer>
   struct coder {};
 
+  template<typename Layer>
+  struct coder<int, Layer> {
+    static inline int decode(Layer layer) { return layer.get_int(); }
+  };
+
+  template<typename Layer>
+  struct coder<std::string, Layer> {
+    static inline std::string decode(Layer layer) { return layer.get_string(); }
+  };
+
+  template<typename Layer>
+  struct coder<std::string_view, Layer> {
+    static inline std::string_view decode(Layer layer) { return layer.get_string_view(); }
+  };
+
+  template<typename Layer>
+  struct coder<const char*, Layer> {
+    static inline const char* decode(Layer layer) { return layer.get_cstr(); }
+  };
+
+  template<typename Layer>
+  struct coder<double, Layer> {
+    static inline double decode(Layer layer) { return layer.get_double(); }
+  };
+
   /* TODO:  <04-02-21, Peyman> use concept for c++ and onward. */
 
   template<typename, typename, class = void>
