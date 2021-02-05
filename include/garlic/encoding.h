@@ -59,8 +59,6 @@ namespace garlic {
     }
   };
 
-  /* TODO:  <04-02-21, Peyman> use concept for c++ and onward. */
-
   namespace internal {
 
     template<typename, typename, class = void>
@@ -160,23 +158,6 @@ namespace garlic {
   safe_decode(Layer layer, Callable&& cb) {
     Type::safe_decode(layer, cb);
   }
-
-  namespace internal {
-
-    template<typename T>
-    struct always_false {
-      enum { value = false };
-    };
-
-  }
-
-  template<ViewLayer Layer, typename Output>
-  static inline Output
-  copy_layer(Layer layer) {
-    static_assert(
-        internal::always_false<Output>::value,
-        "OutputType does not support decoding.");
-  };
 
   template<ViewLayer Layer, RefLayer Output>
   static inline void
