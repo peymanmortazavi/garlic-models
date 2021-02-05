@@ -19,6 +19,7 @@ set(TEST_SOURCES
     test_clove.cpp
     test_models.cpp
     test_module.cpp
+    test_encoding.cpp
     test_constraints.cpp
     test_helpers.cpp
     test_utility.cpp)
