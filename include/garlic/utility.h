@@ -18,7 +18,7 @@
 namespace garlic {
 
   template<ViewLayer L1, ViewLayer L2>
-  std::enable_if_t<!is_comparable<L1, L2>::value, bool>
+  static inline std::enable_if_t<!is_comparable<L1, L2>::value, bool>
   cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
     else if (layer1.is_string() && layer2.is_string() && std::strcmp(layer1.get_cstr(), layer2.get_cstr()) == 0) {
@@ -46,7 +46,7 @@ namespace garlic {
   }
 
   template<ViewLayer Layer1, ViewLayer Layer2>
-  std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
+  static inline std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
   cmp_layers(const Layer1& layer1, const Layer2& layer2) {
     return layer1 == layer2;
   }
@@ -95,7 +95,8 @@ namespace garlic {
 
 
   template<ViewLayer LayerType, typename Callable>
-  void resolve(const LayerType& value, std::string_view path, Callable&& cb) {
+  static inline void
+  resolve(const LayerType& value, std::string_view path, Callable&& cb) {
     lazy_string_splitter parts{path};
     auto cursor = std::make_unique<LayerType>(value);
     while (true) {
