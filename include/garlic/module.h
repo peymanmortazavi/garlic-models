@@ -183,7 +183,7 @@ namespace garlic {
             info.status = FieldStatus::available;
             info.descriptor = item.second;
           }
-          get(context.lazy_model_fields, it->second, [&field_table](const auto& lazy_field_map) {
+          find(context.lazy_model_fields, it->second, [&field_table](const auto& lazy_field_map) {
               for (const auto& item : lazy_field_map.second) {
                 auto& info = field_table[item.first];
                 if (info.status == FieldStatus::exclude) continue;
