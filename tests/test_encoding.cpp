@@ -12,6 +12,6 @@ using namespace garlic::providers::rapidjson;
 TEST(Encoding, DefaultLayerDecode) {
   auto doc = get_rapidjson_document("data/test.json");
   CloveDocument target;
-  decode(doc.get_view(), target.get_reference());
+  copy_layer(doc.get_view(), target.get_reference());
   ASSERT_TRUE(cmp_layers(doc.get_view(), target.get_view()));
 }

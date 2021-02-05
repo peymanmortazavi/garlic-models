@@ -2,6 +2,7 @@
 #define GARLIC_ENCODING_H
 
 #include "layer.h"
+#include <type_traits>
 
 namespace garlic {
 
@@ -16,7 +17,7 @@ namespace garlic {
 
   template<ViewLayer Layer, typename Output>
   static inline Output
-  decode(Layer layer) {
+  copy_layer(Layer layer) {
     static_assert(
         internal::always_false<Output>::value,
         "OutputType does not support decoding.");
@@ -24,7 +25,7 @@ namespace garlic {
 
   template<ViewLayer Layer, RefLayer Output>
   static inline void
-  decode(Layer layer, Output output) {
+  copy_layer(Layer layer, Output output) {
     if (layer.is_double()) {
       output.set_double(layer.get_double());
     } else if (layer.is_int()) {
@@ -37,7 +38,7 @@ namespace garlic {
       output.set_list();
       for (const auto& item : layer.get_list()) {
           output.push_back_builder(
-              [&item](auto ref) { decode(item, ref); }
+              [&item](auto ref) { copy_layer(item, ref); }
               );
       }
     } else if (layer.is_object()) {
@@ -45,7 +46,7 @@ namespace garlic {
       for (const auto& pair : layer.get_object()) {
         output.add_member_builder(
             pair.key.get_cstr(),
-            [&pair](auto ref) { decode(pair.value, ref); }
+            [&pair](auto ref) { copy_layer(pair.value, ref); }
             );
       }
     } else {
