@@ -5,5 +5,8 @@ find_package(Threads REQUIRED)
 add_executable(RapidJsonTests test_json.cpp)
 target_link_libraries(RapidJsonTests GarlicModel Threads::Threads ${GTEST_BOTH_LIBRARIES})
 
+add_executable(RapidJsonPerformance performance.cpp)
+target_link_libraries(RapidJsonPerformance GarlicModel Threads::Threads benchmark)
+
 add_test(RapidJsonTests RapidJsonTests)
 set_tests_properties(RapidJsonTests PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
