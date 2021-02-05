@@ -5,6 +5,7 @@
 #include <garlic/clove.h>
 #include <memory>
 
+#include "garlic/utility.h"
 #include "test_utility.h"
 
 using namespace garlic;
@@ -36,18 +37,21 @@ struct Data1 {
   template<typename Layer>
   static inline Data1 decode(Layer layer) {
     return {
-      (*layer.find_member("prop1")).value.get_string(),
-      (*layer.find_member("prop2")).value.get_int()
+      get<std::string>(layer, "prop1"),
+      get<int>(layer, "prop2")
     };
   }
+
+  template<typename Layer, typename Callable>
+  static inline void safe_decode(Layer layer, Callable&& cb) {}
 };
 
 class Data2 {
 public:
   template<typename Layer>
   Data2(Layer layer) {
-    prop1 = (*layer.find_member("prop1")).value.get_string();
-    prop2 = (*layer.find_member("prop2")).value.get_int();
+    prop1 = get<std::string>(layer, "prop1");
+    prop2 = get<int>(layer, "prop2");
   }
 
   std::string prop1;
@@ -63,9 +67,17 @@ template<typename Layer>
 struct coder<Data3, Layer> {
   static inline Data3 decode(Layer layer) {
     return {
-      (*layer.find_member("prop1")).value.get_string(),
-      (*layer.find_member("prop2")).value.get_int(),
+      get<std::string>(layer, "prop1"),
+      get<int>(layer, "prop2")
     };
+  }
+
+  template<typename Callable>
+  static inline void safe_decode(Layer layer, Callable&& cb) {
+    cb(Data3{
+        get<std::string>(layer, "prop1", "default"),
+        safe_get<int>(layer, "prop2", 0)
+        });
   }
 };
 
@@ -73,6 +85,10 @@ TEST(Encoding, CustomStaticClassDecoder) {
   auto data = decode<Data1>(get_test_clove());
   ASSERT_STREQ(data.prop1.c_str(), "Property 1");
   ASSERT_EQ(data.prop2, 24);
+
+  safe_decode<Data1>(get_test_clove(), [](auto&&) {
+      ASSERT_TRUE(false);
+      });
 }
 
 TEST(Encoding, CustomConstructorClassDecoder) {
@@ -85,4 +101,9 @@ TEST(Encoding, CustomExplicitDecoder) {
   auto data = decode<Data3>(get_test_clove());
   ASSERT_STREQ(data.prop1.c_str(), "Property 1");
   ASSERT_EQ(data.prop2, 24);
+
+  safe_decode<Data3>(get_test_clove(), [](auto result){
+      ASSERT_STREQ(result.prop1.c_str(), "Property 1");
+      ASSERT_EQ(result.prop2, 24);
+      });
 }

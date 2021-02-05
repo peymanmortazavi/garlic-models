@@ -3,6 +3,7 @@
 
 #include "layer.h"
 #include "meta.h"
+#include "encoding.h"
 #include <algorithm>
 #include <cstring>
 #include <iterator>
@@ -57,7 +58,7 @@ namespace garlic {
     lazy_string_splitter(std::string_view text) : text_(text), cursor_(text.begin()) {}
 
     template<typename Callable>
-    void for_each(const Callable& cb) {
+    void for_each(Callable&& cb) {
       std::string_view part = this->next();
       while (!part.empty()) {
         cb(part);
@@ -94,7 +95,7 @@ namespace garlic {
 
 
   template<ViewLayer LayerType, typename Callable>
-  void resolve(const LayerType& value, std::string_view path, Callable cb) {
+  void resolve(const LayerType& value, std::string_view path, Callable&& cb) {
     lazy_string_splitter parts{path};
     auto cursor = std::make_unique<LayerType>(value);
     while (true) {
@@ -141,8 +142,56 @@ namespace garlic {
 
 
   template<typename Container, typename ValueType, typename Callable>
-  void get(const Container& container, const ValueType& value, const Callable& cb) {
+  static inline void
+  find(const Container& container, const ValueType& value, Callable&& cb) {
     if (auto it = container.find(value); it != container.end()) cb(*it);
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  get(Layer layer, const char* key) {
+    return decode<OutputType, Layer>((*layer.find_member(key)).value);
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  get(Layer layer, const char* key, OutputType default_value) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      return decode<OutputType, Layer>((*it).value);
+    }
+    return default_value;
+  }
+
+
+  template<typename OutputType, typename Callable, ViewLayer Layer>
+  static inline void
+  get_cb(Layer layer, const char* key, Callable&& cb) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      cb(decode<OutputType, Layer>((*it).value));
+    }
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  safe_get(Layer layer, const char* key, OutputType&& default_value) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      safe_decode<OutputType, Layer>(
+          (*it).value,
+          [&default_value](auto&& result) { default_value = result; });
+    }
+    return default_value;
+  }
+
+
+  template<typename OutputType, ViewLayer Layer, typename Callable>
+  static inline void
+  safe_get_cb(Layer layer, const char* key, Callable&& cb) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      safe_decode<OutputType, Layer>((*it).value, cb);
+    }
   }
 
 
