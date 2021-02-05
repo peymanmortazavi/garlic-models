@@ -6,6 +6,39 @@
 
 namespace garlic {
 
+  template<typename, typename>
+  struct decoder : std::false_type {};
+
+  /* TODO:  <04-02-21, Peyman> use concept for c++ and onward. */
+
+  template<typename, typename, class = void>
+  struct is_layer_constructible : std::false_type{};
+
+  template<typename Type, typename Layer>
+  struct is_layer_constructible<
+    Type,
+    Layer,
+    std::void_t<decltype(Type(std::declval<Layer>()))>> : std::true_type {};
+
+  template<typename, typename, class = void>
+  struct has_decode_layer_method : std::false_type {};
+
+  template<typename Type, typename Layer>
+  struct has_decode_layer_method<
+    Type,
+    Layer,
+    std::void_t<decltype(Type::decode(std::declval<Layer>()))>> : std::true_type {};
+
+  template<typename Type, ViewLayer Layer>
+  static inline std::enable_if_t<has_decode_layer_method<Type, Layer>::value, Type>
+  decode(Layer layer) { return Type::decode(layer); }
+
+  template<typename Type, ViewLayer Layer>
+  static inline std::enable_if_t<
+    is_layer_constructible<Type, Layer>::value && !has_decode_layer_method<Type, Layer>::value,
+    Type>
+  decode(Layer layer) { return Type(layer); }
+
   namespace internal {
 
     template<typename T>
