@@ -9,14 +9,18 @@ namespace garlic {
 
   struct VoidType {};
 
-  template<typename Left, typename Right>
-  using comparable = decltype(std::declval<Left>() == std::declval<Right>());
+  namespace internal {
+    template<typename Left, typename Right>
+    using comparable = decltype(std::declval<Left>() == std::declval<Right>());
+  }
 
   template<typename, typename, class = void>
   struct is_comparable : std::false_type{};
 
   template<typename Left, typename Right>
-  struct is_comparable<Left, Right, std::void_t<comparable<Left, Right>>> : std::true_type{};
+  struct is_comparable<
+    Left, Right,
+    std::void_t<internal::comparable<Left, Right>>> : std::true_type{};
 
   template<typename, class = void>
   struct is_std_string : std::false_type {};
