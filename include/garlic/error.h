@@ -34,7 +34,8 @@ namespace std {
   struct is_error_code_enum<garlic::GarlicError> : true_type {};
 }
 
-std::error_code make_error_code(garlic::GarlicError error) {
+inline std::error_code
+make_error_code(garlic::GarlicError error) {
   static garlic::error::GarlicErrorCategory category;
   return {static_cast<int>(error), category};
 }
