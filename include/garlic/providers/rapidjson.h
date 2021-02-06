@@ -3,7 +3,6 @@
 
 #include <iterator>
 #include <string>
-#include <type_traits>
 
 #include "../layer.h"
 #include "rapidjson/document.h"
