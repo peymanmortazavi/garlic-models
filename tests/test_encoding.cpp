@@ -11,13 +11,6 @@
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
 
-TEST(Encoding, DefaultLayerCopy) {
-  auto doc = get_rapidjson_document("data/test.json");
-  CloveDocument target;
-  copy_layer(doc.get_view(), target.get_reference());
-  ASSERT_TRUE(cmp_layers(doc.get_view(), target.get_view()));
-}
-
 inline static CloveRef get_test_clove() {
   static std::unique_ptr<CloveDocument> doc;
   if (!doc) {
@@ -48,11 +41,22 @@ struct Data1 {
 
 class Data2 {
 public:
+  Data2(const char* prop1, int prop2) : prop1(prop1), prop2(prop2) {}
+
   template<typename Layer>
   Data2(Layer layer) {
     prop1 = get<std::string>(layer, "prop1");
     prop2 = get<int>(layer, "prop2");
   }
+  Data2(const Data2&) = delete;
+
+  template<typename Layer>
+  static inline void encode(Layer layer, const Data2& value) {
+    layer.set_object();
+    layer.add_member("prop1", value.prop1.c_str());
+    layer.add_member("prop2", value.prop2);
+  }
+
 
   std::string prop1;
   int prop2;
@@ -70,6 +74,12 @@ struct coder<Data3, Layer> {
       get<std::string>(layer, "prop1"),
       get<int>(layer, "prop2")
     };
+  }
+
+  static inline void encode(Layer layer, const Data3& value) {
+    layer.set_object();
+    layer.add_member("prop1", value.prop1.c_str());
+    layer.add_member("prop2", value.prop2);
   }
 
   template<typename Callable>
@@ -106,4 +116,20 @@ TEST(Encoding, CustomExplicitDecoder) {
       ASSERT_STREQ(result.prop1.c_str(), "Property 1");
       ASSERT_EQ(result.prop2, 24);
       });
+}
+
+TEST(Encoding, CustomExplicitEncoder) {
+  Data3 value {"Property", 30};
+  CloveDocument doc;
+  encode(doc.get_reference(), value);
+  ASSERT_STREQ(safe_get<const char*>(doc.get_view(), "prop1", ""), "Property");
+  ASSERT_EQ(safe_get<int>(doc.get_view(), "prop2", 0), 30);
+}
+
+TEST(Encoding, CustomStaticClassEncoder) {
+  Data2 value("Property", 30);
+  CloveDocument doc;
+  encode(doc.get_reference(), value);
+  ASSERT_STREQ(safe_get<const char*>(doc.get_view(), "prop1", ""), "Property");
+  ASSERT_EQ(safe_get<int>(doc.get_view(), "prop2", 0), 30);
 }

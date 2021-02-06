@@ -196,6 +196,38 @@ namespace garlic {
   }
 
 
+  template<ViewLayer Layer, RefLayer Output>
+  static inline void
+  copy_layer(Layer layer, Output output) {
+    if (layer.is_double()) {
+      output.set_double(layer.get_double());
+    } else if (layer.is_int()) {
+      output.set_int(layer.get_int());
+    } else if (layer.is_bool()) {
+      output.set_bool(layer.get_bool());
+    } else if (layer.is_string()) {
+      output.set_string(layer.get_cstr());
+    } else if (layer.is_list()) {
+      output.set_list();
+      for (const auto& item : layer.get_list()) {
+          output.push_back_builder(
+              [&item](auto ref) { copy_layer(item, ref); }
+              );
+      }
+    } else if (layer.is_object()) {
+      output.set_object();
+      for (const auto& pair : layer.get_object()) {
+        output.add_member_builder(
+            pair.key.get_cstr(),
+            [&pair](auto ref) { copy_layer(pair.value, ref); }
+            );
+      }
+    } else {
+      output.set_null();
+    }
+  }
+
+
   class FileStreamBuffer : public std::streambuf {
   public:
     FileStreamBuffer(FILE* file) : file_(file) {}

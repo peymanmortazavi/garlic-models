@@ -72,6 +72,13 @@ inline static CloveRef get_test_clove() {
   return doc->get_reference();
 }
 
+TEST(Encoding, DefaultLayerCopy) {
+  auto doc = get_rapidjson_document("data/test.json");
+  CloveDocument target;
+  copy_layer(doc.get_view(), target.get_reference());
+  ASSERT_TRUE(cmp_layers(doc.get_view(), target.get_view()));
+}
+
 TEST(Utility, Get) {
   auto result = get<std::string>(get_test_clove(), "key");
   ASSERT_STREQ(result.c_str(), "value");
