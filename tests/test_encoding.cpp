@@ -57,7 +57,6 @@ public:
     layer.add_member("prop2", value.prop2);
   }
 
-
   std::string prop1;
   int prop2;
 };
