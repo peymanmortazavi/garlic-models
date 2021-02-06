@@ -96,6 +96,7 @@ namespace garlic {
     { t.push_back(std::declval<bool>()) };
     { t.push_back(std::declval<int>()) };
     { t.push_back(std::declval<double>()) };
+    { t.push_back_builder(std::declval<void(*)(T)>()) };
     { t.pop_back() };
     { t.erase(std::declval<ValueIteratorOf<T>>()) };
     { t.erase(std::declval<ValueIteratorOf<T>>(), std::declval<ValueIteratorOf<T>>()) };
@@ -105,8 +106,25 @@ namespace garlic {
     { t.add_member(std::declval<const char*>(), std::declval<bool>()) };
     { t.add_member(std::declval<const char*>(), std::declval<int>()) };
     { t.add_member(std::declval<const char*>(), std::declval<double>()) };
+    { t.add_member_builder(std::declval<const char*>(), std::declval<void(*)(T)>()) };
     { t.remove_member(std::declval<const char*>()) };
     { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
+  };
+
+  template<typename T>
+  concept TypeAbstraction = requires {
+    { T::Null };
+    { T::Boolean };
+    { T::String };
+    { T::Number };
+    { T::Object };
+    { T::List };
+  };
+
+  template<typename T>
+  concept TypeProvider = requires (const T& value) {
+    { T::type_flag } -> TypeAbstraction;
+    { value.get_type() } -> std::same_as<typename T::type_flag>;
   };
 
   template<typename T>

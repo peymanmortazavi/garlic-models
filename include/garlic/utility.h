@@ -3,6 +3,7 @@
 
 #include "layer.h"
 #include "meta.h"
+#include "encoding.h"
 #include <algorithm>
 #include <cstring>
 #include <iterator>
@@ -17,7 +18,7 @@
 namespace garlic {
 
   template<ViewLayer L1, ViewLayer L2>
-  std::enable_if_t<!is_comparable<L1, L2>::value, bool>
+  static inline std::enable_if_t<!is_comparable<L1, L2>::value, bool>
   cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
     else if (layer1.is_string() && layer2.is_string() && std::strcmp(layer1.get_cstr(), layer2.get_cstr()) == 0) {
@@ -45,7 +46,7 @@ namespace garlic {
   }
 
   template<ViewLayer Layer1, ViewLayer Layer2>
-  std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
+  static inline std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
   cmp_layers(const Layer1& layer1, const Layer2& layer2) {
     return layer1 == layer2;
   }
@@ -57,7 +58,7 @@ namespace garlic {
     lazy_string_splitter(std::string_view text) : text_(text), cursor_(text.begin()) {}
 
     template<typename Callable>
-    void for_each(const Callable& cb) {
+    void for_each(Callable&& cb) {
       std::string_view part = this->next();
       while (!part.empty()) {
         cb(part);
@@ -94,7 +95,8 @@ namespace garlic {
 
 
   template<ViewLayer LayerType, typename Callable>
-  void resolve(const LayerType& value, std::string_view path, Callable cb) {
+  static inline void
+  resolve(const LayerType& value, std::string_view path, Callable&& cb) {
     lazy_string_splitter parts{path};
     auto cursor = std::make_unique<LayerType>(value);
     while (true) {
@@ -141,8 +143,88 @@ namespace garlic {
 
 
   template<typename Container, typename ValueType, typename Callable>
-  void get(const Container& container, const ValueType& value, const Callable& cb) {
+  static inline void
+  find(const Container& container, const ValueType& value, Callable&& cb) {
     if (auto it = container.find(value); it != container.end()) cb(*it);
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  get(Layer layer, const char* key) {
+    return decode<OutputType, Layer>((*layer.find_member(key)).value);
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  get(Layer layer, const char* key, OutputType default_value) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      return decode<OutputType, Layer>((*it).value);
+    }
+    return default_value;
+  }
+
+
+  template<typename OutputType, typename Callable, ViewLayer Layer>
+  static inline void
+  get_cb(Layer layer, const char* key, Callable&& cb) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      cb(decode<OutputType, Layer>((*it).value));
+    }
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  safe_get(Layer layer, const char* key, OutputType&& default_value) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      safe_decode<OutputType, Layer>(
+          (*it).value,
+          [&default_value](auto&& result) { default_value = result; });
+    }
+    return default_value;
+  }
+
+
+  template<typename OutputType, ViewLayer Layer, typename Callable>
+  static inline void
+  safe_get_cb(Layer layer, const char* key, Callable&& cb) {
+    if (auto it = layer.find_member(key); it != layer.end_member()) {
+      safe_decode<OutputType, Layer>((*it).value, cb);
+    }
+  }
+
+
+  template<ViewLayer Layer, RefLayer Output>
+  static inline void
+  copy_layer(Layer layer, Output output) {
+    if (layer.is_double()) {
+      output.set_double(layer.get_double());
+    } else if (layer.is_int()) {
+      output.set_int(layer.get_int());
+    } else if (layer.is_bool()) {
+      output.set_bool(layer.get_bool());
+    } else if (layer.is_string()) {
+      output.set_string(layer.get_cstr());
+    } else if (layer.is_list()) {
+      output.set_list();
+      for (const auto& item : layer.get_list()) {
+          output.push_back_builder(
+              [&item](auto ref) { copy_layer(item, ref); }
+              );
+      }
+    } else if (layer.is_object()) {
+      output.set_object();
+      for (const auto& pair : layer.get_object()) {
+        output.add_member_builder(
+            pair.key.get_cstr(),
+            [&pair](auto ref) { copy_layer(pair.value, ref); }
+            );
+      }
+    } else {
+      output.set_null();
+    }
   }
 
 

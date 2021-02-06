@@ -110,6 +110,12 @@ namespace garlic::providers::yamlcpp {
 
     // list functions.
     void clear() { node_.reset(YAML::Node{YAML::NodeType::Sequence}); }
+    template<typename Callable>
+    void push_back_builder(Callable&& cb) {
+      YAML::Node node_;
+      cb(YamlNode(node_));
+      node_.push_back(node_);
+    }
     void push_back() { node_.push_back(YAML::Node()); }
     void push_back(const YamlNode& value) { node_.push_back(value.get_inner_value()); }
     void push_back(const std::string& value) { node_.push_back(value); }
@@ -141,6 +147,13 @@ namespace garlic::providers::yamlcpp {
     void add_member(const char* key, double value) { this->add_member(key, YAML::Node(value)); }
     void add_member(const char* key, int value) { this->add_member(key, YAML::Node(value)); }
     void add_member(const char* key, bool value) { this->add_member(key, YAML::Node(value)); }
+
+    template<typename Callable>
+    void add_member_builder(const char* key, Callable&& cb) {
+      YAML::Node value;
+      cb(YamlNode(value));
+      this->add_member(key, value);
+    }
 
     void remove_member(const char* key) { node_.remove(key); }
     void remove_member(const YamlNode& key) { node_.remove(key.get_inner_value()); }

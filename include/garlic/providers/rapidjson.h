@@ -182,6 +182,12 @@ namespace garlic::providers::rapidjson {
 
     // list functions.
     void clear() { value_.Clear(); }
+    template<typename Callable>
+    void push_back_builder(Callable&& cb) {
+      ValueType value;
+      cb(JsonRef{value, allocator_});
+      value_.PushBack(value.Move(), allocator_);
+    }
     void push_back() { value_.PushBack(ValueType().Move(), allocator_); }
     void push_back(const JsonView& value) {
       value_.PushBack(ValueType(value.get_inner_value(), allocator_), allocator_);
@@ -236,6 +242,12 @@ namespace garlic::providers::rapidjson {
       );
     }
 
+    template<typename Callable>
+    void add_member_builder(const char* key, Callable&& cb) {
+      ValueType value;
+      cb(JsonRef(value, allocator_));
+      this->add_member(ValueType().SetString(key, allocator_), value.Move());
+    }
     void add_member(const char* key) { this->add_member(ValueType().SetString(key, allocator_)); }
     void add_member(const char* key, const JsonRef& value) {
       this->add_member(ValueType().SetString(key, allocator_), value.get_inner_value());

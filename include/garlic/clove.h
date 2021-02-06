@@ -250,6 +250,13 @@ namespace garlic {
       std::for_each(this->begin_list(), this->end_list(), [](auto item){ item.clean(); });
       this->data_.list.length = 0;
     }
+    template<typename Callable>
+    void push_back_builder(Callable&& cb) {
+      this->check_list();
+      DataType value;
+      cb(GenericCloveRef(value, allocator_));
+      this->push_back(std::move(value));
+    }
     void push_back(DataType&& value) {
       this->check_list();
       this->data_.list.data[this->data_.list.length] = std::move(value);
@@ -312,6 +319,13 @@ namespace garlic {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return key.compare(item.key.get_cstr()) == 0;
       });
+    }
+
+    template<typename Callable>
+    void add_member_builder(const char* key, Callable&& cb) {
+      DataType value;
+      cb(GenericCloveRef(value, allocator_));
+      this->add_member(key, std::move(value));
     }
 
     void add_member(DataType&& key, DataType&& value) {
