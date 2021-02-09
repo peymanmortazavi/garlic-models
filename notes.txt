@@ -5,11 +5,3 @@
 * Make a yaml parser that uses libyaml to create clove value and parse clove to yaml.
 * Create an issue to explore using a different container other than vector to enable constexpr
   models.
-
-  -- Today
-. Add bidirectional iterator as well as forward iterator.
-. Make sure both c++ 20 and earlier versions are covered.
-. Introduce get<type>(layer, index)
-. Introduce get<type>(layer, index, default)
-. Introduce get<type>(layer, index, callback)
-. Rename get to find and introduce get_item, alternative to get_member
