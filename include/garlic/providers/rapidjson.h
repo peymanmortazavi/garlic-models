@@ -60,9 +60,9 @@ namespace garlic::providers::rapidjson {
   class JsonView {
   public:
     using ValueType = ::rapidjson::Value;
-    using ConstValueIterator = BasicLayerForwardIterator<
+    using ConstValueIterator = BasicRandomAccessIterator<
       JsonView, typename ::rapidjson::Value::ConstValueIterator>;
-    using ConstMemberIterator = LayerForwardIterator<
+    using ConstMemberIterator = RandomAccessIterator<
       ConstMemberIteratorWrapper<JsonView, ::rapidjson::Value::ConstMemberIterator>>;
 
     JsonView (const ValueType& value) : value_(value) {}
@@ -126,9 +126,9 @@ namespace garlic::providers::rapidjson {
   public:
     using DocumentType = ::rapidjson::Document;
     using AllocatorType = DocumentType::AllocatorType;
-    using ValueIterator = LayerForwardIterator<
+    using ValueIterator = RandomAccessIterator<
       ValueIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>>;
-    using MemberIterator = LayerForwardIterator<
+    using MemberIterator = RandomAccessIterator<
       MemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>>;
     using JsonView::begin_list;
     using JsonView::end_list;
