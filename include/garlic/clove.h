@@ -99,9 +99,9 @@ namespace garlic {
   class GenericCloveView {
   public:
     using DataType = GenericData<Allocator>;
-    using ConstValueIterator = BasicLayerForwardIterator<
+    using ConstValueIterator = BasicLayerRandomAccessIterator<
       GenericCloveView, typename DataType::List::Container>;
-    using ConstMemberIterator = LayerForwardIterator<
+    using ConstMemberIterator = LayerRandomAccessIterator<
       ConstMemberIteratorWrapper<GenericCloveView, typename DataType::Object::Container>>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
@@ -155,9 +155,9 @@ namespace garlic {
     using ViewType = GenericCloveView<Allocator>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
-    using ValueIterator = LayerForwardIterator<
+    using ValueIterator = LayerRandomAccessIterator<
       ValueIteratorWrapper<GenericCloveRef, typename DataType::List::Container, AllocatorType>>;
-    using MemberIterator = LayerForwardIterator<
+    using MemberIterator = LayerRandomAccessIterator<
       MemberIteratorWrapper<GenericCloveRef, typename DataType::Object::Container, AllocatorType>>;
     using ViewType::begin_list;
     using ViewType::end_list;

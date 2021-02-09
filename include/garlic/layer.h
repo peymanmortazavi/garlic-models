@@ -189,8 +189,136 @@ namespace garlic {
     Container container_;
   };
 
+  template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
+  class LayerRandomAccessIterator {
+  public:
+    using difference_type = DifferenceType;
+    using value_type = typename Container::output_type;
+    using reference_type = value_type;
+    using pointer_type = value_type*;
+    using iterator_category = std::random_access_iterator_tag;
+    using iterator_type = typename Container::iterator_type;
+    using self = LayerRandomAccessIterator;
+
+    LayerRandomAccessIterator() = default;
+    LayerRandomAccessIterator(Container container)
+      : container_(container) {}
+
+    self& operator ++ () {
+      ++container_.iterator;
+      return *this;
+    }
+
+    self operator ++ (int) {
+      auto it = *this;
+      ++container_.iterator;
+      return it;
+    }
+
+    self& operator -- () {
+      --container_.iterator;
+      return *this;
+    }
+
+    self operator -- (int) {
+      auto it = *this;
+      --container_.iterator;
+      return it;
+    }
+
+    bool operator == (const self& other) const {
+      return container_.iterator == other.container_.iterator;
+    }
+
+    bool operator != (const self& other) const {
+      return container_.iterator != other.container_.iterator;
+    }
+
+    bool operator < (const self& other) const {
+      return container_.iterator < other.container_.iterator;
+    }
+
+    bool operator > (const self& other) const {
+      return container_.iterator > other.container_.iterator;
+    }
+
+    bool operator <= (const self& other) const {
+      return container_.iterator <= other.container_.iterator;
+    }
+
+    bool operator >= (const self& other) const {
+      return container_.iterator >= other.container_.iterator;
+    }
+
+    self operator + (int value) const {
+      auto it = *this;
+      it.container_.iterator += value;
+      return it;
+    }
+
+    self& operator += (int value) {
+      container_.iterator += value;
+      return *this;
+    }
+
+    self operator - (int value) const {
+      auto it = *this;
+      it.container_.iterator -= value;
+      return it;
+    }
+
+    self& operator -= (int value) {
+      container_.iterator -= value;
+      return *this;
+    }
+
+    reference_type operator [] (int index) const {
+      return *(*this + index);
+    }
+
+    iterator_type& get_inner_iterator() { return container_.iterator; }
+    const iterator_type& get_inner_iterator() const {
+      return container_.iterator;
+    }
+    inline value_type operator * () const {
+      return container_.wrap();
+    }
+
+  private:
+    Container container_;
+  };
+
+  template<typename Container, typename DifferenceType>
+  static inline LayerRandomAccessIterator<Container, DifferenceType>
+  operator + (
+      int left,
+      LayerRandomAccessIterator<Container, DifferenceType> right) {
+    return right += left;
+  }
+
+  template<typename Container, typename DifferenceType>
+  static inline LayerRandomAccessIterator<Container, DifferenceType>
+  operator - (
+      int left,
+      LayerRandomAccessIterator<Container, DifferenceType> right) {
+    return right -= left;
+  }
+
+  template<typename Container, typename DifferenceType>
+  static inline DifferenceType
+  operator - (
+      const LayerRandomAccessIterator<Container, DifferenceType>& left,
+      const LayerRandomAccessIterator<Container, DifferenceType>& right) {
+    return left.get_inner_iterator() - right.get_inner_iterator();
+  }
+
   template<typename ValueType, typename Iterator>
   using BasicLayerForwardIterator = LayerForwardIterator<
+    BasicIteratorWrapper<ValueType, Iterator>
+    >;
+
+  template<typename ValueType, typename Iterator>
+  using BasicLayerRandomAccessIterator = LayerRandomAccessIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 

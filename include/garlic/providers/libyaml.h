@@ -42,8 +42,8 @@ namespace garlic::providers::libyaml {
     };
 
   public:
-    using ConstValueIterator = LayerForwardIterator<ValueIteratorWrapper>;
-    using ConstMemberIterator = LayerForwardIterator<MemberIteratorWrapper>;
+    using ConstValueIterator = LayerRandomAccessIterator<ValueIteratorWrapper>;
+    using ConstMemberIterator = LayerRandomAccessIterator<MemberIteratorWrapper>;
 
     YamlView (yaml_document_t* doc, yaml_node_t* node) : doc_(doc), node_(node) {}
     YamlView (yaml_document_t* doc) : doc_(doc) { node_ = yaml_document_get_root_node(doc); }
