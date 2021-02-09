@@ -30,7 +30,7 @@ TEST(Utility, StringSplitter) {
 TEST(Utility, Resolve) {
   auto assert_resolve = [](const auto& value, const char* path, const auto& cb) {
     auto fail = true;
-    resolve(value, path, [&fail, &cb](const auto& item){
+    resolve_layer_cb(value, path, [&fail, &cb](const auto& item){
         fail = false;
         cb(item);
         });
@@ -42,6 +42,11 @@ TEST(Utility, Resolve) {
     assert_resolve(value, "user.first_name", [](const auto& item) {
         test_readonly_string_value(item, "Peyman");
         });
+    ASSERT_STREQ(resolve<const char*>(value, "user.first_name", ""), "Peyman");
+    ASSERT_STREQ(resolve<const char*>(value, "random", ""), "");
+    ASSERT_EQ(safe_resolve(value, "user.first_name", 0), 0);
+    ASSERT_EQ(safe_resolve(value, "random", 0), 0);
+    ASSERT_STREQ(safe_resolve<const char*>(value, "user.first_name", ""), "Peyman");
     assert_resolve(value, "user.numbers.3", [](const auto& item) {
         test_readonly_int_value(item, 4);
         });

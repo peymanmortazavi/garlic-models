@@ -96,7 +96,7 @@ namespace garlic {
 
   template<ViewLayer LayerType, typename Callable>
   static inline void
-  resolve(const LayerType& value, std::string_view path, Callable&& cb) {
+  resolve_layer_cb(const LayerType& value, std::string_view path, Callable&& cb) {
     lazy_string_splitter parts{path};
     auto cursor = std::make_unique<LayerType>(value);
     while (true) {
@@ -114,31 +114,93 @@ namespace garlic {
         if (!found) return;
       } else if (cursor->is_list()) {
         size_t position;
-        if (std::from_chars(part.begin(), part.end(), position).ec != std::errc::invalid_argument) {
-          size_t index = 0;
-          for (const auto& item : cursor->get_list()) {
-            if (index == position) {
-              cursor = std::make_unique<LayerType>(item);
-              break;
-            }
-            index++;
-          }
-          if (index != position) return;
-        } else return;
+        if (std::from_chars(part.begin(), part.end(), position).ec == std::errc::invalid_argument)
+          return;
+        bool found = false;
+        get_item(*cursor, position, [&cursor, &found](const auto& result) {
+            cursor = std::make_unique<LayerType>(result);
+            found = true;
+            });
+        if (!found) return;
       } else return;
     }
   }
 
 
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  safe_resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
+    resolve_layer_cb(value, key, [&default_value](const auto& result) {
+        safe_decode<OutputType, Layer>(result, [&default_value](auto&& result){
+            default_value = result;
+            });
+        });
+    return default_value;
+  }
+
+
+  template<typename OutputType, ViewLayer Layer, typename Callable>
+  static inline void
+  safe_resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
+    resolve_layer_cb(value, key, [&cb](const auto& result) {
+        safe_decode<OutputType, Layer>(result, cb);
+        });
+  }
+
+
+  template<typename OutputType, ViewLayer Layer>
+  static inline OutputType
+  resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
+    resolve_layer_cb(value, key, [&default_value](const auto& result) {
+        default_value = decode<OutputType, Layer>(result);
+        });
+    return default_value;
+  }
+
+
+  template<typename OutputType, ViewLayer Layer, typename Callable>
+  static inline void
+  resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
+    resolve_layer_cb(value, key, [&cb](const auto& result) {
+        cb(decode<OutputType, Layer>(result, cb));
+        });
+  }
+
+
   template<typename Callable>
-  void get_member(const ViewLayer auto& value, const char* key, const Callable& cb) noexcept {
+  static inline void
+  get_member(const ViewLayer auto& value, const char* key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
 
   template<typename Callable>
-  void get_member(const ViewLayer auto& value, std::string_view key, const Callable& cb) noexcept {
+  static inline void
+  get_member(const ViewLayer auto& value, std::string_view key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
+  }
+
+
+  template<ViewLayer Layer, std::integral IndexType, typename Callable>
+  static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
+  get_item(const Layer& value, IndexType position, Callable&& cb) noexcept {
+    if (auto it = value.begin_list() += position; it < value.end_list()) cb(*it);
+  }
+
+
+  template<ViewLayer Layer, std::integral IndexType, typename Callable>
+  static inline std::enable_if_t<!std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
+  get_item(const Layer& value, IndexType position, Callable&& cb) noexcept {
+    auto it = value.begin_list();
+    IndexType counter = 0;
+    while (it != value.end_list()) {
+      if (counter == position) {
+        cb(*it);
+        return;
+      }
+      ++counter;
+      ++it;
+    }
   }
 
 
