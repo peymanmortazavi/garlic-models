@@ -36,9 +36,9 @@ namespace garlic::providers::yamlcpp {
 
   public:
     using ValueType = YAML::Node;
-    using ConstValueIterator = BasicLayerForwardIterator<YamlNode, typename ValueType::const_iterator>;
-    using ConstMemberIterator = LayerForwardIterator<MemberIteratorWrapper<typename ValueType::const_iterator>>;
-    using MemberIterator = LayerForwardIterator<MemberIteratorWrapper<typename ValueType::iterator>>;
+    using ConstValueIterator = BasicForwardIterator<YamlNode, typename ValueType::const_iterator>;
+    using ConstMemberIterator = ForwardIterator<MemberIteratorWrapper<typename ValueType::const_iterator>>;
+    using MemberIterator = ForwardIterator<MemberIteratorWrapper<typename ValueType::iterator>>;
 
     YamlNode () = default;
     YamlNode (const ValueType& node) : node_(node) {}

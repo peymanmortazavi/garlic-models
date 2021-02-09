@@ -150,7 +150,7 @@ namespace garlic {
   };
 
   template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
-  class LayerForwardIterator {
+  class ForwardIterator {
   public:
     using difference_type = DifferenceType;
     using value_type = typename Container::output_type;
@@ -158,10 +158,10 @@ namespace garlic {
     using pointer = typename Container::output_type*;
     using iterator_category = std::forward_iterator_tag;
     using iterator_type = typename Container::iterator_type;
-    using self = LayerForwardIterator;
+    using self = ForwardIterator;
 
-    LayerForwardIterator() = default;
-    LayerForwardIterator(Container container)
+    ForwardIterator() = default;
+    ForwardIterator(Container container)
       : container_(std::move(container)) {}
 
     self& operator ++ () {
@@ -190,7 +190,7 @@ namespace garlic {
   };
 
   template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
-  class LayerRandomAccessIterator {
+  class RandomAccessIterator {
   public:
     using difference_type = DifferenceType;
     using value_type = typename Container::output_type;
@@ -198,10 +198,10 @@ namespace garlic {
     using pointer_type = value_type*;
     using iterator_category = std::random_access_iterator_tag;
     using iterator_type = typename Container::iterator_type;
-    using self = LayerRandomAccessIterator;
+    using self = RandomAccessIterator;
 
-    LayerRandomAccessIterator() = default;
-    LayerRandomAccessIterator(Container container)
+    RandomAccessIterator() = default;
+    RandomAccessIterator(Container container)
       : container_(container) {}
 
     self& operator ++ () {
@@ -289,36 +289,36 @@ namespace garlic {
   };
 
   template<typename Container, typename DifferenceType>
-  static inline LayerRandomAccessIterator<Container, DifferenceType>
+  static inline RandomAccessIterator<Container, DifferenceType>
   operator + (
       int left,
-      LayerRandomAccessIterator<Container, DifferenceType> right) {
+      RandomAccessIterator<Container, DifferenceType> right) {
     return right += left;
   }
 
   template<typename Container, typename DifferenceType>
-  static inline LayerRandomAccessIterator<Container, DifferenceType>
+  static inline RandomAccessIterator<Container, DifferenceType>
   operator - (
       int left,
-      LayerRandomAccessIterator<Container, DifferenceType> right) {
+      RandomAccessIterator<Container, DifferenceType> right) {
     return right -= left;
   }
 
   template<typename Container, typename DifferenceType>
   static inline DifferenceType
   operator - (
-      const LayerRandomAccessIterator<Container, DifferenceType>& left,
-      const LayerRandomAccessIterator<Container, DifferenceType>& right) {
+      const RandomAccessIterator<Container, DifferenceType>& left,
+      const RandomAccessIterator<Container, DifferenceType>& right) {
     return left.get_inner_iterator() - right.get_inner_iterator();
   }
 
   template<typename ValueType, typename Iterator>
-  using BasicLayerForwardIterator = LayerForwardIterator<
+  using BasicForwardIterator = ForwardIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 
   template<typename ValueType, typename Iterator>
-  using BasicLayerRandomAccessIterator = LayerRandomAccessIterator<
+  using BasicRandomAccessIterator = RandomAccessIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 
