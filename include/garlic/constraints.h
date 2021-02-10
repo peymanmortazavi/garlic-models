@@ -72,10 +72,18 @@ namespace garlic {
   }
 
 
-  void set_constraint_properties(const ViewLayer auto& value, ConstraintProperties& props) noexcept {
-    get_member(value, "fatal", [&props](const auto& item) { props.fatal = item.get_bool(); });
-    get_member(value, "message", [&props](const auto& item) { props.message = item.get_cstr(); });
-    get_member(value, "name", [&props](const auto& item) { props.name = item.get_cstr(); });
+  template<ViewLayer Layer>
+  static inline ConstraintProperties
+  build_constraint_properties(
+      Layer layer,
+      const char* name = "",
+      const char* message = "",
+      bool fatal = false) noexcept {
+    return ConstraintProperties {
+      .fatal = get(layer, "fatal", fatal),
+      .name = get(layer, "name", name),
+      .message = get(layer, "message", message)
+    };
   }
 
 
