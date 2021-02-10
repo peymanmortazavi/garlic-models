@@ -322,8 +322,7 @@ namespace garlic::providers::rapidjson {
   };
 
 
-  class Json {
-  public:
+  struct Json {
     static JsonDocument load(const char* data) {
       ::rapidjson::Document doc;
       doc.Parse(data);
