@@ -45,7 +45,7 @@ namespace garlic::parsing {
         std::move(constraint),
         build_constraint_properties(layer, "list_constraint", "", true),
         get(layer, "ignore_details", false)
-    );
+        );
   }
 
 
@@ -59,7 +59,7 @@ namespace garlic::parsing {
         get(layer, "strict", true),
         build_constraint_properties(layer, "tuple_constraint"),
         get(layer, "ignore_details", false)
-    );
+        );
   }
 
 
@@ -103,10 +103,9 @@ namespace garlic::parsing {
             build_constraint_properties(layer, "", "", true),
             get(layer, "hide", false),
             get(layer, "ignore_details", false)
-        );
-        if (!ptr) {
+            );
+        if (!ptr)
           parser.add_field_dependency(field.get_cstr(), result);
-        }
         });
     return result;
   }
@@ -173,7 +172,7 @@ namespace garlic::parsing {
         parser.parse_constraint(key, [&ptr](auto&& constraint) {
             ptr = std::move(constraint);
             });
-       });
+        });
   }
 
   
@@ -190,7 +189,7 @@ namespace garlic::parsing {
               container.emplace_back(std::move(constraint));
               });
           }
-        });
+          });
   }
 
 }
