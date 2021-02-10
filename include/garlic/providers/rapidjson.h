@@ -7,6 +7,8 @@
 #include "../layer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/writer.h"
 
 
 namespace garlic::providers::rapidjson {
@@ -323,18 +325,39 @@ namespace garlic::providers::rapidjson {
 
 
   struct Json {
-    static JsonDocument load(const char* data) {
+    static inline JsonDocument load(const char* data) {
       ::rapidjson::Document doc;
       doc.Parse(data);
       return JsonDocument{std::move(doc)};
     }
 
-    static JsonDocument load(FILE * file) {
+    static inline JsonDocument load(FILE * file) {
       char read_buffer[65536];
       ::rapidjson::FileReadStream input_stream(file, read_buffer, sizeof(read_buffer));
       ::rapidjson::Document doc;
       doc.ParseStream(input_stream);
       return JsonDocument{std::move(doc)};
+    }
+
+    static inline void dump(const JsonDocument& doc, FILE * file) {
+      char write_buffer[65536];
+      ::rapidjson::FileWriteStream os(file, write_buffer, sizeof(write_buffer));
+      ::rapidjson::Writer<::rapidjson::FileWriteStream> writer(os);
+      doc.get_inner_doc().Accept(writer);
+    }
+
+    static inline void dump(JsonView view, FILE * file) {
+      char write_buffer[65536];
+      ::rapidjson::FileWriteStream os(file, write_buffer, sizeof(write_buffer));
+      ::rapidjson::Writer<::rapidjson::FileWriteStream> writer(os);
+      view.get_inner_value().Accept(writer);
+    }
+
+    static inline void dump(JsonRef ref, FILE * file) {
+      char write_buffer[65536];
+      ::rapidjson::FileWriteStream os(file, write_buffer, sizeof(write_buffer));
+      ::rapidjson::Writer<::rapidjson::FileWriteStream> writer(os);
+      ref.get_inner_value().Accept(writer);
     }
   };
 
