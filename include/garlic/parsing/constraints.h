@@ -12,176 +12,145 @@ namespace garlic::parsing {
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_any(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props {};
-    set_constraint_properties(value, props);
+  parse_any(const ViewLayer auto& layer, Parser parser) noexcept {
     std::vector<ConstraintPtrOf<Destination>> constraints;
-    read_constraints<Destination>(value, parser, "of", constraints);
+    read_constraints<Destination>(layer, parser, "of", constraints);
     return std::make_shared<AnyConstraint<Destination>>(
-        std::move(constraints), std::move(props)
+        std::move(constraints),
+        build_constraint_properties(layer)
     );
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_all(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props {};
-    set_constraint_properties(value, props);
+  parse_all(const ViewLayer auto& layer, Parser parser) noexcept {
     std::vector<ConstraintPtrOf<Destination>> constraints;
-    bool hide = true;
-    bool ignore_details = false;
-    read_constraints<Destination>(value, parser, "of", constraints);
-    get_member(value, "hide", [&hide](const auto& result) {
-        hide = result.get_bool();
-        });
-    get_member(value, "ignore_details", [&ignore_details](const auto& result) {
-        ignore_details = result.get_bool();
-        });
+    read_constraints<Destination>(layer, parser, "of", constraints);
     return std::make_shared<AllConstraint<Destination>>(
-        std::move(constraints), std::move(props), hide, ignore_details
+        std::move(constraints),
+        build_constraint_properties(layer),
+        get(layer, "hide", true),
+        get(layer, "ignore_details", false)
         );
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_list(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .fatal = true, .name = "list_constraint" };
-    set_constraint_properties(value, props);
+  parse_list(const ViewLayer auto& layer, Parser parser) noexcept {
     ConstraintPtrOf<Destination> constraint;
-    read_constraint<Destination>(value, parser, "of", constraint);
-    bool ignore_details = false;
-    get_member(value, "ignore_details",
-        [&ignore_details](const auto& item) {
-          ignore_details = item.get_bool();
-          });
+    read_constraint<Destination>(layer, parser, "of", constraint);
     return std::make_shared<ListConstraint<Destination>>(
-        std::move(constraint), std::move(props)
-    );
+        std::move(constraint),
+        build_constraint_properties(layer, "list_constraint", "", true),
+        get(layer, "ignore_details", false)
+        );
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_tuple(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .fatal = false, .name = "tuple_constraint"};
-    set_constraint_properties(value, props);
+  parse_tuple(const ViewLayer auto& layer, Parser parser) noexcept {
     std::vector<ConstraintPtrOf<Destination>> constraints;
-    read_constraints<Destination>(value, parser, "items", constraints);
-    bool strict = true;
-    bool ignore_details = false;
-    get_member(value, "strict", [&strict](const auto& item) {
-        strict = item.get_bool();
-    });
-    get_member(value, "ignore_details", [&ignore_details](const auto& item) {
-        ignore_details = item.get_bool();
-    });
+    read_constraints<Destination>(layer, parser, "items", constraints);
     return std::make_shared<TupleConstraint<Destination>>(
-        std::move(constraints), strict, std::move(props), ignore_details
-    );
+        std::move(constraints),
+        get(layer, "strict", true),
+        build_constraint_properties(layer, "tuple_constraint"),
+        get(layer, "ignore_details", false)
+        );
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_range(const ViewLayer auto& value, Parser parser) noexcept {
+  parse_range(const ViewLayer auto& layer, Parser parser) noexcept {
     typename RangeConstraint<Destination>::SizeType min;
     typename RangeConstraint<Destination>::SizeType max;
-    get_member(value, "min", [&min](const auto& v) {
+    get_member(layer, "min", [&min](const auto& v) {
         if (v.is_double()) min = v.get_double(); else min = v.get_int();
         });
-    get_member(value, "max", [&max](const auto& v) {
+    get_member(layer, "max", [&max](const auto& v) {
         if (v.is_double()) max = v.get_double(); else max = v.get_int();
         });
-    ConstraintProperties props { .fatal = false, .name = "range_constraint"};
-    set_constraint_properties(value, props);
-    return std::make_shared<RangeConstraint<Destination>>(min, max, std::move(props));
-  }
-
-
-  template<ViewLayer Destination, typename Parser>
-  static ConstraintPtrOf<Destination>
-  parse_regex(const ViewLayer auto& value, Parser parser) noexcept {
-    std::string pattern;
-    ConstraintProperties props { .fatal = false, .name = "regex_constraint"};
-    set_constraint_properties(value, props);
-    get_member(value, "pattern", [&pattern](const auto& v) {
-        pattern = v.get_cstr();
-        });
-    return std::make_shared<RegexConstraint<Destination>>(
-        std::move(pattern), std::move(props)
+    return std::make_shared<RangeConstraint<Destination>>(
+        min, max,
+        build_constraint_properties(layer, "range_constraint")
         );
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_field(const ViewLayer auto& value, Parser parser) noexcept {
+  parse_regex(const ViewLayer auto& layer, Parser parser) noexcept {
+    return std::make_shared<RegexConstraint<Destination>>(
+        get<std::string>(layer, "pattern"),
+        build_constraint_properties(layer, "regex_constraint")
+        );
+  }
+
+
+  template<ViewLayer Destination, typename Parser>
+  static ConstraintPtrOf<Destination>
+  parse_field(const ViewLayer auto& layer, Parser parser) noexcept {
     using FieldPtr = std::shared_ptr<Field<Destination>>;
-    ConstraintProperties props { .fatal = true };
-    set_constraint_properties(value, props);
-    bool hide = false;
-    bool ignore_details = false;
     std::shared_ptr<FieldConstraint<Destination>> result;
-    get_member(value, "hide", [&hide](const auto& hide_value) {
-        hide = hide_value.get_bool();
-        });
-    get_member(value, "ignore_details", [&ignore_details](const auto& item) {
-        ignore_details = item.get_bool();
-        });
-    get_member(value, "field", [&](const auto& field) {
+    get_member(layer, "field", [&result, &layer, &parser](const auto& field) {
         auto ptr = parser.resolve_field_reference(field.get_cstr());
         result = std::make_shared<FieldConstraint<Destination>>(
-            std::make_shared<FieldPtr>(ptr), std::move(props),
-            hide, ignore_details
-        );
-        if (!ptr) {
+            std::make_shared<FieldPtr>(ptr),
+            build_constraint_properties(layer, "", "", true),
+            get(layer, "hide", false),
+            get(layer, "ignore_details", false)
+            );
+        if (!ptr)
           parser.add_field_dependency(field.get_cstr(), result);
-        }
-    });
+        });
     return result;
   }
 
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_map(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .fatal = false, .name = "map_constraint"};
-    set_constraint_properties(value, props);
+  parse_map(const ViewLayer auto& layer, Parser parser) noexcept {
     ConstraintPtrOf<Destination> key_constraint;
     ConstraintPtrOf<Destination> value_constraint;
-    read_constraint<Destination>(value, parser, "key", key_constraint);
-    read_constraint<Destination>(value, parser, "value", value_constraint);
-    bool ignore_details = false;
-    get_member(value, "ignore_details", [&ignore_details](const auto& item) {
-        ignore_details = item.get_bool();
-        });
+    read_constraint<Destination>(layer, parser, "key", key_constraint);
+    read_constraint<Destination>(layer, parser, "value", value_constraint);
     return std::make_shared<MapConstraint<Destination>>(
         std::move(key_constraint), std::move(value_constraint),
-        std::move(props), ignore_details
+        build_constraint_properties(layer, "map_constraint"),
+        get(layer, "ignore_details", false)
         );
   }
 
   template<ViewLayer Destination, typename Parser>
   static ConstraintPtrOf<Destination>
-  parse_literal(const ViewLayer auto& value, Parser parser) noexcept {
-    ConstraintProperties props { .fatal = false, .name = "literal_constraint" };
-    set_constraint_properties(value, props);
+  parse_literal(const ViewLayer auto& layer, Parser parser) noexcept {
+    auto props = build_constraint_properties(layer, "literal_constraint");
     ConstraintPtrOf<Destination> result;
-    get_member(value, "value", [&props, &result](const auto& item) {
-        if (item.is_int())
+    get_member(layer, "value", [&props, &result](const auto& item) {
+        if (item.is_int()) {
           result = std::make_shared<LiteralConstraint<Destination, int>>(
               std::move(props), item.get_int());
-        else if (item.is_double())
+          return;
+        }
+        else if (item.is_double()) {
           result = std::make_shared<LiteralConstraint<Destination, double>>(
               std::move(props), item.get_double());
-        else if (item.is_bool())
+          return;
+        }
+        else if (item.is_bool()) {
           result = std::make_shared<LiteralConstraint<Destination, bool>>(
               std::move(props), item.get_bool());
-        else if (item.is_string())
+          return;
+        }
+        else if (item.is_string()) {
           result = std::make_shared<LiteralConstraint<Destination, std::string>>(
               std::move(props), item.get_string());
+          return;
+        }
         else if (item.is_null())
           result = std::make_shared<LiteralConstraint<Destination>>(std::move(props));
         });
@@ -195,32 +164,32 @@ namespace garlic::parsing {
   template<ViewLayer Destination, typename ParserType>
   static void
   read_constraint(
-      const ViewLayer auto& value,
+      const ViewLayer auto& layer,
       ParserType& parser,
       const char* name,
       ConstraintPtrOf<Destination>& ptr) {
-    get_member(value, name, [&parser, &ptr](const auto& key) {
+    get_member(layer, name, [&parser, &ptr](const auto& key) {
         parser.parse_constraint(key, [&ptr](auto&& constraint) {
             ptr = std::move(constraint);
             });
-       });
+        });
   }
 
   
   template<ViewLayer Destination, typename ParserType>
   static void
   read_constraints(
-      const ViewLayer auto& value,
+      const ViewLayer auto& layer,
       ParserType& parser,
       const char* name,
       std::vector<ConstraintPtrOf<Destination>>& container) {
-    get_member(value, name, [&parser, &container](const auto& items) {
+    get_member(layer, name, [&parser, &container](const auto& items) {
         for (const auto& item : items.get_list()) {
           parser.parse_constraint(item, [&container](auto&& constraint) {
               container.emplace_back(std::move(constraint));
               });
           }
-        });
+          });
   }
 
 }

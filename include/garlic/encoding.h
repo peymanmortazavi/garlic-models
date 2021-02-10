@@ -26,6 +26,22 @@ namespace garlic {
   };
 
   template<typename Layer>
+  struct coder<bool, Layer> {
+    static inline bool
+    decode(Layer layer) { return layer.get_bool(); }
+
+    static inline void
+    encode(Layer layer, bool value) { layer.set_bool(value); }
+
+    template<typename Callable>
+    static inline void
+    safe_decode(Layer layer, Callable&& cb) {
+      if (layer.is_bool())
+        cb(layer.get_bool());
+    }
+  };
+
+  template<typename Layer>
   struct coder<std::string, Layer> {
     static inline std::string
     decode(Layer layer) { return layer.get_string(); }
