@@ -160,54 +160,45 @@ namespace garlic::providers::rapidjson {
         AllocatorType& allocator
         ) : JsonView(value), value_(std::forward<T>(value)), allocator_(allocator) {}
 
-    template<typename Target>
-    using DocumentRef = 
-        std::enable_if_t<std::is_reference<Target>::value, ProviderDocumentType&>;
+    template<typename Target, typename Type>
+    using enable_for_reference_type =
+        std::enable_if_t<std::is_reference<Target>::value, Type>;
 
-    template<typename Target>
-    using Document =
-        std::enable_if_t<std::is_same<Target, ProviderDocumentType>::value, ProviderDocumentType>;
+    template<typename Target, typename Type>
+    using enable_for_value_type =
+        std::enable_if_t<std::is_same<Target, ProviderValueType>::value, Type>;
 
-    template<typename Target>
-    using DocumentRoot =
-        std::enable_if_t<std::is_reference<Target>::value, DocumentType&>;
-
-    template<typename Target>
-    using AllocatorRef =
-        std::enable_if_t<std::is_same<Target, ProviderValueType>::value, AllocatorType&>;
-
-    template<typename Target>
-    using DocumentRef2 =
-        std::enable_if_t<std::is_same<Target, ProviderValueType>::value, ProviderDocumentType&>;
-
-    template<typename Target>
-    using DocumentRef3 =
-        std::enable_if_t<std::is_same<Target, ProviderValueType>::value, DocumentType&>;
+    template<typename Target, typename Type>
+    using enable_for_document_type =
+        std::enable_if_t<std::is_same<Target, ProviderDocumentType>::value, Type>;
 
     template<typename Target = T>
-    JsonWrapper(DocumentRef<Target> doc)
+    JsonWrapper(enable_for_reference_type<Target, ProviderDocumentType&> doc)
       : JsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
 
     template<typename Target = T>
-    JsonWrapper(DocumentRoot<Target> doc)
+    JsonWrapper(enable_for_reference_type<Target, DocumentType&> doc)
       : JsonView(doc.get_inner_value()),
         value_(doc.get_inner_value()),
         allocator_(doc.get_allocator()) {}
 
     template<typename Target = T>
-    JsonWrapper(Document<Target> doc = ProviderDocumentType())
-      : value_(std::forward<Target>(doc)), JsonView(value_), allocator_(value_.GetAllocator()) {}
+    JsonWrapper(
+        enable_for_document_type<Target, ProviderDocumentType> doc = ProviderDocumentType()
+        ) : value_(std::forward<Target>(doc)),
+            JsonView(value_),
+            allocator_(value_.GetAllocator()) {}
 
     template<typename Target = T>
-    JsonWrapper(AllocatorRef<Target> allocator)
+    JsonWrapper(enable_for_value_type<Target, AllocatorType&> allocator)
       : JsonView(value_), allocator_(allocator) {}
 
     template<typename Target = T>
-    JsonWrapper(DocumentRef2<Target> doc)
+    JsonWrapper(enable_for_value_type<Target, ProviderDocumentType&> doc)
       : JsonView(value_), allocator_(doc.GetAllocator()) {}
 
     template<typename Target = T>
-    JsonWrapper(DocumentRef3<Target> doc)
+    JsonWrapper(enable_for_value_type<Target, DocumentType&> doc)
       : JsonView(value_), allocator_(doc.get_allocator()) {}
 
     void set_string(const char* value) {
