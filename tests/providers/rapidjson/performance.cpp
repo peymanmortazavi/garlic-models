@@ -50,17 +50,16 @@ static void BM_CreateJsonDocument_Garlic(benchmark::State& state) {
   int iterations = (rand() % 1) + 100000;
   for (auto _ : state) {
     JsonDocument doc;
-    auto ref = doc.get_reference();
-    ref.set_list();
+    doc.set_list();
     for (auto i = 0; i < iterations; ++i) {
-      ref.push_back(12);
-      ref.push_back("Some Text Value Here");
-      ref.push_back_builder([](auto item) {
+      doc.push_back(12);
+      doc.push_back("Some Text Value Here");
+      doc.push_back_builder([](auto item) {
           item.set_list();
           item.push_back(12);
           });
     }
-    state.counters["array"] += doc.get_inner_doc().Capacity();
+    state.counters["array"] += doc.get_inner_value().Capacity();
   }
 }
 
