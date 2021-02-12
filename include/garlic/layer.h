@@ -35,7 +35,7 @@ namespace garlic {
     { *it } -> member_pair;
   };
 
-  template<typename T> concept ViewLayer = std::copy_constructible<T> && requires(const T& t) {
+  template<typename T> concept ViewLayer = requires(const T& t) {
     typename ConstValueIteratorOf<T>;
     typename ConstMemberIteratorOf<T>;
 
@@ -63,6 +63,8 @@ namespace garlic {
     { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
     { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
+
+    // todo get_view must be a requirement.
   };
 
   template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
