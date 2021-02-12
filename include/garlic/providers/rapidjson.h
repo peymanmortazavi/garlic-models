@@ -3,6 +3,7 @@
 
 #include <iterator>
 #include <string>
+#include <type_traits>
 
 #include "../layer.h"
 #include "rapidjson/document.h"
@@ -124,14 +125,17 @@ namespace garlic::providers::rapidjson {
     const ValueType& value_;
   };
 
-  class JsonRef : public JsonView {
+  template<typename T>
+  class JsonWrapper : public JsonView {
   public:
     using DocumentType = ::rapidjson::Document;
+    using ReferenceType = JsonWrapper<ValueType&>;
+    using ViewType = JsonView;
     using AllocatorType = DocumentType::AllocatorType;
     using ValueIterator = RandomAccessIterator<
-      ValueIteratorWrapper<JsonRef, typename ::rapidjson::Value::ValueIterator, AllocatorType>>;
+      ValueIteratorWrapper<JsonWrapper, typename ::rapidjson::Value::ValueIterator, AllocatorType>>;
     using MemberIterator = RandomAccessIterator<
-      MemberIteratorWrapper<JsonRef, typename ::rapidjson::Value::MemberIterator, AllocatorType>>;
+      MemberIteratorWrapper<JsonWrapper, typename ::rapidjson::Value::MemberIterator, AllocatorType>>;
     using JsonView::begin_list;
     using JsonView::end_list;
     using JsonView::begin_member;
@@ -140,16 +144,50 @@ namespace garlic::providers::rapidjson {
     using JsonView::get_list;
     using JsonView::get_object;
 
-    JsonRef(
-        ValueType& value,
-        DocumentType::AllocatorType& allocator
-    ) : JsonView(value), value_(value), allocator_(allocator) {}
+    JsonWrapper(
+        std::add_rvalue_reference_t<T> value,
+        AllocatorType& allocator
+        ) : JsonView(value), value_(std::forward<T>(value)), allocator_(allocator) {}
 
-    JsonRef(DocumentType& doc) : JsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
+    template<typename Target>
+    using DocumentRef = 
+        std::enable_if_t<std::is_reference<Target>::value, DocumentType&>;
 
-    void set_string(const char* value) { value_.SetString(value, allocator_); }
-    void set_string(const std::string& value) { value_.SetString(value.data(), value.length(), allocator_); }
-    void set_string(std::string_view value) { value_.SetString(value.data(), value.length(), allocator_); }
+    template<typename Target>
+    using Document =
+        std::enable_if_t<std::is_same<Target, DocumentType>::value, DocumentType>;
+
+    template<typename Target>
+    using DocumentRoot =
+        std::enable_if_t<std::is_reference<Target>::value, JsonWrapper<DocumentType>&>;
+
+    template<typename Target>
+    using AllocatorRef =
+        std::enable_if_t<std::is_same<Target, ValueType>::value, AllocatorType&>;
+
+    template<typename Target = T>
+    JsonWrapper(DocumentRef<Target> doc)
+      : JsonView(doc), value_(doc), allocator_(doc.GetAllocator()) {}
+
+    template<typename Target = T>
+    JsonWrapper(DocumentRoot<Target> doc)
+      : JsonView(doc.get_inner_value()),
+        value_(doc.get_inner_value()),
+        allocator_(doc.get_allocator()) {}
+
+    template<typename Target = T>
+    JsonWrapper(Document<Target> doc = DocumentType())
+      : value_(std::forward<Target>(doc)), JsonView(value_), allocator_(value_.GetAllocator()) {}
+
+    void set_string(const char* value) {
+      value_.SetString(value, allocator_);
+    }
+    void set_string(const std::string& value) {
+      value_.SetString(value.data(), value.length(), allocator_);
+    }
+    void set_string(std::string_view value) {
+      value_.SetString(value.data(), value.length(), allocator_);
+    }
     void set_int(int value) { value_.SetInt(value); }
     void set_double(double value) { value_.SetDouble(value); }
     void set_bool(bool value) { value_.SetBool(value); }
@@ -157,14 +195,14 @@ namespace garlic::providers::rapidjson {
     void set_list() { value_.SetArray(); }
     void set_object() { value_.SetObject(); }
 
-    JsonRef& operator = (double value) { this->set_double(value); return *this; }
-    JsonRef& operator = (int value) { this->set_int(value); return *this; }
-    JsonRef& operator = (const char* value) { this->set_string(value); return *this; }
-    JsonRef& operator = (const std::string& value) { this->set_string(value); return *this; }
-    JsonRef& operator = (std::string_view value) { this->set_string(value); return *this; }
-    JsonRef& operator = (bool value) { this->set_bool(value); return *this; }
+    JsonWrapper& operator = (double value) { this->set_double(value); return *this; }
+    JsonWrapper& operator = (int value) { this->set_int(value); return *this; }
+    JsonWrapper& operator = (const char* value) { this->set_string(value); return *this; }
+    JsonWrapper& operator = (const std::string& value) { this->set_string(value); return *this; }
+    JsonWrapper& operator = (std::string_view value) { this->set_string(value); return *this; }
+    JsonWrapper& operator = (bool value) { this->set_bool(value); return *this; }
 
-    bool operator == (const JsonRef& ref) const {
+    bool operator == (const JsonWrapper& ref) const {
       return ref.value_ == value_;
     }
 
@@ -174,42 +212,46 @@ namespace garlic::providers::rapidjson {
 
     ValueIterator begin_list() { return ValueIterator({value_.Begin(), &allocator_}); }
     ValueIterator end_list() { return ValueIterator({value_.End(), &allocator_}); }
-    auto get_list() { return ListRange<JsonRef>{*this}; }
+    auto get_list() { return ListRange<JsonWrapper>{*this}; }
 
     MemberIterator begin_member() { return MemberIterator({value_.MemberBegin(), &allocator_}); }
     MemberIterator end_member() { return MemberIterator({value_.MemberEnd(), &allocator_}); }
-    auto get_object() { return MemberRange<JsonRef>{*this}; }
-
-    JsonRef get_reference() { return JsonRef{value_, allocator_}; }
+    auto get_object() { return MemberRange<JsonWrapper>{*this}; }
 
     // list functions.
     void clear() { value_.Clear(); }
     template<typename Callable>
     void push_back_builder(Callable&& cb) {
       ValueType value;
-      cb(JsonRef{value, allocator_});
-      value_.PushBack(value.Move(), allocator_);
+      cb(ReferenceType{value, allocator_});
+      value_.PushBack(value, allocator_);
     }
     void push_back() { value_.PushBack(ValueType().Move(), allocator_); }
     void push_back(const JsonView& value) {
       value_.PushBack(ValueType(value.get_inner_value(), allocator_), allocator_);
     }
+    void push_back(ValueType& value) {
+      value_.PushBack(value, allocator_);
+    }
+    void push_back(ValueType&& value) {
+      value_.PushBack(value, allocator_);
+    }
     void push_back(const char* value) {
-      value_.PushBack(ValueType().SetString(value, allocator_), allocator_);
+      push_back(ValueType().SetString(value, allocator_));
     }
     void push_back(const std::string& value) {
-      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
+      push_back(ValueType().SetString(value.data(), value.length(), allocator_));
     }
     void push_back(std::string_view value) {
-      value_.PushBack(ValueType().SetString(value.data(), value.length(), allocator_), allocator_);
+      push_back(ValueType().SetString(value.data(), value.length(), allocator_));
     }
-    void push_back(int value) { value_.PushBack(ValueType(value).Move(), allocator_); }
-    void push_back(double value) { value_.PushBack(ValueType(value).Move(), allocator_); }
-    void push_back(bool value) { value_.PushBack(ValueType(value).Move(), allocator_); }
+    void push_back(int value) { push_back(ValueType(value)); }
+    void push_back(double value) { push_back(ValueType(value)); }
+    void push_back(bool value) { push_back(ValueType(value)); }
     void pop_back() { value_.PopBack(); }
-    void erase(const ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator position) { value_.Erase(position.get_inner_iterator()); }
-    void erase(const ValueIterator first, const ValueIterator last) {
+    void erase(ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
+    void erase(ValueIterator position) { value_.Erase(position.get_inner_iterator()); }
+    void erase(ValueIterator first, ValueIterator last) {
       value_.Erase(first.get_inner_iterator(), last.get_inner_iterator());
     }
     void erase(const ConstValueIterator first, const ConstValueIterator last) {
@@ -228,122 +270,121 @@ namespace garlic::providers::rapidjson {
     MemberIterator find_member(const JsonView& value) {
       return MemberIterator({value_.FindMember(value.get_inner_value()), &allocator_});
     }
-    void add_member(const JsonView& key, const JsonView& value) {
-      value_.AddMember(
-        ValueType(key.get_inner_value(), allocator_),
-        ValueType(value.get_inner_value(), allocator_),
-        allocator_
-      );
+
+    void add_member(ValueType&& key, ValueType&& value) {
+      value_.AddMember(key, value, allocator_);
     }
 
-    void add_member(const JsonView& key) {
+    void add_member(ValueType& key, ValueType& value) {
+      value_.AddMember(key, value, allocator_);
+    }
+
+    void add_member(const char* key, ValueType&& value) {
       value_.AddMember(
-        ValueType(key.get_inner_value(), allocator_),
-        ValueType().Move(),
-        allocator_
-      );
+          ValueType().SetString(key, allocator_),
+          value,
+          allocator_);
+    }
+
+    void add_member(const char* key, ValueType& value) {
+      value_.AddMember(
+          ValueType().SetString(key, allocator_),
+          value,
+          allocator_);
+    }
+
+    void add_member(JsonView key, JsonView value) {
+      add_member(
+          ValueType(key.get_inner_value(), allocator_),
+          ValueType(value.get_inner_value(), allocator_)
+          );
+    }
+
+    void add_member(JsonView key) {
+      add_member(
+          ValueType(key.get_inner_value(), allocator_),
+          ValueType()
+          );
     }
 
     template<typename Callable>
     void add_member_builder(const char* key, Callable&& cb) {
       ValueType value;
-      cb(JsonRef(value, allocator_));
-      this->add_member(ValueType().SetString(key, allocator_), value.Move());
+      cb(JsonWrapper<ValueType&>(value, allocator_));
+      add_member(key, value);
     }
-    void add_member(const char* key) { this->add_member(ValueType().SetString(key, allocator_)); }
-    void add_member(const char* key, const JsonRef& value) {
-      this->add_member(ValueType().SetString(key, allocator_), value.get_inner_value());
+    void add_member(const char* key) {
+      add_member(ValueType().SetString(key, allocator_));
+    }
+    void add_member(const char* key, const JsonWrapper& value) {
+      add_member(key, value.get_inner_value());
     }
     void add_member(const char* key, const char* value) {
-      this->add_member(key, JsonRef{ValueType().SetString(value, allocator_), allocator_});
+      add_member(key, ValueType().SetString(value, allocator_));
     }
     void add_member(const char* key, const std::string& value) {
-      this->add_member(
+      add_member(
           key,
-          JsonRef{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
-      );
+          ValueType().SetString(value.data(), value.length(), allocator_));
     }
     void add_member(const char* key, std::string_view value) {
-      this->add_member(
+      add_member(
           key,
-          JsonRef{ValueType().SetString(value.data(), value.length(), allocator_), allocator_}
-      );
+          ValueType().SetString(value.data(), value.length(), allocator_));
     }
     void add_member(const char* key, double value) {
-      this->add_member(key, JsonRef{ValueType().SetDouble(value), allocator_});
+      add_member(key, ValueType(value));
     }
     void add_member(const char* key, int value) {
-      this->add_member(key, JsonRef{ValueType().SetInt(value), allocator_});
+      add_member(key, ValueType(value));
     }
     void add_member(const char* key, bool value) {
-      this->add_member(key, JsonRef{ValueType().SetBool(value), allocator_});
+      add_member(key, ValueType(value));
     }
 
     void remove_member(const char* key) { value_.RemoveMember(key); }
     void remove_member(const JsonView& key) { value_.RemoveMember(key.get_inner_value()); }
     void erase_member(MemberIterator position) { value_.EraseMember(position.get_inner_iterator()); }
+    void erase_member(ConstMemberIterator position) {
+      value_.EraseMember(position.get_inner_iterator());
+    }
 
+    T& get_inner_value() { return value_; }
+    const T& get_inner_value() const { return value_; }
+    JsonWrapper<ValueType&> get_reference() {
+      return JsonWrapper<ValueType&>(value_, allocator_);
+    }
     AllocatorType& get_allocator() { return allocator_; }
 
   private:
-    ValueType& value_;
+    T value_;
     AllocatorType& allocator_;
   };
 
-  class JsonDocument {
-  public:
-    JsonDocument() {}
-    explicit JsonDocument(::rapidjson::Document&& doc) : doc_(std::move(doc)) {}
-
-    JsonRef get_reference() { return JsonRef(doc_); }
-    JsonView get_view() const { return JsonView(doc_); }
-    ::rapidjson::Document& get_inner_doc() { return doc_; }
-    const ::rapidjson::Document& get_inner_doc() const { return doc_; }
-
-  private:
-    ::rapidjson::Document doc_;
-  };
-
-
-  class JsonValue {
-  public:
-    explicit JsonValue (JsonDocument& doc) : allocator_(doc.get_inner_doc().GetAllocator()) { }
-    explicit JsonValue (::rapidjson::Document doc) : allocator_(doc.GetAllocator()) {}
-    JsonValue (
-        ::rapidjson::Value&& value,
-        ::rapidjson::Document::AllocatorType& allocator
-      ) : value_(std::move(value)), allocator_(allocator) {}
-    explicit JsonValue (JsonRef ref) : allocator_(ref.get_allocator()) {}
-
-    JsonRef get_reference() { return JsonRef(value_, allocator_); }
-    JsonView get_view() const { return JsonView(value_); }
-
-  private:
-    ::rapidjson::Value value_;
-    ::rapidjson::Document::AllocatorType& allocator_;
-  };
-
+  using JsonRef = JsonWrapper<::rapidjson::Value&>;
+  using JsonValue = JsonWrapper<::rapidjson::Value>;
+  using JsonDocument = JsonWrapper<::rapidjson::Document>;
 
   struct Json {
     static inline JsonDocument load(const char* data) {
-      ::rapidjson::Document doc;
-      doc.Parse(data);
-      return JsonDocument{std::move(doc)};
+      JsonDocument doc;
+      doc.get_inner_value().Parse(data);
+      return doc;
     }
 
     static inline JsonDocument load(FILE * file) {
       char read_buffer[65536];
       ::rapidjson::FileReadStream input_stream(file, read_buffer, sizeof(read_buffer));
-      ::rapidjson::Document doc;
-      doc.ParseStream(input_stream);
-      return JsonDocument{std::move(doc)};
+      JsonDocument doc;
+      doc.get_inner_value().ParseStream(input_stream);
+      return doc;
     }
 
     static inline void dump(const JsonDocument& doc, FILE * file) {
       char write_buffer[65536];
       ::rapidjson::FileWriteStream os(file, write_buffer, sizeof(write_buffer));
       ::rapidjson::Writer<::rapidjson::FileWriteStream> writer(os);
-      doc.get_inner_doc().Accept(writer);
+      doc.get_inner_value().Accept(writer);
     }
 
     static inline void dump(JsonView view, FILE * file) {
