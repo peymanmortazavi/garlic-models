@@ -62,13 +62,13 @@ namespace garlic::providers::rapidjson {
 
   class JsonView {
   public:
-    using ValueType = ::rapidjson::Value;
+    using ProviderValueType = ::rapidjson::Value;
     using ConstValueIterator = BasicRandomAccessIterator<
-      JsonView, typename ::rapidjson::Value::ConstValueIterator>;
+      JsonView, typename ProviderValueType::ConstValueIterator>;
     using ConstMemberIterator = RandomAccessIterator<
-      ConstMemberIteratorWrapper<JsonView, ::rapidjson::Value::ConstMemberIterator>>;
+      ConstMemberIteratorWrapper<JsonView, typename ProviderValueType::ConstMemberIterator>>;
 
-    JsonView (const ValueType& value) : value_(value) {}
+    JsonView (const ProviderValueType& value) : value_(value) {}
 
     bool is_null() const noexcept { return value_.IsNull(); }
     bool is_int() const noexcept { return value_.IsInt(); }
@@ -114,7 +114,7 @@ namespace garlic::providers::rapidjson {
     }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
 
-    const ValueType& get_inner_value() const { return value_; }
+    const ProviderValueType& get_inner_value() const { return value_; }
     JsonView get_view() const { return JsonView{value_}; }
 
     bool operator == (const JsonView& view) const {
@@ -122,20 +122,24 @@ namespace garlic::providers::rapidjson {
     }
   
   private:
-    const ValueType& value_;
+    const ProviderValueType& value_;
   };
 
   template<typename T>
   class JsonWrapper : public JsonView {
   public:
-    using DocumentType = ::rapidjson::Document;
-    using ReferenceType = JsonWrapper<ValueType&>;
+    using ProviderDocumentType = ::rapidjson::Document;
+    using ProviderValueIterator = ProviderValueType::ValueIterator;
+    using ProviderMemberIterator = ProviderValueType::MemberIterator;
+    using ValueType = JsonWrapper<ProviderValueType>;
+    using DocumentType = JsonWrapper<ProviderDocumentType>;
+    using ReferenceType = JsonWrapper<ProviderValueType&>;
     using ViewType = JsonView;
-    using AllocatorType = DocumentType::AllocatorType;
+    using AllocatorType = ProviderDocumentType::AllocatorType;
     using ValueIterator = RandomAccessIterator<
-      ValueIteratorWrapper<JsonWrapper, typename ::rapidjson::Value::ValueIterator, AllocatorType>>;
+      ValueIteratorWrapper<JsonWrapper, ProviderValueIterator, AllocatorType>>;
     using MemberIterator = RandomAccessIterator<
-      MemberIteratorWrapper<JsonWrapper, typename ::rapidjson::Value::MemberIterator, AllocatorType>>;
+      MemberIteratorWrapper<JsonWrapper, ProviderMemberIterator, AllocatorType>>;
     using JsonView::begin_list;
     using JsonView::end_list;
     using JsonView::begin_member;
@@ -151,19 +155,19 @@ namespace garlic::providers::rapidjson {
 
     template<typename Target>
     using DocumentRef = 
-        std::enable_if_t<std::is_reference<Target>::value, DocumentType&>;
+        std::enable_if_t<std::is_reference<Target>::value, ProviderDocumentType&>;
 
     template<typename Target>
     using Document =
-        std::enable_if_t<std::is_same<Target, DocumentType>::value, DocumentType>;
+        std::enable_if_t<std::is_same<Target, ProviderDocumentType>::value, ProviderDocumentType>;
 
     template<typename Target>
     using DocumentRoot =
-        std::enable_if_t<std::is_reference<Target>::value, JsonWrapper<DocumentType>&>;
+        std::enable_if_t<std::is_reference<Target>::value, DocumentType&>;
 
     template<typename Target>
     using AllocatorRef =
-        std::enable_if_t<std::is_same<Target, ValueType>::value, AllocatorType&>;
+        std::enable_if_t<std::is_same<Target, ProviderValueType>::value, AllocatorType&>;
 
     template<typename Target = T>
     JsonWrapper(DocumentRef<Target> doc)
@@ -176,7 +180,7 @@ namespace garlic::providers::rapidjson {
         allocator_(doc.get_allocator()) {}
 
     template<typename Target = T>
-    JsonWrapper(Document<Target> doc = DocumentType())
+    JsonWrapper(Document<Target> doc = ProviderDocumentType())
       : value_(std::forward<Target>(doc)), JsonView(value_), allocator_(value_.GetAllocator()) {}
 
     void set_string(const char* value) {
@@ -222,32 +226,32 @@ namespace garlic::providers::rapidjson {
     void clear() { value_.Clear(); }
     template<typename Callable>
     void push_back_builder(Callable&& cb) {
-      ValueType value;
+      ProviderValueType value;
       cb(ReferenceType{value, allocator_});
       value_.PushBack(value, allocator_);
     }
-    void push_back() { value_.PushBack(ValueType().Move(), allocator_); }
+    void push_back() { value_.PushBack(ProviderValueType().Move(), allocator_); }
     void push_back(const JsonView& value) {
-      value_.PushBack(ValueType(value.get_inner_value(), allocator_), allocator_);
+      value_.PushBack(ProviderValueType(value.get_inner_value(), allocator_), allocator_);
     }
-    void push_back(ValueType& value) {
+    void push_back(ProviderValueType& value) {
       value_.PushBack(value, allocator_);
     }
-    void push_back(ValueType&& value) {
+    void push_back(ProviderValueType&& value) {
       value_.PushBack(value, allocator_);
     }
     void push_back(const char* value) {
-      push_back(ValueType().SetString(value, allocator_));
+      push_back(ProviderValueType().SetString(value, allocator_));
     }
     void push_back(const std::string& value) {
-      push_back(ValueType().SetString(value.data(), value.length(), allocator_));
+      push_back(ProviderValueType().SetString(value.data(), value.length(), allocator_));
     }
     void push_back(std::string_view value) {
-      push_back(ValueType().SetString(value.data(), value.length(), allocator_));
+      push_back(ProviderValueType().SetString(value.data(), value.length(), allocator_));
     }
-    void push_back(int value) { push_back(ValueType(value)); }
-    void push_back(double value) { push_back(ValueType(value)); }
-    void push_back(bool value) { push_back(ValueType(value)); }
+    void push_back(int value) { push_back(ProviderValueType(value)); }
+    void push_back(double value) { push_back(ProviderValueType(value)); }
+    void push_back(bool value) { push_back(ProviderValueType(value)); }
     void pop_back() { value_.PopBack(); }
     void erase(ConstValueIterator position) { value_.Erase(position.get_inner_iterator()); }
     void erase(ValueIterator position) { value_.Erase(position.get_inner_iterator()); }
@@ -271,75 +275,75 @@ namespace garlic::providers::rapidjson {
       return MemberIterator({value_.FindMember(value.get_inner_value()), &allocator_});
     }
 
-    void add_member(ValueType&& key, ValueType&& value) {
+    void add_member(ProviderValueType&& key, ProviderValueType&& value) {
       value_.AddMember(key, value, allocator_);
     }
 
-    void add_member(ValueType& key, ValueType& value) {
+    void add_member(ProviderValueType& key, ProviderValueType& value) {
       value_.AddMember(key, value, allocator_);
     }
 
-    void add_member(const char* key, ValueType&& value) {
+    void add_member(const char* key, ProviderValueType&& value) {
       value_.AddMember(
-          ValueType().SetString(key, allocator_),
+          ProviderValueType().SetString(key, allocator_),
           value,
           allocator_);
     }
 
-    void add_member(const char* key, ValueType& value) {
+    void add_member(const char* key, ProviderValueType& value) {
       value_.AddMember(
-          ValueType().SetString(key, allocator_),
+          ProviderValueType().SetString(key, allocator_),
           value,
           allocator_);
     }
 
     void add_member(JsonView key, JsonView value) {
       add_member(
-          ValueType(key.get_inner_value(), allocator_),
-          ValueType(value.get_inner_value(), allocator_)
+          ProviderValueType(key.get_inner_value(), allocator_),
+          ProviderValueType(value.get_inner_value(), allocator_)
           );
     }
 
     void add_member(JsonView key) {
       add_member(
-          ValueType(key.get_inner_value(), allocator_),
-          ValueType()
+          ProviderValueType(key.get_inner_value(), allocator_),
+          ProviderValueType()
           );
     }
 
     template<typename Callable>
     void add_member_builder(const char* key, Callable&& cb) {
-      ValueType value;
-      cb(JsonWrapper<ValueType&>(value, allocator_));
+      ProviderValueType value;
+      cb(ReferenceType(value, allocator_));
       add_member(key, value);
     }
     void add_member(const char* key) {
-      add_member(ValueType().SetString(key, allocator_));
+      add_member(ProviderValueType().SetString(key, allocator_));
     }
     void add_member(const char* key, const JsonWrapper& value) {
       add_member(key, value.get_inner_value());
     }
     void add_member(const char* key, const char* value) {
-      add_member(key, ValueType().SetString(value, allocator_));
+      add_member(key, ProviderValueType().SetString(value, allocator_));
     }
     void add_member(const char* key, const std::string& value) {
       add_member(
           key,
-          ValueType().SetString(value.data(), value.length(), allocator_));
+          ProviderValueType().SetString(value.data(), value.length(), allocator_));
     }
     void add_member(const char* key, std::string_view value) {
       add_member(
           key,
-          ValueType().SetString(value.data(), value.length(), allocator_));
+          ProviderValueType().SetString(value.data(), value.length(), allocator_));
     }
     void add_member(const char* key, double value) {
-      add_member(key, ValueType(value));
+      add_member(key, ProviderValueType(value));
     }
     void add_member(const char* key, int value) {
-      add_member(key, ValueType(value));
+      add_member(key, ProviderValueType(value));
     }
     void add_member(const char* key, bool value) {
-      add_member(key, ValueType(value));
+      add_member(key, ProviderValueType(value));
     }
 
     void remove_member(const char* key) { value_.RemoveMember(key); }
@@ -351,8 +355,8 @@ namespace garlic::providers::rapidjson {
 
     T& get_inner_value() { return value_; }
     const T& get_inner_value() const { return value_; }
-    JsonWrapper<ValueType&> get_reference() {
-      return JsonWrapper<ValueType&>(value_, allocator_);
+    ReferenceType get_reference() {
+      return ReferenceType(value_, allocator_);
     }
     AllocatorType& get_allocator() { return allocator_; }
 
