@@ -63,10 +63,12 @@ namespace garlic::providers::rapidjson {
   class JsonView {
   public:
     using ProviderValueType = ::rapidjson::Value;
+    using ProviderConstValueIterator = ProviderValueType::ConstValueIterator;
+    using ProviderConstMemberIterator = ProviderValueType::ConstMemberIterator;
     using ConstValueIterator = BasicRandomAccessIterator<
-      JsonView, typename ProviderValueType::ConstValueIterator>;
+      JsonView, ProviderConstValueIterator>;
     using ConstMemberIterator = RandomAccessIterator<
-      ConstMemberIteratorWrapper<JsonView, typename ProviderValueType::ConstMemberIterator>>;
+      ConstMemberIteratorWrapper<JsonView, ProviderConstMemberIterator>>;
 
     JsonView (const ProviderValueType& value) : value_(value) {}
 
