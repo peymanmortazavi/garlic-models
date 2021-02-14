@@ -39,6 +39,16 @@ Document get_test_document() {
 
 TEST(RapidJson, DocumentTest) {
   JsonDocument doc;
+
+  doc.set_int(12);
+  ASSERT_EQ(doc.get_int(), 12);
+
+  // Make sure getting referenece and view is working.
+  doc.get_reference().set_int(15);
+  ASSERT_EQ(doc.get_view().get_int(), 15);
+  ASSERT_EQ(doc.get_reference().get_int(), 15);
+  ASSERT_EQ(doc.get_int(), 15);
+
   doc.set_object();
 
   std::deque<std::string> names;
@@ -58,6 +68,7 @@ TEST(RapidJson, DocumentTest) {
     names.pop_front();
   }
   
+  test_full_layer(doc);
   test_full_layer(doc.get_reference());
 }
 
