@@ -19,10 +19,10 @@ namespace garlic {
     List    = 0x1 << 6,
   };
 
-  template<typename T> using ConstValueIteratorOf = typename T::ConstValueIterator;
-  template<typename T> using ValueIteratorOf = typename T::ValueIterator;
-  template<typename T> using ConstMemberIteratorOf = typename T::ConstMemberIterator;
-  template<typename T> using MemberIteratorOf = typename T::MemberIterator;
+  template<typename T> using ConstValueIteratorOf = typename std::decay_t<T>::ConstValueIterator;
+  template<typename T> using ValueIteratorOf = typename std::decay_t<T>::ValueIterator;
+  template<typename T> using ConstMemberIteratorOf = typename std::decay_t<T>::ConstMemberIterator;
+  template<typename T> using MemberIteratorOf = typename std::decay_t<T>::MemberIterator;
 
   template<typename T>
   concept member_pair = requires(T pair) {
