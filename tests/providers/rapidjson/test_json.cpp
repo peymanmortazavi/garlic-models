@@ -56,7 +56,7 @@ TEST(RapidJson, DocumentTest) {
   names.push_back("b");
   names.push_back("c");
 
-  JsonValue names_value {doc};
+  JsonValue names_value {doc};  // initialize JsonValue via JsonDocument.
   names_value.set_list();
   std::for_each(names.begin(), names.end(),
       [&](auto& item) { names_value.push_back(item); });
