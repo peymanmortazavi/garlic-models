@@ -17,9 +17,9 @@ namespace garlic {
     char* data;
   };
 
-  template<typename T>
+  template<typename Type>
   struct Array {
-    using Container = T*;
+    using Container = Type*;
 
     size_t capacity;
     size_t length;
