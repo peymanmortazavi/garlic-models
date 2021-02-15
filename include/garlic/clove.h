@@ -317,7 +317,7 @@ namespace garlic {
       std::memmove(
           static_cast<void*>(first.get_inner_iterator()),
           static_cast<void*>(last.get_inner_iterator()),
-          static_cast<size_t>(this->end_list().get_inner_iterator() - last.get_inner_iterator()) * sizeof(DataType)
+          static_cast<SizeType>(this->end_list().get_inner_iterator() - last.get_inner_iterator()) * sizeof(DataType)
       );
       data_.list.length -= count;
     }
@@ -380,7 +380,7 @@ namespace garlic {
       memmove(
           static_cast<void*>(position.get_pointer()),
           static_cast<void*>(position.get_pointer() + 1),
-          static_cast<size_t>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
+          static_cast<SizeType>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
       );
     }
 
