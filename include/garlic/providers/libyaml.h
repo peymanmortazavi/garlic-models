@@ -163,17 +163,17 @@ namespace garlic::providers::libyaml {
   };
 
   struct Yaml {
-    static YamlDocument load(const unsigned char * data, size_t lenght) {
+    static YamlDocument load(const char * data, size_t lenght) {
       YamlDocument doc;
       yaml_parser_t parser;
       yaml_parser_initialize(&parser);
-      yaml_parser_set_input_string(&parser, data, lenght);
+      yaml_parser_set_input_string(&parser, reinterpret_cast<const unsigned char*>(data), lenght);
       yaml_parser_load(&parser, doc.get_inner_document());
       yaml_parser_delete(&parser);
       return doc;
     }
 
-    static YamlDocument load(const unsigned char * data) {
+    static YamlDocument load(const char * data) {
       return Yaml::load(data, strlen((char*)data));
     }
 
