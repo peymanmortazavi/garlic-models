@@ -7,3 +7,4 @@ benchmark/1.5.2
 
 [generators]
 cmake
+virtualenv
