@@ -13,5 +13,6 @@
 
 TEST(CloveValue, ProtocolTest) {
   garlic::CloveDocument doc;
+  test_full_layer(doc);
   test_full_layer(doc.get_reference());
 }

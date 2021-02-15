@@ -147,6 +147,7 @@ namespace garlic {
     auto get_object() const { return ConstMemberRange<GenericCloveView>{*this}; }
 
     GenericCloveView get_view() const { return GenericCloveView{data_}; }
+    const DataType& get_inner_value() const { return data_; }
 
   private:
     const DataType& data_;
@@ -385,6 +386,7 @@ namespace garlic {
     }
 
     GenericCloveRef get_reference() { return GenericCloveRef(data_, allocator_); }
+    DataType& get_inner_value() { return data_; }
 
   private:
     DataType& data_;
@@ -448,19 +450,21 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator>
-  class GenericCloveDocument {
+  template<Allocator Allocator, typename SizeType = unsigned>
+  class GenericCloveDocument : public GenericCloveRef<Allocator, SizeType> {
   public:
-    using DataType = GenericData<Allocator>;
-    using ViewType = GenericCloveView<Allocator>;
-    using ReferenceType = GenericCloveRef<Allocator>;
+    using DataType = GenericData<Allocator, SizeType>;
+    using ViewType = GenericCloveView<Allocator, SizeType>;
+    using ReferenceType = GenericCloveRef<Allocator, SizeType>;
+    using DocumentType = GenericCloveDocument<Allocator, SizeType>;
 
-    explicit GenericCloveDocument(std::shared_ptr<Allocator> allocator) : allocator_(allocator) {}
-    GenericCloveDocument() { allocator_ = std::make_shared<Allocator>(); }
+    explicit GenericCloveDocument(
+        std::shared_ptr<Allocator> allocator
+        ) : allocator_(allocator), ReferenceType(data_, *allocator) {}
+    GenericCloveDocument(
+        ) : allocator_(std::make_shared<Allocator>()), ReferenceType(data_, *allocator_) {}
     ~GenericCloveDocument() { this->get_reference().set_null(); }
 
-    ViewType get_view() { return ViewType{data_}; }
-    ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
     Allocator& get_allocator() { return *allocator_; }
 
   private:
@@ -469,28 +473,28 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator>
-  class GenericCloveValue {
+  template<Allocator Allocator, typename SizeType = unsigned>
+  class GenericCloveValue : public GenericCloveRef<Allocator, SizeType> {
   public:
     using DataType = GenericData<Allocator>;
     using ViewType = GenericCloveView<Allocator>;
     using ReferenceType = GenericCloveRef<Allocator>;
     using DocumentType = GenericCloveDocument<Allocator>;
 
-    explicit GenericCloveValue(DocumentType root) : allocator_(root.get_allocator()) {}
+    explicit GenericCloveValue(
+        DocumentType& root) : ReferenceType(data_, root.get_allocator()) {}
+
+    explicit GenericCloveValue(
+        Allocator& allocator) : ReferenceType(data_, allocator) {}
     ~GenericCloveValue() { this->get_reference().set_null(); }
 
-    ViewType get_view() { return ViewType{data_}; }
-    ReferenceType get_reference() { return ReferenceType{data_, allocator_}; }
     DataType&& move_data() { return std::move(data_); }
 
   private:
     DataType data_;
-    Allocator& allocator_;
   };
 
 
-  using CloveData = GenericData<CAllocator>;
   using CloveView = GenericCloveView<CAllocator>;
   using CloveRef = GenericCloveRef<CAllocator>;
   using CloveValue = GenericCloveValue<CAllocator>;
