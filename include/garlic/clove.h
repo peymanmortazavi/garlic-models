@@ -159,10 +159,12 @@ namespace garlic {
     using ViewType = GenericCloveView<Allocator, SizeType>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
+    using ProviderValueIterator = typename ViewType::ProviderValueIterator;
+    using ProviderMemberIterator = typename ViewType::ProviderMemberIterator;
     using ValueIterator = RandomAccessIterator<
-      ValueIteratorWrapper<GenericCloveRef, typename DataType::List::Container, AllocatorType>>;
+      ValueIteratorWrapper<GenericCloveRef, ProviderValueIterator, AllocatorType>>;
     using MemberIterator = RandomAccessIterator<
-      MemberIteratorWrapper<GenericCloveRef, typename DataType::Object::Container, AllocatorType>>;
+      MemberIteratorWrapper<GenericCloveRef, ProviderMemberIterator, AllocatorType>>;
     using ViewType::begin_list;
     using ViewType::end_list;
     using ViewType::get_list;
