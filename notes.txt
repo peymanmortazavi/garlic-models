@@ -5,3 +5,6 @@
 * Make a yaml parser that uses libyaml to create clove value and parse clove to yaml.
 * Create an issue to explore using a different container other than vector to enable constexpr
   models.
+
+  When making the Python module, take a look at this:
+  https://github.com/python-rapidjson/python-rapidjson

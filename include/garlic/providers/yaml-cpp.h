@@ -170,8 +170,7 @@ namespace garlic::providers::yamlcpp {
   };
 
 
-  class Yaml {
-  public:
+  struct Yaml {
     static YamlNode load(const char * data) {
       return YamlNode{YAML::Load(data)};
     }

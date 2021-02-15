@@ -38,28 +38,38 @@ Document get_test_document() {
 
 
 TEST(RapidJson, DocumentTest) {
-  JsonDocument root{};
-  auto root_ref = root.get_reference();
-  root_ref.set_object();
+  JsonDocument doc;
+
+  doc.set_int(12);
+  ASSERT_EQ(doc.get_int(), 12);
+
+  // Make sure getting referenece and view is working.
+  doc.get_reference().set_int(15);
+  ASSERT_EQ(doc.get_view().get_int(), 15);
+  ASSERT_EQ(doc.get_reference().get_int(), 15);
+  ASSERT_EQ(doc.get_int(), 15);
+
+  doc.set_object();
 
   std::deque<std::string> names;
   names.push_back("a");
   names.push_back("b");
   names.push_back("c");
 
-  JsonValue name_element{root};
-  auto name_element_ref = name_element.get_reference();
-  name_element_ref.set_list();
-  std::for_each(names.begin(), names.end(), [&](auto& item) { name_element_ref.push_back(item); });
+  JsonValue names_value {doc};  // initialize JsonValue via JsonDocument.
+  names_value.set_list();
+  std::for_each(names.begin(), names.end(),
+      [&](auto& item) { names_value.push_back(item); });
 
-  root_ref.add_member("names", name_element_ref);
-
-  for (auto item : name_element_ref.get_list()) {
+  doc.add_member("names", names_value);
+  auto saved_names = (*doc.find_member("names")).value;
+  for (auto item : saved_names.get_list()) {
     ASSERT_STREQ(item.get_cstr(), names[0].c_str());
     names.pop_front();
   }
   
-  test_full_layer(root.get_reference());
+  test_full_layer(doc);
+  test_full_layer(doc.get_reference());
 }
 
 

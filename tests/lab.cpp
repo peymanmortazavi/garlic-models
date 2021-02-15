@@ -61,9 +61,6 @@ static long long garlic_way(rapidjson::Document& doc) {
   };
 
 
-  using ConstValueIterator = garlic::BasicLayerForwardIterator<
-    garlic::providers::rapidjson::JsonView, typename ::rapidjson::Value::ConstValueIterator>;
-
 int main()
 {
   int iterations;

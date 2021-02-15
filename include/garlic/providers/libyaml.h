@@ -162,8 +162,7 @@ namespace garlic::providers::libyaml {
     yaml_document_t doc_;
   };
 
-  class Yaml {
-  public:
+  struct Yaml {
     static YamlDocument load(const unsigned char * data, size_t lenght) {
       YamlDocument doc;
       yaml_parser_t parser;
