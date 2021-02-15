@@ -415,8 +415,9 @@ namespace garlic::providers::rapidjson {
       return doc;
     }
 
+    template<int BufferSize = 65536>
     static inline JsonDocument load(FILE * file) {
-      char read_buffer[65536];
+      char read_buffer[BufferSize];
       ::rapidjson::FileReadStream input_stream(file, read_buffer, sizeof(read_buffer));
       JsonDocument doc;
       doc.get_inner_value().ParseStream(input_stream);
