@@ -122,11 +122,15 @@ namespace garlic {
     }
 
     ConstValueIterator begin_list() const { return ConstValueIterator({data_.list.data}); }
-    ConstValueIterator end_list() const { return ConstValueIterator({data_.list.data + data_.list.length}); }
+    ConstValueIterator end_list() const {
+      return ConstValueIterator({data_.list.data + data_.list.length});
+    }
     auto get_list() const { return ConstListRange<GenericCloveView>{*this}; }
 
     ConstMemberIterator begin_member() const { return ConstMemberIterator({data_.object.data}); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator({data_.object.data + data_.object.length}); }
+    ConstMemberIterator end_member() const {
+      return ConstMemberIterator({data_.object.data + data_.object.length});
+    }
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return strcmp(item.key.get_cstr(), key) == 0;
