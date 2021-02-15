@@ -12,24 +12,25 @@
 
 namespace garlic {
 
-  struct String {
-    size_t length;
+  template<typename SizeType = unsigned>
+  struct StringData {
+    SizeType length;
     char* data;
   };
 
-  template<typename Type>
+  template<typename Type, typename SizeType = unsigned>
   struct Array {
     using Container = Type*;
 
-    size_t capacity;
-    size_t length;
+    SizeType capacity;
+    SizeType length;
     Container data;
   };
 
-  template<Allocator Allocator>
+  template<Allocator Allocator, typename SizeType = unsigned>
   struct GenericData {  // todo: use pointers to the array in order to reduce 4 size_t types.
-    using List = Array<GenericData>;
-    using Object = Array<MemberPair<GenericData>>;
+    using List = Array<GenericData, SizeType>;
+    using Object = Array<MemberPair<GenericData>, SizeType>;
     using AllocatorType = Allocator;
 
     TypeFlag type = TypeFlag::Null;
@@ -37,7 +38,7 @@ namespace garlic {
       double dvalue;
       int integer;
       bool boolean;
-      struct String string;
+      StringData<SizeType> string;
       List list;
       Object object;
     };
@@ -93,14 +94,15 @@ namespace garlic {
   class GenericCloveView {
   public:
     using DataType = GenericData<Allocator>;
-    using ConstValueIterator = BasicRandomAccessIterator<
-      GenericCloveView, typename DataType::List::Container>;
+    using ProviderValueIterator = typename DataType::List::Container;
+    using ProviderMemberIterator = typename DataType::Object::Container;
+    using ConstValueIterator = BasicRandomAccessIterator<GenericCloveView, ProviderValueIterator>;
     using ConstMemberIterator = RandomAccessIterator<
-      ConstMemberIteratorWrapper<GenericCloveView, typename DataType::Object::Container>>;
+      ConstMemberIteratorWrapper<GenericCloveView, ProviderMemberIterator>>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
 
-    bool is_null() const noexcept { return data_.type == TypeFlag::Null; }
+    bool is_null() const noexcept { return data_.type & TypeFlag::Null; }
     bool is_int() const noexcept { return data_.type & TypeFlag::Integer; }
     bool is_string() const noexcept { return data_.type & TypeFlag::String; }
     bool is_double() const noexcept { return data_.type & TypeFlag::Double; }
