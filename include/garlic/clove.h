@@ -26,16 +26,10 @@ namespace garlic {
     Container data;
   };
 
-  template<typename T>
-  struct Member {
-    T key;
-    T value;
-  };
- 
   template<Allocator Allocator>
   struct GenericData {  // todo: use pointers to the array in order to reduce 4 size_t types.
     using List = Array<GenericData>;
-    using Object = Array<Member<GenericData>>;
+    using Object = Array<MemberPair<GenericData>>;
     using AllocatorType = Allocator;
 
     TypeFlag type = TypeFlag::Null;
@@ -214,7 +208,7 @@ namespace garlic {
       this->clean();
       this->data_.type = TypeFlag::Object;
       this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.allocate(128 * sizeof(Member<DataType>))
+          allocator_.allocate(128 * sizeof(MemberPair<DataType>))
       );
       this->data_.object.length = 0;
       this->data_.object.capacity = 128;
@@ -330,7 +324,7 @@ namespace garlic {
 
     void add_member(DataType&& key, DataType&& value) {
       this->check_members();
-      this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
+      this->data_.object.data[this->data_.object.length] = MemberPair<DataType>{std::move(key), std::move(value)};
       this->data_.object.length++;
     }
     void add_member(const char* key, DataType&& value) {
@@ -366,7 +360,7 @@ namespace garlic {
       memmove(
           static_cast<void*>(position.get_pointer()),
           static_cast<void*>(position.get_pointer() + 1),
-          static_cast<size_t>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(Member<DataType>)
+          static_cast<size_t>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
       );
     }
 
