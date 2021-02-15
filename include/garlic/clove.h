@@ -90,10 +90,10 @@ namespace garlic {
     }
   };
 
-  template<Allocator Allocator>
+  template<Allocator Allocator, typename SizeType = unsigned>
   class GenericCloveView {
   public:
-    using DataType = GenericData<Allocator>;
+    using DataType = GenericData<Allocator, SizeType>;
     using ProviderValueIterator = typename DataType::List::Container;
     using ProviderMemberIterator = typename DataType::Object::Container;
     using ConstValueIterator = BasicRandomAccessIterator<GenericCloveView, ProviderValueIterator>;
@@ -114,8 +114,12 @@ namespace garlic {
     double get_double() const { return data_.dvalue; }
     bool get_bool() const { return data_.boolean; }
     const char* get_cstr() const { return data_.string.data; }
-    std::string get_string() const { return std::string{data_.string.data}; }
-    std::string_view get_string_view() const { return std::string_view{data_.string.data}; }
+    std::string get_string() const {
+      return std::string{data_.string.data, data_.string.length};
+    }
+    std::string_view get_string_view() const {
+      return std::string_view{data_.string.data, data_.string.length};
+    }
 
     ConstValueIterator begin_list() const { return ConstValueIterator({data_.list.data}); }
     ConstValueIterator end_list() const { return ConstValueIterator({data_.list.data + data_.list.length}); }
@@ -145,10 +149,10 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator>
+  template<Allocator Allocator, typename SizeType = unsigned>
   class GenericCloveRef : public GenericCloveView<Allocator> {
   public:
-    using ViewType = GenericCloveView<Allocator>;
+    using ViewType = GenericCloveView<Allocator, SizeType>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
     using ValueIterator = RandomAccessIterator<
@@ -168,14 +172,17 @@ namespace garlic {
     ) : data_(data), allocator_(allocator), ViewType(data) {}
 
     void set_string(const char* str) {
-      this->clean();
-      this->data_.type = TypeFlag::String;
-      this->data_.string.length = strlen(str) + 1;
-      this->data_.string.data = reinterpret_cast<char*>(allocator_.allocate(sizeof(char) * this->data_.string.length));
+      this->prepare_string(strlen(str));
       strcpy(this->data_.string.data, str);
     }
-    void set_string(const std::string& str) { this->set_string(str.data()); }
-    void set_string(const std::string_view& str) { this->set_string(str.data()); }
+    void set_string(const std::string& str) {
+      this->prepare_string(str.size());
+      strcpy(this->data_.string.data, str.c_str());
+    }
+    void set_string(std::string_view str) {
+      this->prepare_string(str.size());
+      strcpy(this->data_.string.data, str.data());
+    }
     void set_double(double value) {
       this->clean();
       this->data_.type = TypeFlag::Double;
@@ -390,6 +397,14 @@ namespace garlic {
         );
         this->data_.object.capacity *= 2;
       }
+    }
+
+    inline void prepare_string(SizeType length) {
+      this->clean();
+      this->data_.type = TypeFlag::String;
+      this->data_.string.length = length;
+      this->data_.string.data = reinterpret_cast<char*>(
+          allocator_.allocate(sizeof(char) * (length + 1)));
     }
 
     void clean() {
