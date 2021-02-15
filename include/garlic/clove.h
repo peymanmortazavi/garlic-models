@@ -28,7 +28,7 @@ namespace garlic {
   };
 
   template<Allocator Allocator, typename SizeType = unsigned>
-  struct GenericData {  // todo: use pointers to the array in order to reduce 4 size_t types.
+  struct GenericData {
     using List = Array<GenericData, SizeType>;
     using Object = Array<MemberPair<GenericData>, SizeType>;
     using AllocatorType = Allocator;
