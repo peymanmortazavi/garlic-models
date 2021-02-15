@@ -10,13 +10,13 @@
 namespace garlic {
 
   enum TypeFlag : uint8_t {
-    Null    = 0x1 << 0,
-    Boolean = 0x1 << 1,
-    String  = 0x1 << 2,
-    Integer = 0x1 << 3,
-    Double  = 0x1 << 4,
-    Object  = 0x1 << 5,
-    List    = 0x1 << 6,
+    Null    = 0x1 << 1,
+    Boolean = 0x1 << 2,
+    String  = 0x1 << 3,
+    Integer = 0x1 << 4,
+    Double  = 0x1 << 5,
+    Object  = 0x1 << 6,
+    List    = 0x1 << 7,
   };
 
   template<typename T> using ConstValueIteratorOf = typename std::decay_t<T>::ConstValueIterator;

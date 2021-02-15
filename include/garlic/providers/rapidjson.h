@@ -82,9 +82,11 @@ namespace garlic::providers::rapidjson {
     bool is_bool() const noexcept { return value_.IsBool(); }
 
     int get_int() const noexcept { return value_.GetInt(); }
-    std::string get_string() const noexcept { return value_.GetString(); }
+    std::string get_string() const noexcept {
+      return std::string(value_.GetString(), value_.GetStringLength());
+    }
     std::string_view get_string_view() const noexcept {
-      return std::string_view(value_.GetString());
+      return std::string_view(value_.GetString(), value_.GetStringLength());
     }
     const char* get_cstr() const noexcept { return value_.GetString(); }
     double get_double() const noexcept { return value_.GetDouble(); }

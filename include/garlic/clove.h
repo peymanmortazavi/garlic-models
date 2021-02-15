@@ -12,30 +12,25 @@
 
 namespace garlic {
 
-  struct String {
-    size_t length;
+  template<typename SizeType = unsigned>
+  struct StringData {
+    SizeType length;
     char* data;
   };
 
-  template<typename T>
+  template<typename Type, typename SizeType = unsigned>
   struct Array {
-    using Container = T*;
+    using Container = Type*;
 
-    size_t capacity;
-    size_t length;
+    SizeType capacity;
+    SizeType length;
     Container data;
   };
 
-  template<typename T>
-  struct Member {
-    T key;
-    T value;
-  };
- 
-  template<Allocator Allocator>
-  struct GenericData {  // todo: use pointers to the array in order to reduce 4 size_t types.
-    using List = Array<GenericData>;
-    using Object = Array<Member<GenericData>>;
+  template<Allocator Allocator, typename SizeType = unsigned>
+  struct GenericData {
+    using List = Array<GenericData, SizeType>;
+    using Object = Array<MemberPair<GenericData>, SizeType>;
     using AllocatorType = Allocator;
 
     TypeFlag type = TypeFlag::Null;
@@ -43,7 +38,7 @@ namespace garlic {
       double dvalue;
       int integer;
       bool boolean;
-      struct String string;
+      StringData<SizeType> string;
       List list;
       Object object;
     };
@@ -95,18 +90,19 @@ namespace garlic {
     }
   };
 
-  template<Allocator Allocator>
+  template<Allocator Allocator, typename SizeType = unsigned>
   class GenericCloveView {
   public:
-    using DataType = GenericData<Allocator>;
-    using ConstValueIterator = BasicRandomAccessIterator<
-      GenericCloveView, typename DataType::List::Container>;
+    using DataType = GenericData<Allocator, SizeType>;
+    using ProviderValueIterator = typename DataType::List::Container;
+    using ProviderMemberIterator = typename DataType::Object::Container;
+    using ConstValueIterator = BasicRandomAccessIterator<GenericCloveView, ProviderValueIterator>;
     using ConstMemberIterator = RandomAccessIterator<
-      ConstMemberIteratorWrapper<GenericCloveView, typename DataType::Object::Container>>;
+      ConstMemberIteratorWrapper<GenericCloveView, ProviderMemberIterator>>;
 
     GenericCloveView (const DataType& data) : data_(data) {}
 
-    bool is_null() const noexcept { return data_.type == TypeFlag::Null; }
+    bool is_null() const noexcept { return data_.type & TypeFlag::Null; }
     bool is_int() const noexcept { return data_.type & TypeFlag::Integer; }
     bool is_string() const noexcept { return data_.type & TypeFlag::String; }
     bool is_double() const noexcept { return data_.type & TypeFlag::Double; }
@@ -118,15 +114,23 @@ namespace garlic {
     double get_double() const { return data_.dvalue; }
     bool get_bool() const { return data_.boolean; }
     const char* get_cstr() const { return data_.string.data; }
-    std::string get_string() const { return std::string{data_.string.data}; }
-    std::string_view get_string_view() const { return std::string_view{data_.string.data}; }
+    std::string get_string() const {
+      return std::string{data_.string.data, data_.string.length};
+    }
+    std::string_view get_string_view() const {
+      return std::string_view{data_.string.data, data_.string.length};
+    }
 
     ConstValueIterator begin_list() const { return ConstValueIterator({data_.list.data}); }
-    ConstValueIterator end_list() const { return ConstValueIterator({data_.list.data + data_.list.length}); }
+    ConstValueIterator end_list() const {
+      return ConstValueIterator({data_.list.data + data_.list.length});
+    }
     auto get_list() const { return ConstListRange<GenericCloveView>{*this}; }
 
     ConstMemberIterator begin_member() const { return ConstMemberIterator({data_.object.data}); }
-    ConstMemberIterator end_member() const { return ConstMemberIterator({data_.object.data + data_.object.length}); }
+    ConstMemberIterator end_member() const {
+      return ConstMemberIterator({data_.object.data + data_.object.length});
+    }
     ConstMemberIterator find_member(const char* key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return strcmp(item.key.get_cstr(), key) == 0;
@@ -143,22 +147,25 @@ namespace garlic {
     auto get_object() const { return ConstMemberRange<GenericCloveView>{*this}; }
 
     GenericCloveView get_view() const { return GenericCloveView{data_}; }
+    const DataType& get_inner_value() const { return data_; }
 
   private:
     const DataType& data_;
   };
 
 
-  template<Allocator Allocator>
+  template<Allocator Allocator, typename SizeType = unsigned>
   class GenericCloveRef : public GenericCloveView<Allocator> {
   public:
-    using ViewType = GenericCloveView<Allocator>;
+    using ViewType = GenericCloveView<Allocator, SizeType>;
     using DataType = typename ViewType::DataType;
     using AllocatorType = Allocator;
+    using ProviderValueIterator = typename ViewType::ProviderValueIterator;
+    using ProviderMemberIterator = typename ViewType::ProviderMemberIterator;
     using ValueIterator = RandomAccessIterator<
-      ValueIteratorWrapper<GenericCloveRef, typename DataType::List::Container, AllocatorType>>;
+      ValueIteratorWrapper<GenericCloveRef, ProviderValueIterator, AllocatorType>>;
     using MemberIterator = RandomAccessIterator<
-      MemberIteratorWrapper<GenericCloveRef, typename DataType::Object::Container, AllocatorType>>;
+      MemberIteratorWrapper<GenericCloveRef, ProviderMemberIterator, AllocatorType>>;
     using ViewType::begin_list;
     using ViewType::end_list;
     using ViewType::get_list;
@@ -172,14 +179,17 @@ namespace garlic {
     ) : data_(data), allocator_(allocator), ViewType(data) {}
 
     void set_string(const char* str) {
-      this->clean();
-      this->data_.type = TypeFlag::String;
-      this->data_.string.length = strlen(str) + 1;
-      this->data_.string.data = reinterpret_cast<char*>(allocator_.allocate(sizeof(char) * this->data_.string.length));
+      this->prepare_string(strlen(str));
       strcpy(this->data_.string.data, str);
     }
-    void set_string(const std::string& str) { this->set_string(str.data()); }
-    void set_string(const std::string_view& str) { this->set_string(str.data()); }
+    void set_string(const std::string& str) {
+      this->prepare_string(str.size());
+      strcpy(this->data_.string.data, str.c_str());
+    }
+    void set_string(std::string_view str) {
+      this->prepare_string(str.size());
+      strcpy(this->data_.string.data, str.data());
+    }
     void set_double(double value) {
       this->clean();
       this->data_.type = TypeFlag::Double;
@@ -214,7 +224,7 @@ namespace garlic {
       this->clean();
       this->data_.type = TypeFlag::Object;
       this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.allocate(128 * sizeof(Member<DataType>))
+          allocator_.allocate(128 * sizeof(MemberPair<DataType>))
       );
       this->data_.object.length = 0;
       this->data_.object.capacity = 128;
@@ -223,8 +233,12 @@ namespace garlic {
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
     GenericCloveRef& operator = (int value) { this->set_int(value); return *this; }
     GenericCloveRef& operator = (bool value) { this->set_bool(value); return *this; }
-    GenericCloveRef& operator = (const std::string& value) { this->set_string(value); return *this; }
-    GenericCloveRef& operator = (const std::string_view& value) { this->set_string(value); return *this; }
+    GenericCloveRef& operator = (const std::string& value) {
+      this->set_string(value); return *this;
+    }
+    GenericCloveRef& operator = (const std::string_view& value) {
+      this->set_string(value); return *this;
+    }
     GenericCloveRef& operator = (const char* value) { this->set_string(value); return *this; }
 
     ValueIterator begin_list() {
@@ -250,6 +264,7 @@ namespace garlic {
       std::for_each(this->begin_list(), this->end_list(), [](auto item){ item.clean(); });
       this->data_.list.length = 0;
     }
+
     template<typename Callable>
     void push_back_builder(Callable&& cb) {
       this->check_list();
@@ -303,7 +318,7 @@ namespace garlic {
       std::memmove(
           static_cast<void*>(first.get_inner_iterator()),
           static_cast<void*>(last.get_inner_iterator()),
-          static_cast<size_t>(this->end_list().get_inner_iterator() - last.get_inner_iterator()) * sizeof(DataType)
+          static_cast<SizeType>(this->end_list().get_inner_iterator() - last.get_inner_iterator()) * sizeof(DataType)
       );
       data_.list.length -= count;
     }
@@ -330,7 +345,7 @@ namespace garlic {
 
     void add_member(DataType&& key, DataType&& value) {
       this->check_members();
-      this->data_.object.data[this->data_.object.length] = Member<DataType>{std::move(key), std::move(value)};
+      this->data_.object.data[this->data_.object.length] = MemberPair<DataType>{std::move(key), std::move(value)};
       this->data_.object.length++;
     }
     void add_member(const char* key, DataType&& value) {
@@ -366,11 +381,12 @@ namespace garlic {
       memmove(
           static_cast<void*>(position.get_pointer()),
           static_cast<void*>(position.get_pointer() + 1),
-          static_cast<size_t>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(Member<DataType>)
+          static_cast<SizeType>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
       );
     }
 
     GenericCloveRef get_reference() { return GenericCloveRef(data_, allocator_); }
+    DataType& get_inner_value() { return data_; }
 
   private:
     DataType& data_;
@@ -394,6 +410,14 @@ namespace garlic {
         );
         this->data_.object.capacity *= 2;
       }
+    }
+
+    inline void prepare_string(SizeType length) {
+      this->clean();
+      this->data_.type = TypeFlag::String;
+      this->data_.string.length = length;
+      this->data_.string.data = reinterpret_cast<char*>(
+          allocator_.allocate(sizeof(char) * (length + 1)));
     }
 
     void clean() {
@@ -426,19 +450,21 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator>
-  class GenericCloveDocument {
+  template<Allocator Allocator, typename SizeType = unsigned>
+  class GenericCloveDocument : public GenericCloveRef<Allocator, SizeType> {
   public:
-    using DataType = GenericData<Allocator>;
-    using ViewType = GenericCloveView<Allocator>;
-    using ReferenceType = GenericCloveRef<Allocator>;
+    using DataType = GenericData<Allocator, SizeType>;
+    using ViewType = GenericCloveView<Allocator, SizeType>;
+    using ReferenceType = GenericCloveRef<Allocator, SizeType>;
+    using DocumentType = GenericCloveDocument<Allocator, SizeType>;
 
-    explicit GenericCloveDocument(std::shared_ptr<Allocator> allocator) : allocator_(allocator) {}
-    GenericCloveDocument() { allocator_ = std::make_shared<Allocator>(); }
+    explicit GenericCloveDocument(
+        std::shared_ptr<Allocator> allocator
+        ) : allocator_(allocator), ReferenceType(data_, *allocator) {}
+    GenericCloveDocument(
+        ) : allocator_(std::make_shared<Allocator>()), ReferenceType(data_, *allocator_) {}
     ~GenericCloveDocument() { this->get_reference().set_null(); }
 
-    ViewType get_view() { return ViewType{data_}; }
-    ReferenceType get_reference() { return ReferenceType{data_, *allocator_}; }
     Allocator& get_allocator() { return *allocator_; }
 
   private:
@@ -447,28 +473,28 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator>
-  class GenericCloveValue {
+  template<Allocator Allocator, typename SizeType = unsigned>
+  class GenericCloveValue : public GenericCloveRef<Allocator, SizeType> {
   public:
     using DataType = GenericData<Allocator>;
     using ViewType = GenericCloveView<Allocator>;
     using ReferenceType = GenericCloveRef<Allocator>;
     using DocumentType = GenericCloveDocument<Allocator>;
 
-    explicit GenericCloveValue(DocumentType root) : allocator_(root.get_allocator()) {}
+    explicit GenericCloveValue(
+        DocumentType& root) : ReferenceType(data_, root.get_allocator()) {}
+
+    explicit GenericCloveValue(
+        Allocator& allocator) : ReferenceType(data_, allocator) {}
     ~GenericCloveValue() { this->get_reference().set_null(); }
 
-    ViewType get_view() { return ViewType{data_}; }
-    ReferenceType get_reference() { return ReferenceType{data_, allocator_}; }
     DataType&& move_data() { return std::move(data_); }
 
   private:
     DataType data_;
-    Allocator& allocator_;
   };
 
 
-  using CloveData = GenericData<CAllocator>;
   using CloveView = GenericCloveView<CAllocator>;
   using CloveRef = GenericCloveRef<CAllocator>;
   using CloveValue = GenericCloveValue<CAllocator>;
