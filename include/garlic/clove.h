@@ -232,8 +232,12 @@ namespace garlic {
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
     GenericCloveRef& operator = (int value) { this->set_int(value); return *this; }
     GenericCloveRef& operator = (bool value) { this->set_bool(value); return *this; }
-    GenericCloveRef& operator = (const std::string& value) { this->set_string(value); return *this; }
-    GenericCloveRef& operator = (const std::string_view& value) { this->set_string(value); return *this; }
+    GenericCloveRef& operator = (const std::string& value) {
+      this->set_string(value); return *this;
+    }
+    GenericCloveRef& operator = (const std::string_view& value) {
+      this->set_string(value); return *this;
+    }
     GenericCloveRef& operator = (const char* value) { this->set_string(value); return *this; }
 
     ValueIterator begin_list() {
@@ -259,6 +263,7 @@ namespace garlic {
       std::for_each(this->begin_list(), this->end_list(), [](auto item){ item.clean(); });
       this->data_.list.length = 0;
     }
+
     template<typename Callable>
     void push_back_builder(Callable&& cb) {
       this->check_list();
