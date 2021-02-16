@@ -33,6 +33,17 @@ namespace garlic {
       std::is_same<T, std::string_view>::value
       >
     >: std::true_type {};
+
+  template<typename, class = void>
+  struct provides_reference_on_insertions : std::false_type {};
+
+  template<typename LayerType>
+  struct provides_reference_on_insertions<
+    LayerType,
+    std::enable_if_t<
+      !std::is_void_v<decltype(std::declval<LayerType>().push_back())> &&
+      !std::is_void_v<decltype(std::declval<LayerType>().add_member(std::declval<const char*>()))>
+      >> : std::true_type {};
 }
 
 #endif /* end of include guard: GARLIC_META_H */
