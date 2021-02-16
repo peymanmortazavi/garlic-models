@@ -250,6 +250,7 @@ namespace garlic::providers::libyaml {
     private:
       template<garlic::RefLayer LayerType>
       inline yaml_parse_error start(LayerType&& layer) {
+        // parse the very first event.
         parse_event();
 
         // expect beginning events.
