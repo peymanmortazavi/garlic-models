@@ -198,60 +198,82 @@ namespace garlic::providers::libyaml {
     template<typename LayerType>
     static inline yaml_parse_error
     parse(FILE* file, LayerType&& layer) {
-      parse_context context;
-
-      if (!file)
-        return yaml_parse_error::null_file;  // null file.
-
-      if (!yaml_parser_initialize(&context.parser))
-        return yaml_parse_error::parser_init_failure;  // error state.
-
-      yaml_parser_set_input_file(&context.parser, file);
-
-      context.parse();  // take the first event.
-
-      // expect beginning events.
-      if (!context.consume(yaml_event_type_t::YAML_STREAM_START_EVENT))
-        return yaml_parse_error::parser_error;
-      if (!context.consume(yaml_event_type_t::YAML_DOCUMENT_START_EVENT))
-        return yaml_parse_error::parser_error;
-
-      read_value(layer, context);
-
-      // return errors if any.
-      if (context.has_error)
-        return yaml_parse_error::parser_error;
-
-      // expect final events.
-      if (!context.consume(yaml_event_type_t::YAML_DOCUMENT_END_EVENT))
-        return yaml_parse_error::parser_error;
-      if (!context.consume(yaml_event_type_t::YAML_STREAM_END_EVENT))
-        return yaml_parse_error::parser_error;
-
-      return yaml_parse_error::no_error;
+      return recursive_parser().parse(file, layer);
     }
 
     template<typename LayerType>
     static inline void
     parse(const char* data, LayerType&& layer) {
+      return recursive_parser().parse(data, strlen(data), layer);
+    }
+
+    template<typename LayerType>
+    static inline void
+    parse(const char* data, size_t length, LayerType&& layer) {
+      return recursive_parser().parse(data, length, layer);
     }
 
     static inline void
     dump(FILE* file, const YamlDocument& doc) {
     }
 
-    struct parse_context {
-      yaml_parser_t parser;
-      yaml_event_t event;
-      bool has_error = false;
-      char key[128];
-
-      ~parse_context() {
+    class recursive_parser {
+    public:
+      ~recursive_parser() {
         yaml_event_delete(&event);
         yaml_parser_delete(&parser);
       }
 
-      inline void parse() {
+      template<garlic::RefLayer LayerType>
+      inline yaml_parse_error
+      parse(FILE* file, LayerType&& layer) {
+        if (!file)
+          return yaml_parse_error::null_file;  // null file.
+
+        if (!yaml_parser_initialize(&parser))
+          return yaml_parse_error::parser_init_failure;  // error state.
+
+        yaml_parser_set_input_file(&parser, file);
+        return start(layer);
+      }
+
+      template<garlic::RefLayer LayerType>
+      inline yaml_parse_error
+      parse(const char* input, size_t length, LayerType&& layer) {
+        if (!yaml_parser_initialize(&parser))
+          return yaml_parse_error::parser_init_failure;  // error state.
+
+        yaml_parser_set_input_string(&parser, reinterpret_cast<const unsigned char*>(input), length);
+        return start(layer);
+      }
+
+    private:
+      template<garlic::RefLayer LayerType>
+      inline yaml_parse_error start(LayerType&& layer) {
+        parse_event();
+
+        // expect beginning events.
+        if (!consume(yaml_event_type_t::YAML_STREAM_START_EVENT))
+          return yaml_parse_error::parser_error;
+        if (!consume(yaml_event_type_t::YAML_DOCUMENT_START_EVENT))
+          return yaml_parse_error::parser_error;
+
+        read_value_recursive(layer);
+
+        // return errors if any.
+        if (has_error)
+          return yaml_parse_error::parser_error;
+
+        // expect final events.
+        if (!consume(yaml_event_type_t::YAML_DOCUMENT_END_EVENT))
+          return yaml_parse_error::parser_error;
+        if (!consume(yaml_event_type_t::YAML_STREAM_END_EVENT))
+          return yaml_parse_error::parser_error;
+
+        return yaml_parse_error::no_error;
+      }
+
+      inline void parse_event() {
         if (!yaml_parser_parse(&parser, &event)) {
           has_error = true;
         }
@@ -259,7 +281,7 @@ namespace garlic::providers::libyaml {
 
       inline void take() {
         yaml_event_delete(&event);
-        parse();
+        parse_event();
       }
 
       inline bool consume(yaml_event_type_t type) {
@@ -274,6 +296,91 @@ namespace garlic::providers::libyaml {
       data() const {
         return reinterpret_cast<const char*>(event.data.scalar.value);
       }
+
+      template<garlic::RefLayer LayerType>
+      void read_mapping_recursive(LayerType&& layer) {
+        layer.set_object();
+        do {
+          if (event.type != yaml_event_type_t::YAML_SCALAR_EVENT) {
+            has_error = true;
+          }
+          strcpy(key, data());  // store a copy of the key.
+          take();
+          layer.add_member_builder(key, [this](auto ref) {
+              read_value_recursive(ref);
+              });
+        } while (!consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !has_error);
+      }
+
+      template<garlic::RefLayer LayerType>
+      void read_sequence_recursive(LayerType&& layer) {
+        layer.set_list();
+        do {
+          layer.push_back_builder([this](auto ref) {
+              read_value_recursive(ref);
+              });
+        } while (!consume(yaml_event_type_t::YAML_SEQUENCE_END_EVENT) && !has_error);
+      }
+
+      template<garlic::RefLayer LayerType>
+      void read_value_recursive(LayerType&& layer) {
+        switch (event.type) {
+          case yaml_event_type_t::YAML_MAPPING_START_EVENT:
+            take();
+            read_mapping_recursive(layer);
+            return;
+          case yaml_event_type_t::YAML_SEQUENCE_START_EVENT:
+            take();
+            read_sequence_recursive(layer);
+            return;
+          case yaml_event_type_t::YAML_SCALAR_EVENT:
+            {
+              // if value is not plain, it is definitely a string.
+              if (event.data.scalar.style != yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE) {
+                layer.set_string(data());
+                take();
+                return;
+              }
+              int i;
+              const char* data = this->data();
+              if (parsing::ParseInt(data, i)) {
+                layer.set_int(i);
+                take();
+                return;
+              }
+              double d;
+              if (parsing::ParseDouble(data, d)) {
+                layer.set_double(d);
+                take();
+                return;
+              }
+              bool b;
+              if (parse_bool(data, b)) {
+                layer.set_bool(b);
+                take();
+                return;
+              }
+              if (strcmp(data, "null") == 0) {
+                layer.set_null();
+                take();
+                return;
+              }
+              layer.set_string(data);
+              take();
+            }
+            break;
+          case yaml_event_type_t::YAML_ALIAS_EVENT:
+            has_error = true;
+            return;
+          default:
+            return;
+        }
+      }
+
+      yaml_parser_t parser;
+      yaml_event_t event;
+      bool has_error = false;
+      char key[128];
     };
 
     static bool parse_bool(const char* data, bool& output) {
@@ -294,87 +401,6 @@ namespace garlic::providers::libyaml {
         }
       }
       return false;
-    }
-
-    template<garlic::RefLayer LayerType>
-    static void
-    read_mapping(LayerType&& layer, parse_context& context) {
-      layer.set_object();
-      do {
-        if (context.event.type != yaml_event_type_t::YAML_SCALAR_EVENT) {
-          return;  // error state.
-        }
-        strcpy(context.key, context.data());  // store a copy of the key.
-        context.take();
-        layer.add_member_builder(context.key, [&context](auto ref) {
-            read_value(ref, context);
-            });
-      } while (!context.consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !context.has_error);
-    }
-
-    template<garlic::RefLayer LayerType>
-    static void
-    read_sequence(LayerType&& layer, parse_context& context) {
-      layer.set_list();
-      do {
-        layer.push_back_builder([&context](auto ref) {
-            read_value(ref, context);
-            });
-      } while (!context.consume(yaml_event_type_t::YAML_SEQUENCE_END_EVENT) && !context.has_error);
-    }
-
-    template<garlic::RefLayer LayerType>
-    static void read_value(LayerType&& layer, parse_context& context) {
-      switch (context.event.type) {
-        case yaml_event_type_t::YAML_MAPPING_START_EVENT:
-          context.take();
-          read_mapping(layer, context);
-          break;
-        case yaml_event_type_t::YAML_SEQUENCE_START_EVENT:
-          context.take();
-          read_sequence(layer, context);
-          break;
-        case yaml_event_type_t::YAML_SCALAR_EVENT:
-          {
-            if (context.event.data.scalar.style != yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE) {
-              layer.set_string(context.data());
-              context.take();
-              return;
-            }
-            int i;
-            const char* data = context.data();
-            if (parsing::ParseInt(data, i)) {
-              layer.set_int(i);
-              context.take();
-              return;
-            }
-            double d;
-            if (parsing::ParseDouble(data, d)) {
-              layer.set_double(d);
-              context.take();
-              return;
-            }
-            bool b;
-            if (parse_bool(data, b)) {
-              layer.set_bool(b);
-              context.take();
-              return;
-            }
-            if (strcmp(data, "null") == 0) {
-              layer.set_null();
-              context.take();
-              return;
-            }
-            layer.set_string(data);
-            context.take();
-          }
-          break;
-        case yaml_event_type_t::YAML_ALIAS_EVENT:
-          context.has_error = true;
-          return;  // error state for unsupported aliasing.
-        default:
-          return;
-      }
     }
 
     template<garlic::RefLayer LayerType>
