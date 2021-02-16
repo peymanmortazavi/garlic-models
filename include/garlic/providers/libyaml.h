@@ -195,26 +195,24 @@ namespace garlic::providers::libyaml {
       null_file = 3,
     };
 
-    template<typename LayerType>
-    static inline yaml_parse_error
-    parse(FILE* file, LayerType&& layer) {
-      return recursive_parser().parse(file, layer);
-    }
-
-    template<typename LayerType>
-    static inline void
-    parse(const char* data, LayerType&& layer) {
-      return recursive_parser().parse(data, strlen(data), layer);
-    }
-
-    template<typename LayerType>
-    static inline void
-    parse(const char* data, size_t length, LayerType&& layer) {
-      return recursive_parser().parse(data, length, layer);
-    }
-
-    static inline void
-    dump(FILE* file, const YamlDocument& doc) {
+    static bool parse_bool(const char* data, bool& output) {
+      struct pair {
+        const char* name;
+        bool value;
+      };
+      static const pair pairs[8] = {
+        {"y", true}, {"n", false},
+        {"true", true}, {"false", false},
+        {"on", true}, {"off", false},
+        {"yes", true}, {"no", false},
+      };
+      for (const auto& it : pairs) {
+        if (strcmp(it.name, data) == 0) {
+          output = it.value;
+          return true;
+        }
+      }
+      return false;
     }
 
     class recursive_parser {
@@ -384,24 +382,27 @@ namespace garlic::providers::libyaml {
       char key[128];
     };
 
-    static bool parse_bool(const char* data, bool& output) {
-      struct pair {
-        const char* name;
-        bool value;
-      };
-      static const pair pairs[8] = {
-        {"y", true}, {"n", false},
-        {"true", true}, {"false", false},
-        {"on", true}, {"off", false},
-        {"yes", true}, {"no", false},
-      };
-      for (const auto& it : pairs) {
-        if (strcmp(it.name, data) == 0) {
-          output = it.value;
-          return true;
-        }
-      }
-      return false;
+
+    template<typename LayerType>
+    static inline yaml_parse_error
+    parse(FILE* file, LayerType&& layer) {
+      return recursive_parser().parse(file, layer);
+    }
+
+    template<typename LayerType>
+    static inline void
+    parse(const char* data, LayerType&& layer) {
+      return recursive_parser().parse(data, strlen(data), layer);
+    }
+
+    template<typename LayerType>
+    static inline void
+    parse(const char* data, size_t length, LayerType&& layer) {
+      return recursive_parser().parse(data, length, layer);
+    }
+
+    static inline void
+    dump(FILE* file, const YamlDocument& doc) {
     }
 
     template<garlic::RefLayer LayerType>
