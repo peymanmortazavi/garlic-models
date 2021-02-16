@@ -64,7 +64,7 @@ namespace garlic {
     { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
-    // todo get_view must be a requirement.
+    { t.get_view() };
   };
 
   template<typename T> concept RefLayer = ViewLayer<T> && requires(T t) {
@@ -111,6 +111,8 @@ namespace garlic {
     { t.add_member_builder(std::declval<const char*>(), std::declval<void(*)(T)>()) };
     { t.remove_member(std::declval<const char*>()) };
     { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
+
+    { t.get_reference() };
   };
 
   template<typename T>
