@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iterator>
 #include <string>
+#include <deque>
 #include "../parsing/numbers.h"
 #include "../layer.h"
 
@@ -187,6 +188,199 @@ namespace garlic::providers::libyaml {
       return doc;
     }
 
+    enum yaml_parse_error : uint8_t {
+      no_error = 0,
+      parser_error = 1,
+      parser_init_failure = 2,
+      null_file = 3,
+    };
+
+    template<typename LayerType>
+    static inline yaml_parse_error
+    parse(FILE* file, LayerType&& layer) {
+      parse_context context;
+
+      if (!file)
+        return yaml_parse_error::null_file;  // null file.
+
+      if (!yaml_parser_initialize(&context.parser))
+        return yaml_parse_error::parser_init_failure;  // error state.
+
+      yaml_parser_set_input_file(&context.parser, file);
+
+      context.parse();  // take the first event.
+
+      // expect beginning events.
+      if (!context.consume(yaml_event_type_t::YAML_STREAM_START_EVENT))
+        return yaml_parse_error::parser_error;
+      if (!context.consume(yaml_event_type_t::YAML_DOCUMENT_START_EVENT))
+        return yaml_parse_error::parser_error;
+
+      read_value(layer, context);
+
+      // return errors if any.
+      if (context.has_error)
+        return yaml_parse_error::parser_error;
+
+      // expect final events.
+      if (!context.consume(yaml_event_type_t::YAML_DOCUMENT_END_EVENT))
+        return yaml_parse_error::parser_error;
+      if (!context.consume(yaml_event_type_t::YAML_STREAM_END_EVENT))
+        return yaml_parse_error::parser_error;
+
+      return yaml_parse_error::no_error;
+    }
+
+    template<typename LayerType>
+    static inline void
+    parse(const char* data, LayerType&& layer) {
+    }
+
+    static inline void
+    dump(FILE* file, const YamlDocument& doc) {
+    }
+
+    struct parse_context {
+      yaml_parser_t parser;
+      yaml_event_t event;
+      bool has_error = false;
+      char key[128];
+
+      ~parse_context() {
+        yaml_event_delete(&event);
+        yaml_parser_delete(&parser);
+      }
+
+      inline void parse() {
+        if (!yaml_parser_parse(&parser, &event)) {
+          has_error = true;
+        }
+      }
+
+      inline void take() {
+        yaml_event_delete(&event);
+        parse();
+      }
+
+      inline bool consume(yaml_event_type_t type) {
+        if (event.type == type) {
+          take();
+          return true;
+        }
+        return false;
+      }
+
+      inline const char*
+      data() const {
+        return reinterpret_cast<const char*>(event.data.scalar.value);
+      }
+    };
+
+    static bool parse_bool(const char* data, bool& output) {
+      struct pair {
+        const char* name;
+        bool value;
+      };
+      static const pair pairs[8] = {
+        {"y", true}, {"n", false},
+        {"true", true}, {"false", false},
+        {"on", true}, {"off", false},
+        {"yes", true}, {"no", false},
+      };
+      for (const auto& it : pairs) {
+        if (strcmp(it.name, data) == 0) {
+          output = it.value;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    template<garlic::RefLayer LayerType>
+    static void
+    read_mapping(LayerType&& layer, parse_context& context) {
+      layer.set_object();
+      do {
+        if (context.event.type != yaml_event_type_t::YAML_SCALAR_EVENT) {
+          return;  // error state.
+        }
+        strcpy(context.key, context.data());  // store a copy of the key.
+        context.take();
+        layer.add_member_builder(context.key, [&context](auto ref) {
+            read_value(ref, context);
+            });
+      } while (!context.consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !context.has_error);
+    }
+
+    template<garlic::RefLayer LayerType>
+    static void
+    read_sequence(LayerType&& layer, parse_context& context) {
+      layer.set_list();
+      do {
+        layer.push_back_builder([&context](auto ref) {
+            read_value(ref, context);
+            });
+      } while (!context.consume(yaml_event_type_t::YAML_SEQUENCE_END_EVENT) && !context.has_error);
+    }
+
+    template<garlic::RefLayer LayerType>
+    static void read_value(LayerType&& layer, parse_context& context) {
+      switch (context.event.type) {
+        case yaml_event_type_t::YAML_MAPPING_START_EVENT:
+          context.take();
+          read_mapping(layer, context);
+          break;
+        case yaml_event_type_t::YAML_SEQUENCE_START_EVENT:
+          context.take();
+          read_sequence(layer, context);
+          break;
+        case yaml_event_type_t::YAML_SCALAR_EVENT:
+          {
+            if (context.event.data.scalar.style != yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE) {
+              layer.set_string(context.data());
+              context.take();
+              return;
+            }
+            int i;
+            const char* data = context.data();
+            if (parsing::ParseInt(data, i)) {
+              layer.set_int(i);
+              context.take();
+              return;
+            }
+            double d;
+            if (parsing::ParseDouble(data, d)) {
+              layer.set_double(d);
+              context.take();
+              return;
+            }
+            bool b;
+            if (parse_bool(data, b)) {
+              layer.set_bool(b);
+              context.take();
+              return;
+            }
+            if (strcmp(data, "null") == 0) {
+              layer.set_null();
+              context.take();
+              return;
+            }
+            layer.set_string(data);
+            context.take();
+          }
+          break;
+        case yaml_event_type_t::YAML_ALIAS_EVENT:
+          context.has_error = true;
+          return;  // error state for unsupported aliasing.
+        default:
+          return;
+      }
+    }
+
+    template<garlic::RefLayer LayerType>
+    static inline void
+    emit(FILE* file, LayerType&& layer) {
+    }
   };
 
 }
