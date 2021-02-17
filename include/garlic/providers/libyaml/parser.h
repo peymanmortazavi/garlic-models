@@ -18,6 +18,13 @@ namespace garlic::providers::libyaml {
 
   namespace internal {
 
+    static inline int leading_zero_position(char* buffer, int size) {
+      while (buffer[--size] == '0');
+      ++size;
+      if (buffer[size] == '.') ++size;
+      return size;
+    }
+
     static bool parse_bool(const char* data, bool& output) {
       struct pair {
         const char* name;
@@ -410,13 +417,6 @@ namespace garlic::providers::libyaml {
           error_ = libyaml_error::emitter_error;
       }
 
-      int leading_zero_position(char* buffer, int size) {
-        while (buffer[--size] == '0');
-        ++size;
-        if (buffer[size] == '.') ++size;
-        return size;
-      }
-
       template<garlic::ViewLayer LayerType>
       inline void
       emit(LayerType&& layer, char* buffer) {
@@ -480,7 +480,7 @@ namespace garlic::providers::libyaml {
               (yaml_char_t*)YAML_STR_TAG,
               (yaml_char_t*)view.data(), view.size(),
               1, 0,
-              yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+              yaml_scalar_style_t::YAML_DOUBLE_QUOTED_SCALAR_STYLE);
         } else {
           yaml_scalar_event_initialize(
               &event_, NULL,
@@ -593,6 +593,93 @@ namespace garlic::providers::libyaml {
       }
       return emitter.emit(layer);
     }
+
+    template<garlic::ViewLayer LayerType>
+    inline int 
+    emit_layer(
+        yaml_emitter_t* emitter,
+        yaml_event_t* event,
+        LayerType&& layer,
+        char* buffer,
+        yaml_mapping_style_t mapping_style = yaml_mapping_style_t::YAML_ANY_MAPPING_STYLE,
+        yaml_sequence_style_t sequence_style = yaml_sequence_style_t::YAML_ANY_SEQUENCE_STYLE) {
+      if (layer.is_object()) {
+        yaml_mapping_start_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_MAP_TAG,
+            1, mapping_style);
+        if (!yaml_emitter_emit(emitter, event))
+          return 1;
+        for (const auto& pair : layer.get_object()) {
+          if (!emit_layer(emitter, event, pair.key, buffer, mapping_style, sequence_style))
+            return 1;
+          if (!emit_layer(emitter, event, pair.value, buffer, mapping_style, sequence_style))
+            return 1;
+        }
+        yaml_mapping_end_event_initialize(event);
+      } else if (layer.is_list()) {
+        yaml_sequence_start_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_SEQ_TAG,
+            1, sequence_style);
+        if (!yaml_emitter_emit(emitter, event))
+          return 1;
+        for (const auto& item : layer.get_list()) {
+          emit(item, buffer);
+        }
+        yaml_sequence_end_event_initialize(event);
+      } else if (layer.is_bool()) {
+        if (layer.get_bool())
+          yaml_scalar_event_initialize(
+              event, NULL,
+              (yaml_char_t*)YAML_BOOL_TAG,
+              (yaml_char_t*)"true", 4,
+              1, 0,
+              yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+        else
+          yaml_scalar_event_initialize(
+              event, NULL,
+              (yaml_char_t*)YAML_INT_TAG,
+              (yaml_char_t*)"false", 5,
+              1, 0,
+              yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+      } else if (layer.is_int()) {
+        auto size = sprintf(buffer, "%d", layer.get_int());
+        yaml_scalar_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_INT_TAG,
+            (yaml_char_t*)buffer, size,
+            1, 0,
+            yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+      } else if (layer.is_double()) {
+        auto size = sprintf(buffer, "%f", layer.get_double());
+        size = leading_zero_position(buffer, size);
+        yaml_scalar_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_FLOAT_TAG,
+            (yaml_char_t*)buffer, size,
+            1, 0,
+            yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+      } else if (layer.is_string()) {
+        auto view = layer.get_string_view();
+        yaml_scalar_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_STR_TAG,
+            (yaml_char_t*)view.data(), view.size(),
+            1, 0,
+            yaml_scalar_style_t::YAML_DOUBLE_QUOTED_SCALAR_STYLE);
+      } else {
+        yaml_scalar_event_initialize(
+            event, NULL,
+            (yaml_char_t*)YAML_NULL_TAG,
+            (yaml_char_t*)"null", 4,
+            1, 0,
+            yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
+      }
+      if (!yaml_emitter_emit(emitter, event))
+        return 1;
+    }
+
   };
 
 }
