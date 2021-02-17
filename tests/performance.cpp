@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 #include <garlic/garlic.h>
-#include "garlic/providers/libyaml.h"
+#include "garlic/providers/libyaml/parser.h"
 #include "garlic/providers/rapidjson.h"
 #include "test_utility.h"
 
