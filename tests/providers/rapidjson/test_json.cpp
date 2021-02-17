@@ -51,21 +51,20 @@ TEST(RapidJson, DocumentTest) {
 
   doc.set_object();
 
-  std::deque<std::string> names;
+  std::vector<std::string> names;
   names.push_back("a");
   names.push_back("b");
   names.push_back("c");
 
   JsonValue names_value {doc};  // initialize JsonValue via JsonDocument.
   names_value.set_list();
-  std::for_each(names.begin(), names.end(),
-      [&](auto& item) { names_value.push_back(item); });
+  copy(begin(names), end(names), garlic::back_inserter(names_value));
 
   doc.add_member("names", names_value);
   auto saved_names = (*doc.find_member("names")).value;
   for (auto item : saved_names.get_list()) {
     ASSERT_STREQ(item.get_cstr(), names[0].c_str());
-    names.pop_front();
+    names.erase(begin(names));
   }
   
   test_full_layer(doc);

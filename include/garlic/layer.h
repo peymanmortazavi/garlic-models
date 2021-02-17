@@ -316,6 +316,37 @@ namespace garlic {
     return left.get_inner_iterator() - right.get_inner_iterator();
   }
 
+  template<RefLayer LayerType>
+  class back_inserter_iterator {
+  public:
+    using difference_type = ptrdiff_t;
+    using value_type = void;
+    using reference_type = void;
+    using pointer_type = void;
+    using iterator_category = std::output_iterator_tag;
+    using container_type = LayerType;
+
+    back_inserter_iterator(LayerType&& layer) : layer_(std::forward<LayerType>(layer)) {}
+
+    template<typename T>
+    inline void operator = (T&& value) noexcept {
+      layer_.push_back(std::forward<T>(value));
+    }
+
+    back_inserter_iterator& operator * () { return *this; }
+    back_inserter_iterator& operator ++() { return *this; }
+    back_inserter_iterator& operator ++(int) { return *this; }
+
+  protected:
+    LayerType layer_;
+  };
+
+  template<RefLayer LayerType>
+  static inline back_inserter_iterator<LayerType>
+  back_inserter(LayerType&& layer) {
+    return back_inserter_iterator<LayerType>(std::forward<LayerType>(layer));
+  }
+
   template<typename ValueType, typename Iterator>
   using BasicForwardIterator = ForwardIterator<
     BasicIteratorWrapper<ValueType, Iterator>
