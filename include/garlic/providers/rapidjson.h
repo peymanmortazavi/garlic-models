@@ -260,7 +260,9 @@ namespace garlic::providers::rapidjson {
         cb(ReferenceType{value, allocator_});
         value_.PushBack(value, allocator_);
       }
-      void push_back() { value_.PushBack(ProviderValueType().Move(), allocator_); }
+      void push_back() {
+        value_.PushBack(ProviderValueType().Move(), allocator_);
+      }
       void push_back(const JsonView& value) {
         value_.PushBack(ProviderValueType(value.get_inner_value(), allocator_), allocator_);
       }

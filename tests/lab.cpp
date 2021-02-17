@@ -1,7 +1,14 @@
+#include "garlic/clove.h"
 #include "garlic/layer.h"
+#include "garlic/meta.h"
 #include "rapidjson/document.h"
+#include <cstdio>
 #include <garlic/garlic.h>
 #include <garlic/providers/rapidjson.h>
+#include <garlic/providers/libyaml/parser.h>
+
+using namespace garlic::providers::rapidjson;
+using namespace garlic::providers::libyaml;
 
 static rapidjson::Document& CreateLargeRapidJsonDocument(int iterations) {
   static rapidjson::Document* d;
@@ -61,11 +68,11 @@ static long long garlic_way(rapidjson::Document& doc) {
   };
 
 
-int main()
-{
-  int iterations;
-  std::cin >> iterations;
-  auto& doc = CreateLargeRapidJsonDocument(iterations);
-  printf("%lld", garlic_way(doc));
+int main() {
+  garlic::providers::rapidjson::JsonDocument doc;
+  FILE* file = fopen("data/test.yaml", "r");
+  Yaml::parse(file, doc);
+  Json::dump_pretty(stdout, doc);
+  Yaml::emit(stdout, doc, true);
   return 0;
 }

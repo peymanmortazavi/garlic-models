@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include "yaml.h"
 #include <garlic/garlic.h>
-#include <garlic/providers/libyaml.h>
+#include <garlic/providers/libyaml/parser.h>
 
 using namespace garlic;
 using namespace garlic::providers::libyaml;

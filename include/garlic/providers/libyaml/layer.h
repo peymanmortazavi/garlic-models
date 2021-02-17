@@ -1,13 +1,14 @@
-#ifndef GARLIC_LIBYAML_H
-#define GARLIC_LIBYAML_H
+#ifndef GARLIC_LIBYAML_LAYER_H
+#define GARLIC_LIBYAML_LAYER_H
 
 #include "yaml.h"
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <string>
-#include "../parsing/numbers.h"
-#include "../layer.h"
+#include <deque>
+#include "../../parsing/numbers.h"
+#include "../../layer.h"
 
 
 namespace garlic::providers::libyaml {
@@ -162,33 +163,6 @@ namespace garlic::providers::libyaml {
     yaml_document_t doc_;
   };
 
-  struct Yaml {
-    static YamlDocument load(const unsigned char * data, size_t lenght) {
-      YamlDocument doc;
-      yaml_parser_t parser;
-      yaml_parser_initialize(&parser);
-      yaml_parser_set_input_string(&parser, data, lenght);
-      yaml_parser_load(&parser, doc.get_inner_document());
-      yaml_parser_delete(&parser);
-      return doc;
-    }
-
-    static YamlDocument load(const unsigned char * data) {
-      return Yaml::load(data, strlen((char*)data));
-    }
-
-    static YamlDocument load(FILE * file) {
-      YamlDocument doc;
-      yaml_parser_t parser;
-      yaml_parser_initialize(&parser);
-      yaml_parser_set_input_file(&parser, file);
-      yaml_parser_load(&parser, doc.get_inner_document());
-      yaml_parser_delete(&parser);
-      return doc;
-    }
-
-  };
-
 }
 
-#endif /* end of include guard: GARLIC_LIBYAML_H */
+#endif /* end of include guard: GARLIC_LIBYAML_LAYER_H */
