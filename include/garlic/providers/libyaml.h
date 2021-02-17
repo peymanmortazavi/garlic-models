@@ -401,6 +401,8 @@ namespace garlic::providers::libyaml {
         if (!yaml_parser_initialize(&parser))
           return yaml_parse_error::parser_init_failure;
 
+        yaml_parser_set_input_file(&parser, file);
+
         enum class state_type : uint8_t {
           set, push, read_key, read_value
         };
@@ -421,6 +423,7 @@ namespace garlic::providers::libyaml {
         do {
           if (delete_event)
             yaml_event_delete(&event);
+          delete_event = true;
           if (!yaml_parser_parse(&parser, &event))
             return yaml_parse_error::parser_error;
           auto& item = stack.front();
@@ -431,7 +434,8 @@ namespace garlic::providers::libyaml {
                   stack.pop_front();
                   continue;
                 }
-                stack.emplace_front(node { item.value.push_back() });
+                item.value.push_back();
+                stack.emplace_front(node { *--item.value.end_list() });
                 // next section will update the layer.
               }
               break;
@@ -443,7 +447,8 @@ namespace garlic::providers::libyaml {
                 }
                 if (event.type != yaml_event_type_t::YAML_SCALAR_EVENT)
                   return yaml_parse_error::parser_error;  // unexpected event.
-                stack.emplace_front(node { item.value.add_member(this->data()) });
+                item.value.add_member(this->data());
+                stack.emplace_front(node { (*--item.value.end_member()).value });
                 continue;  // do not update the layer in this iteration.
               }
             case state_type::read_value:
@@ -452,29 +457,29 @@ namespace garlic::providers::libyaml {
               break;
           }
           // now update the layer.
-          auto& item2 = stack.front();
           switch (event.type) {
             case yaml_event_type_t::YAML_ALIAS_EVENT:
               return yaml_parse_error::parser_error;
             case yaml_event_type_t::YAML_SEQUENCE_START_EVENT:
               {
-                item2.value.set_list();
-                item2.state = state_type::push;
+                stack.front().value.set_list();
+                stack.front().state = state_type::push;
               }
               continue;
             case yaml_event_type_t::YAML_MAPPING_START_EVENT:
               {
-                item2.value.set_object();
-                item2.state = state_type::read_key;
+                stack.front().value.set_object();
+                stack.front().state = state_type::read_key;
               }
               continue;
             case yaml_event_type_t::YAML_SCALAR_EVENT:
               {
                 if (event.data.scalar.style != yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE) {
-                  item2.value.set_string(this->data());
-                  continue;
+                  stack.front().value.set_string(this->data());
+                } else {
+                  set_plain_scalar_value(stack.front().value, this->data());
                 }
-                set_plain_scalar_value(layer, this->data());
+                stack.pop_front();
               }
             default:
               continue;
