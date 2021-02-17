@@ -9,7 +9,7 @@
 #include <garlic/models.h>
 #include <garlic/providers/rapidjson.h>
 #include <garlic/providers/yaml-cpp.h>
-#include <garlic/providers/libyaml.h>
+#include <garlic/providers/libyaml/parser.h>
 #include "gtest/gtest.h"
 
 
