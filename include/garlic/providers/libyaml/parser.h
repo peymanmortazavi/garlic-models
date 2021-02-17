@@ -77,6 +77,7 @@ namespace garlic::providers::libyaml {
       inline void set_input(FILE* file) {
         if (!file)
           error_ = libyaml_error::null_file;
+        yaml_parser_set_input_file(&parser_, file);
       }
 
       inline void set_input(const char* input, size_t length) {
@@ -210,21 +211,37 @@ namespace garlic::providers::libyaml {
     class iterative_parser {
     public:
 
+      iterative_parser() {
+        if (!yaml_parser_initialize(&parser_))
+          error_ = libyaml_error::parser_init_failure;
+      }
+
       ~iterative_parser() {
         yaml_event_delete(&event_);
         yaml_parser_delete(&parser_);
       }
+
+      inline void set_input(FILE* file) {
+        if (!file)
+          error_ = libyaml_error::null_file;
+        yaml_parser_set_input_file(&parser_, file);
+      }
+
+      inline void set_input(const char* input, size_t length) {
+        yaml_parser_set_input_string(
+            &parser_,
+            reinterpret_cast<const unsigned char*>(input),
+            length);
+      }
+
+      inline void set_input(yaml_read_handler_t* handler, void* data) {
+        yaml_parser_set_input(&parser_, handler, data);
+      }
       
       template<garlic::RefLayer LayerType>
-      libyaml_error
-      parse(FILE* file, LayerType&& layer) {
-        if (!file)
-          return libyaml_error::null_file;
-
-        if (!yaml_parser_initialize(&parser_))
-          return libyaml_error::parser_init_failure;
-
-        yaml_parser_set_input_file(&parser_, file);
+      libyaml_error parse(LayerType&& layer) {
+        if (error_)
+          return error_;
 
         enum class state_type : uint8_t {
           set, push, read_key, read_value
@@ -319,6 +336,7 @@ namespace garlic::providers::libyaml {
 
       yaml_parser_t parser_;
       yaml_event_t event_;
+      libyaml_error error_;
     };
 
     class emitter {
