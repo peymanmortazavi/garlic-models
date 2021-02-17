@@ -6,11 +6,12 @@
 
 namespace garlic::providers::libyaml {
 
-  enum yaml_parse_error : uint8_t {
+  enum libyaml_error : uint8_t {
     no_error = 0,
     parser_error = 1,
     parser_init_failure = 2,
     null_file = 3,
+    alias_used = 4,
   };
 
   namespace internal {
@@ -68,63 +69,60 @@ namespace garlic::providers::libyaml {
         yaml_parser_delete(&parser_);
       }
 
-      template<garlic::RefLayer LayerType>
-      inline yaml_parse_error
-      parse(FILE* file, LayerType&& layer) {
-        if (!file)
-          return yaml_parse_error::null_file;  // null file.
-
+      recursive_parser() {
         if (!yaml_parser_initialize(&parser_))
-          return yaml_parse_error::parser_init_failure;  // error state.
-
-        yaml_parser_set_input_file(&parser_, file);
-        return start(layer);
+          error_ = libyaml_error::parser_init_failure;
       }
 
-      template<garlic::RefLayer LayerType>
-      inline yaml_parse_error
-      parse(const char* input, size_t length, LayerType&& layer) {
-        if (!yaml_parser_initialize(&parser_))
-          return yaml_parse_error::parser_init_failure;  // error state.
+      inline void set_input(FILE* file) {
+        if (!file)
+          error_ = libyaml_error::null_file;
+      }
 
+      inline void set_input(const char* input, size_t length) {
         yaml_parser_set_input_string(
             &parser_,
             reinterpret_cast<const unsigned char*>(input),
             length);
-
-        return parse(layer);
       }
 
-    private:
+      inline void set_input(yaml_read_handler_t* handler, void* data) {
+        yaml_parser_set_input(&parser_, handler, data);
+      }
+
       template<garlic::RefLayer LayerType>
-      inline yaml_parse_error parse(LayerType&& layer) {
+      inline libyaml_error parse(LayerType&& layer) {
+        if (error_)
+          return error_;
+
         // parse the very first event.
         parse_event();
 
         // expect beginning events.
         if (!consume(yaml_event_type_t::YAML_STREAM_START_EVENT))
-          return yaml_parse_error::parser_error;
+          return libyaml_error::parser_error;
         if (!consume(yaml_event_type_t::YAML_DOCUMENT_START_EVENT))
-          return yaml_parse_error::parser_error;
+          return libyaml_error::parser_error;
 
         read_value_recursive(layer);
 
         // return errors if any.
-        if (has_error_)
-          return yaml_parse_error::parser_error;
+        if (error_)
+          return error_;
 
         // expect final events.
         if (!consume(yaml_event_type_t::YAML_DOCUMENT_END_EVENT))
-          return yaml_parse_error::parser_error;
+          return libyaml_error::parser_error;
         if (!consume(yaml_event_type_t::YAML_STREAM_END_EVENT))
-          return yaml_parse_error::parser_error;
+          return libyaml_error::parser_error;
 
-        return yaml_parse_error::no_error;
+        return libyaml_error::no_error;
       }
 
+    private:
       inline void parse_event() {
         if (!yaml_parser_parse(&parser_, &event_)) {
-          has_error_ = true;
+          error_ = libyaml_error::parser_error;
         }
       }
 
@@ -151,14 +149,14 @@ namespace garlic::providers::libyaml {
         layer.set_object();
         do {
           if (event_.type != yaml_event_type_t::YAML_SCALAR_EVENT) {
-            has_error_ = true;
+            error_ = libyaml_error::parser_error;
           }
           strcpy(key_, data());  // store a copy of the key.
           take();
           layer.add_member_builder(key_, [this](auto ref) {
               read_value_recursive(ref);
               });
-        } while (!consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !has_error_);
+        } while (!consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !error_);
       }
 
       template<garlic::RefLayer LayerType>
@@ -168,7 +166,7 @@ namespace garlic::providers::libyaml {
           layer.push_back_builder([this](auto ref) {
               read_value_recursive(ref);
               });
-        } while (!consume(yaml_event_type_t::YAML_SEQUENCE_END_EVENT) && !has_error_);
+        } while (!consume(yaml_event_type_t::YAML_SEQUENCE_END_EVENT) && !error_);
       }
 
       template<garlic::RefLayer LayerType>
@@ -195,7 +193,7 @@ namespace garlic::providers::libyaml {
             }
             return;
           case yaml_event_type_t::YAML_ALIAS_EVENT:
-            has_error_ = true;
+            error_ = libyaml_error::alias_used;
             return;
           default:
             return;
@@ -204,7 +202,7 @@ namespace garlic::providers::libyaml {
 
       yaml_parser_t parser_;
       yaml_event_t event_;
-      bool has_error_ = false;
+      libyaml_error error_ = libyaml_error::no_error;
       char key_[128];
     };
 
@@ -218,13 +216,13 @@ namespace garlic::providers::libyaml {
       }
       
       template<garlic::RefLayer LayerType>
-      yaml_parse_error
+      libyaml_error
       parse(FILE* file, LayerType&& layer) {
         if (!file)
-          return yaml_parse_error::null_file;
+          return libyaml_error::null_file;
 
         if (!yaml_parser_initialize(&parser_))
-          return yaml_parse_error::parser_init_failure;
+          return libyaml_error::parser_init_failure;
 
         yaml_parser_set_input_file(&parser_, file);
 
@@ -250,7 +248,7 @@ namespace garlic::providers::libyaml {
             yaml_event_delete(&event_);
           delete_event = true;
           if (!yaml_parser_parse(&parser_, &event_))
-            return yaml_parse_error::parser_error;
+            return libyaml_error::parser_error;
           auto& item = stack.front();
           switch (item.state) {
             case state_type::push:
@@ -271,7 +269,7 @@ namespace garlic::providers::libyaml {
                   continue;
                 }
                 if (event_.type != yaml_event_type_t::YAML_SCALAR_EVENT)
-                  return yaml_parse_error::parser_error;  // unexpected event.
+                  return libyaml_error::parser_error;  // unexpected event.
                 item.value.add_member(this->data());
                 stack.emplace_front(node { (*--item.value.end_member()).value });
                 continue;  // do not update the layer in this iteration.
@@ -284,7 +282,7 @@ namespace garlic::providers::libyaml {
           // now update the layer.
           switch (event_.type) {
             case yaml_event_type_t::YAML_ALIAS_EVENT:
-              return yaml_parse_error::parser_error;
+              return libyaml_error::parser_error;
             case yaml_event_type_t::YAML_SEQUENCE_START_EVENT:
               {
                 stack.front().value.set_list();
@@ -311,7 +309,7 @@ namespace garlic::providers::libyaml {
           }
         } while(event_.type != yaml_event_type_t::YAML_STREAM_END_EVENT);
 
-        return yaml_parse_error::no_error;
+        return libyaml_error::no_error;
       }
 
     private:
@@ -326,12 +324,12 @@ namespace garlic::providers::libyaml {
     class emitter {
     public:
       template<garlic::ViewLayer LayerType>
-      yaml_parse_error emit(FILE* file, LayerType&& layer) {
+      libyaml_error emit(FILE* file, LayerType&& layer) {
         if (!file)
-          return yaml_parse_error::null_file;
+          return libyaml_error::null_file;
 
         if (!yaml_emitter_initialize(&emitter_))
-          return yaml_parse_error::parser_init_failure;
+          return libyaml_error::parser_init_failure;
 
         yaml_emitter_set_output_file(&emitter_, file);
         
@@ -339,9 +337,9 @@ namespace garlic::providers::libyaml {
       }
 
       template<garlic::ViewLayer LayerType>
-      yaml_parse_error emit(char* output, size_t length, LayerType&& layer) {
+      libyaml_error emit(char* output, size_t length, LayerType&& layer) {
         if (!yaml_emitter_initialize(&emitter_))
-          return yaml_parse_error::parser_init_failure;
+          return libyaml_error::parser_init_failure;
 
         size_t written;
         yaml_emitter_set_output_string(
@@ -368,7 +366,7 @@ namespace garlic::providers::libyaml {
       }
 
       template<garlic::ViewLayer LayerType>
-      yaml_parse_error process(LayerType&& layer)
+      libyaml_error process(LayerType&& layer)
       {
         yaml_stream_start_event_initialize(&event_, yaml_encoding_t::YAML_UTF8_ENCODING);
         this->emit();
@@ -386,9 +384,9 @@ namespace garlic::providers::libyaml {
         this->emit();
 
         if (has_error_)
-          return yaml_parse_error::parser_error;
+          return libyaml_error::parser_error;
 
-        return yaml_parse_error::no_error;
+        return libyaml_error::no_error;
       }
 
       template<garlic::ViewLayer LayerType>
@@ -500,25 +498,39 @@ namespace garlic::providers::libyaml {
     }
 
     template<typename LayerType>
-    static inline yaml_parse_error
+    static inline libyaml_error
     parse(FILE* file, LayerType&& layer) {
-      return internal::recursive_parser().parse(file, layer);
+      auto parser = internal::recursive_parser();
+      parser.set_input(file);
+      return parser.parse(layer);
     }
 
     template<typename LayerType>
     static inline void
     parse(const char* data, LayerType&& layer) {
-      return internal::recursive_parser().parse(data, strlen(data), layer);
+      auto parser = internal::recursive_parser();
+      parser.set_input(data, strlen(data));
+      return parser.parse(layer);
     }
 
     template<typename LayerType>
     static inline void
     parse(const char* data, size_t length, LayerType&& layer) {
-      return internal::recursive_parser().parse(data, length, layer);
+      auto parser = internal::recursive_parser();
+      parser.set_input(data, length);
+      return parser.parse(layer);
     }
 
     template<typename LayerType>
-    static inline yaml_parse_error
+    static inline void
+    parse(yaml_read_handler_t* handler, void* data, LayerType&& layer) {
+      auto parser = internal::recursive_parser();
+      parser.set_input(handler, data);
+      return parser.parse(layer);
+    }
+
+    template<typename LayerType>
+    static inline libyaml_error
     emit(FILE* file, LayerType&& layer) {
       return internal::emitter().emit(file, layer);
     }
