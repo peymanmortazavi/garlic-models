@@ -349,6 +349,7 @@ namespace garlic {
   }
 
 
+  template<int BufferSize = 65536>
   class FileStreamBuffer : public std::streambuf {
   public:
     FileStreamBuffer(FILE* file) : file_(file) {}
@@ -362,7 +363,7 @@ namespace garlic {
 
   private:
     FILE* file_;
-    char read_buffer_[65536];
+    char read_buffer_[BufferSize];
   };
 
 }
