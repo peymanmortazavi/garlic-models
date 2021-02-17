@@ -12,6 +12,8 @@ namespace garlic::providers::libyaml {
     parser_init_failure = 2,
     null_file = 3,
     alias_used = 4,
+    emitter_error = 1,
+    emitter_init_failure = 2,
   };
 
   namespace internal {
@@ -341,51 +343,38 @@ namespace garlic::providers::libyaml {
 
     class emitter {
     public:
-      template<garlic::ViewLayer LayerType>
-      libyaml_error emit(FILE* file, LayerType&& layer) {
-        if (!file)
-          return libyaml_error::null_file;
-
+      emitter() {
         if (!yaml_emitter_initialize(&emitter_))
-          return libyaml_error::parser_init_failure;
-
-        yaml_emitter_set_output_file(&emitter_, file);
-        
-        return this->process(layer);
+          error_ = libyaml_error::emitter_init_failure;
       }
 
-      template<garlic::ViewLayer LayerType>
-      libyaml_error emit(char* output, size_t length, LayerType&& layer) {
-        if (!yaml_emitter_initialize(&emitter_))
-          return libyaml_error::parser_init_failure;
-
-        size_t written;
+      inline void set_output(FILE* file) {
+        if (!file)
+          error_ = libyaml_error::null_file;
+        yaml_emitter_set_output_file(&emitter_, file);
+      }
+      
+      inline void set_output(char* output, size_t size, size_t& count) {
         yaml_emitter_set_output_string(
             &emitter_,
             reinterpret_cast<unsigned char*>(output),
-            length,
-            &written);
-        
-        return this->process(layer);
+            size,
+            &count);
+      }
+
+      inline void set_output(yaml_write_handler_t* handler, void* data) {
+        yaml_emitter_set_output(&emitter_, handler, data);
       }
 
       ~emitter() {
         yaml_emitter_delete(&emitter_);
       }
 
-    private:
-      yaml_emitter_t emitter_;
-      yaml_event_t event_;
-      bool has_error_ = false;
-
-      inline void emit() {
-        if (!yaml_emitter_emit(&emitter_, &event_))
-          has_error_ = true;
-      }
-
       template<garlic::ViewLayer LayerType>
-      libyaml_error process(LayerType&& layer)
-      {
+      libyaml_error emit(LayerType&& layer) {
+        if (error_)
+          return error_;
+
         yaml_stream_start_event_initialize(&event_, yaml_encoding_t::YAML_UTF8_ENCODING);
         this->emit();
 
@@ -401,10 +390,21 @@ namespace garlic::providers::libyaml {
         yaml_stream_end_event_initialize(&event_);
         this->emit();
 
-        if (has_error_)
-          return libyaml_error::parser_error;
+        if (error_)
+          return error_;
 
         return libyaml_error::no_error;
+      }
+
+
+    private:
+      yaml_emitter_t emitter_;
+      yaml_event_t event_;
+      libyaml_error error_ = libyaml_error::no_error;
+
+      inline void emit() {
+        if (!yaml_emitter_emit(&emitter_, &event_))
+          error_ = libyaml_error::emitter_error;
       }
 
       template<garlic::ViewLayer LayerType>
@@ -550,7 +550,25 @@ namespace garlic::providers::libyaml {
     template<typename LayerType>
     static inline libyaml_error
     emit(FILE* file, LayerType&& layer) {
-      return internal::emitter().emit(file, layer);
+      auto emitter = internal::emitter();
+      emitter.set_output(file);
+      return emitter.emit(layer);
+    }
+
+    template<typename LayerType>
+    static inline libyaml_error
+    emit(char* output, size_t size, size_t& count, LayerType&& layer) {
+      auto emitter = internal::emitter();
+      emitter.set_output(output, size, count);
+      return emitter.emit(layer);
+    }
+
+    template<typename LayerType>
+    static inline libyaml_error
+    emit(yaml_write_handler_t* handler, void* data, LayerType&& layer) {
+      auto emitter = internal::emitter();
+      emitter.set_output(handler, data);
+      return emitter.emit(layer);
     }
   };
 
