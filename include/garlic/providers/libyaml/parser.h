@@ -154,9 +154,9 @@ namespace garlic::providers::libyaml {
           if (event_.type != yaml_event_type_t::YAML_SCALAR_EVENT) {
             error_ = libyaml_error::parser_error;
           }
-          strcpy(key_, data());  // store a copy of the key.
+          std::string tmp = data();  // todo improve this.
           take();
-          layer.add_member_builder(key_, [this](auto ref) {
+          layer.add_member_builder(tmp.c_str(), [this](auto ref) {
               read_value_recursive(ref);
               });
         } while (!consume(yaml_event_type_t::YAML_MAPPING_END_EVENT) && !error_);
@@ -187,7 +187,8 @@ namespace garlic::providers::libyaml {
             {
               // if value is not plain, it is definitely a string.
               if (event_.data.scalar.style != yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE) {
-                layer.set_string(this->data());
+                layer.set_string(
+                    std::string_view(this->data(), event_.data.scalar.length));
                 take();
                 return;
               }
@@ -206,7 +207,6 @@ namespace garlic::providers::libyaml {
       yaml_parser_t parser_;
       yaml_event_t event_;
       libyaml_error error_ = libyaml_error::no_error;
-      char key_[128];
     };
 
 
@@ -343,6 +343,9 @@ namespace garlic::providers::libyaml {
 
     class emitter {
     public:
+      yaml_mapping_style_t mapping_style = yaml_mapping_style_t::YAML_FLOW_MAPPING_STYLE;
+      yaml_sequence_style_t sequence_style = yaml_sequence_style_t::YAML_FLOW_SEQUENCE_STYLE;
+
       emitter() {
         if (!yaml_emitter_initialize(&emitter_))
           error_ = libyaml_error::emitter_init_failure;
@@ -378,13 +381,13 @@ namespace garlic::providers::libyaml {
         yaml_stream_start_event_initialize(&event_, yaml_encoding_t::YAML_UTF8_ENCODING);
         this->emit();
 
-        yaml_document_start_event_initialize(&event_, NULL, NULL, NULL, 0);
+        yaml_document_start_event_initialize(&event_, NULL, NULL, NULL, 1);
         this->emit();
 
         char buffer[128];
         this->emit(layer, buffer);
 
-        yaml_document_end_event_initialize(&event_, 0);
+        yaml_document_end_event_initialize(&event_, 1);
         this->emit();
 
         yaml_stream_end_event_initialize(&event_);
@@ -407,6 +410,13 @@ namespace garlic::providers::libyaml {
           error_ = libyaml_error::emitter_error;
       }
 
+      int leading_zero_position(char* buffer, int size) {
+        while (buffer[--size] == '0');
+        ++size;
+        if (buffer[size] == '.') ++size;
+        return size;
+      }
+
       template<garlic::ViewLayer LayerType>
       inline void
       emit(LayerType&& layer, char* buffer) {
@@ -414,7 +424,7 @@ namespace garlic::providers::libyaml {
           yaml_mapping_start_event_initialize(
               &event_, NULL,
               (yaml_char_t*)YAML_MAP_TAG,
-              1, yaml_mapping_style_t::YAML_ANY_MAPPING_STYLE);
+              1, mapping_style);
           emit();
           for (const auto& pair : layer.get_object()) {
             emit(pair.key, buffer);
@@ -425,7 +435,7 @@ namespace garlic::providers::libyaml {
           yaml_sequence_start_event_initialize(
               &event_, NULL,
               (yaml_char_t*)YAML_SEQ_TAG,
-              1, yaml_sequence_style_t::YAML_ANY_SEQUENCE_STYLE);
+              1, sequence_style);
           this->emit();
           for (const auto& item : layer.get_list()) {
             emit(item, buffer);
@@ -456,6 +466,7 @@ namespace garlic::providers::libyaml {
               yaml_scalar_style_t::YAML_PLAIN_SCALAR_STYLE);
         } else if (layer.is_double()) {
           auto size = sprintf(buffer, "%f", layer.get_double());
+          size = leading_zero_position(buffer, size);
           yaml_scalar_event_initialize(
               &event_, NULL,
               (yaml_char_t*)YAML_FLOAT_TAG,
@@ -549,25 +560,37 @@ namespace garlic::providers::libyaml {
 
     template<typename LayerType>
     static inline libyaml_error
-    emit(FILE* file, LayerType&& layer) {
+    emit(FILE* file, LayerType&& layer, bool pretty=false) {
       auto emitter = internal::emitter();
       emitter.set_output(file);
+      if (pretty) {
+        emitter.mapping_style = yaml_mapping_style_t::YAML_BLOCK_MAPPING_STYLE;
+        emitter.sequence_style = yaml_sequence_style_t::YAML_BLOCK_SEQUENCE_STYLE;
+      }
       return emitter.emit(layer);
     }
 
     template<typename LayerType>
     static inline libyaml_error
-    emit(char* output, size_t size, size_t& count, LayerType&& layer) {
+    emit(char* output, size_t size, size_t& count, LayerType&& layer, bool pretty = false) {
       auto emitter = internal::emitter();
       emitter.set_output(output, size, count);
+      if (pretty) {
+        emitter.mapping_style = yaml_mapping_style_t::YAML_BLOCK_MAPPING_STYLE;
+        emitter.sequence_style = yaml_sequence_style_t::YAML_BLOCK_SEQUENCE_STYLE;
+      }
       return emitter.emit(layer);
     }
 
     template<typename LayerType>
     static inline libyaml_error
-    emit(yaml_write_handler_t* handler, void* data, LayerType&& layer) {
+    emit(yaml_write_handler_t* handler, void* data, LayerType&& layer, bool pretty = false) {
       auto emitter = internal::emitter();
       emitter.set_output(handler, data);
+      if (pretty) {
+        emitter.mapping_style = yaml_mapping_style_t::YAML_BLOCK_MAPPING_STYLE;
+        emitter.sequence_style = yaml_sequence_style_t::YAML_BLOCK_SEQUENCE_STYLE;
+      }
       return emitter.emit(layer);
     }
   };
