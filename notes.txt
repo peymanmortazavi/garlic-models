@@ -8,3 +8,5 @@
 
   When making the Python module, take a look at this:
   https://github.com/python-rapidjson/python-rapidjson
+
+  Update the libyaml module to allow using an existing initialized emitter.
