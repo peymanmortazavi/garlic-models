@@ -13,42 +13,51 @@ namespace garlic {
     copy,
   };
 
-  template<typename SizeType = unsigned>
-  class text {
+  template<typename Ch, typename SizeType = unsigned>
+  class basic_text {
   public:
-    text(const char* data, text_type type = text_type::reference) : type_(type) {
+    basic_text(const Ch* data, text_type type = text_type::reference) : type_(type) {
       size_ = strlen(data);
-      if (type == text_type::copy && size_) {
-        data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
-      } else {
+      if (type == text_type::copy && size_)
+        data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
+      else
         data_ = data;
-      }
     }
 
-    text(const char* data, SizeType size, text_type type = text_type::reference) : type_(type), size_(size) {
-      if (type == text_type::copy && size_) {
-        data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
-      } else {
+    basic_text(const Ch* data, SizeType size, text_type type = text_type::reference) : type_(type), size_(size) {
+      if (type == text_type::copy && size_)
+        data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
+      else
         data_ = data;
-      }
     }
 
-    text(const text&) = delete;  // no copy
+    basic_text(
+        const std::basic_string<Ch>& value,
+        text_type type = text_type::reference) : type_(type), size_(value.size()) {
+      if (type == text_type::copy && size_)
+        data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), value.data());
+      else
+        data_ = value.data();
+    }
 
-    ~text() {
+    basic_text(const basic_text&) = delete;  // no copy
+
+    ~basic_text() {
       if (type_ == text_type::copy && size_) std::free((void*)data_);
     }
 
-    const char* data() const { return data_; }
+    const Ch* data() const { return data_; }
 
-    inline const char* begin() const { return data_; }
-    inline const char* end() const { return data_ + size_; }
+    inline const Ch* begin() const { return data_; }
+    inline const Ch* end() const { return data_ + size_; }
 
   private:
-    const char* data_;
+    const Ch* data_;
     SizeType size_;
     text_type type_;
   };
+
+  using text = basic_text<char>;
 
   template<typename ValueType, typename SizeType = unsigned>
   class sequence {
