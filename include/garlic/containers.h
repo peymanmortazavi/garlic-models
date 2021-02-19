@@ -8,33 +8,35 @@
 
 namespace garlic {
 
+  enum class text_type : uint8_t {
+    reference,
+    copy,
+  };
+
   template<typename SizeType = unsigned>
   class text {
   public:
-    enum flag : uint8_t {
-      reference = 0,
-      copy = 1,
-    };
-
-    text(const char* data, flag type = flag::reference) : type_(type) {
+    text(const char* data, text_type type = text_type::reference) : type_(type) {
       size_ = strlen(data);
-      if (type == flag::copy && size_) {
+      if (type == text_type::copy && size_) {
         data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
       } else {
         data_ = data;
       }
     }
 
-    text(const char* data, SizeType size, flag type = flag::reference) : type_(type), size_(size) {
-      if (type == flag::copy && size_) {
+    text(const char* data, SizeType size, text_type type = text_type::reference) : type_(type), size_(size) {
+      if (type == text_type::copy && size_) {
         data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
       } else {
         data_ = data;
       }
     }
+
+    text(const text&) = delete;  // no copy
 
     ~text() {
-      if (type_ == flag::copy && size_) std::free((void*)data_);
+      if (type_ == text_type::copy && size_) std::free((void*)data_);
     }
 
     const char* data() const { return data_; }
@@ -45,7 +47,7 @@ namespace garlic {
   private:
     const char* data_;
     SizeType size_;
-    flag type_;
+    text_type type_;
   };
 
   template<typename ValueType, typename SizeType = unsigned>
@@ -61,6 +63,13 @@ namespace garlic {
     sequence(SizeType initial_capacity = 8) : capacity_(initial_capacity), size_(0) {
       if (capacity_)
         items_ = reinterpret_cast<pointer>(std::malloc(capacity_ * sizeof(ValueType)));
+    }
+
+    sequence(const sequence&) = delete;
+
+    ~sequence() {
+      if (capacity_)
+        free(items_);
     }
 
     void push_back(value_type&& value) {
