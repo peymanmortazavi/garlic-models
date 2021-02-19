@@ -75,6 +75,9 @@ namespace garlic {
     }
 
     sequence(const sequence&) = delete;
+    sequence(sequence&& old) : items_(old.items_), capacity_(old.capacity_), size_(old.size_) {
+      old.capacity_ = 0;
+    }
 
     ~sequence() {
       if (capacity_)
@@ -99,6 +102,7 @@ namespace garlic {
 
     inline SizeType size() const noexcept { return size_; }
     inline SizeType capacity() const noexcept { return capacity_; }
+    inline bool empty() const noexcept { return !size_; }
 
   protected:
     pointer items_;
