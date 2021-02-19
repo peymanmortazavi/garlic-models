@@ -8,6 +8,46 @@
 
 namespace garlic {
 
+  template<typename SizeType = unsigned>
+  class text {
+  public:
+    enum flag : uint8_t {
+      reference = 0,
+      copy = 1,
+    };
+
+    text(const char* data, flag type = flag::reference) : type_(type) {
+      size_ = strlen(data);
+      if (type == flag::copy && size_) {
+        data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
+      } else {
+        data_ = data;
+      }
+    }
+
+    text(const char* data, SizeType size, flag type = flag::reference) : type_(type), size_(size) {
+      if (type == flag::copy && size_) {
+        data_ = strcpy((char*)malloc((size_ + 1) * sizeof(char)), data);
+      } else {
+        data_ = data;
+      }
+    }
+
+    ~text() {
+      if (type_ == flag::copy && size_) std::free((void*)data_);
+    }
+
+    const char* data() const { return data_; }
+
+    inline const char* begin() const { return data_; }
+    inline const char* end() const { return data_ + size_; }
+
+  private:
+    const char* data_;
+    SizeType size_;
+    flag type_;
+  };
+
   template<typename ValueType, typename SizeType = unsigned>
   class sequence {
   public:
