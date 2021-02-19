@@ -179,16 +179,17 @@ namespace garlic {
     ) : data_(data), allocator_(allocator), ViewType(data) {}
 
     void set_string(const char* str) {
-      this->prepare_string(strlen(str));
-      strcpy(this->data_.string.data, str);
+      auto length = strlen(str);
+      this->prepare_string(length);
+      strncpy(this->data_.string.data, str, length);
     }
     void set_string(const std::string& str) {
       this->prepare_string(str.size());
-      strcpy(this->data_.string.data, str.c_str());
+      strncpy(this->data_.string.data, str.c_str(), str.size());
     }
     void set_string(std::string_view str) {
       this->prepare_string(str.size());
-      strcpy(this->data_.string.data, str.data());
+      strncpy(this->data_.string.data, str.data(), str.size());
     }
     void set_double(double value) {
       this->clean();
