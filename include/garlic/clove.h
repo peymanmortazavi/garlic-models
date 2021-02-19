@@ -217,17 +217,17 @@ namespace garlic {
           allocator_.allocate(256 * sizeof(DataType))
       );
       this->data_.list.length = 0;
-      this->data_.list.capacity = 256;
+      this->data_.list.capacity = 16;
     }
     void set_object() {
       if (this->is_object()) return;
       this->clean();
       this->data_.type = TypeFlag::Object;
       this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.allocate(128 * sizeof(MemberPair<DataType>))
+          allocator_.allocate(16 * sizeof(MemberPair<DataType>))
       );
       this->data_.object.length = 0;
-      this->data_.object.capacity = 128;
+      this->data_.object.capacity = 16;
     }
 
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
