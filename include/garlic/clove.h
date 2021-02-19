@@ -274,8 +274,7 @@ namespace garlic {
     }
     void push_back(DataType&& value) {
       this->check_list();
-      this->data_.list.data[this->data_.list.length] = std::move(value);
-      this->data_.list.length++;
+      this->data_.list.data[this->data_.list.length++] = std::move(value);
     }
     void push_back() { this->push_back(DataType{}); }
     void push_back(const std::string& value) {
@@ -395,20 +394,28 @@ namespace garlic {
     void check_list() {
       // make sure we have enough space for another item.
       if (this->data_.list.length >= this->data_.list.capacity) {
+        auto new_capacity = this->data_.list.capacity + (this->data_.list.capacity + 1) / 2;
         this->data_.list.data = reinterpret_cast<typename DataType::List::Container>(
-          allocator_.reallocate(this->data_.list.data, this->data_.list.capacity, this->data_.list.capacity * 2)
+          allocator_.reallocate(
+            this->data_.list.data,
+            this->data_.list.capacity * sizeof(DataType),
+            new_capacity * sizeof(DataType))
         );
-        this->data_.list.capacity *= 2;
+        this->data_.list.capacity = new_capacity;
       }
     }
 
     void check_members() {
       // make sure we have enough space for another member.
       if (this->data_.object.length >= this->data_.object.capacity) {
+        auto new_capacity = this->data_.object.capacity + (this->data_.object.capacity + 1) / 2;
         this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.reallocate(this->data_.object.data, this->data_.object.capacity, this->data_.object.capacity * 2)
+          allocator_.reallocate(
+            this->data_.object.data,
+            this->data_.object.capacity * sizeof(DataType),
+            new_capacity * sizeof(DataType))
         );
-        this->data_.object.capacity *= 2;
+        this->data_.object.capacity = new_capacity;
       }
     }
 
