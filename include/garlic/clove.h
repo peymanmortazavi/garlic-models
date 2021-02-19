@@ -179,9 +179,8 @@ namespace garlic {
     ) : data_(data), allocator_(allocator), ViewType(data) {}
 
     void set_string(const char* str) {
-      auto length = strlen(str);
-      this->prepare_string(length);
-      strncpy(this->data_.string.data, str, length);
+      this->prepare_string(strlen(str));
+      strcpy(this->data_.string.data, str);
     }
     void set_string(const std::string& str) {
       this->prepare_string(str.size());
