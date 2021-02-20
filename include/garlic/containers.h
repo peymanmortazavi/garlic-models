@@ -1,9 +1,8 @@
 #ifndef GARLIC_CONTAINERS_H
 #define GARLIC_CONTAINERS_H
 
-#include <cstdint>
-#include <cstdlib>
 #include <cstring>
+#include <cstdlib>
 #include <memory>
 
 namespace garlic {
@@ -41,6 +40,17 @@ namespace garlic {
     }
 
     basic_text(const basic_text&) = delete;  // no copy
+    basic_text(basic_text&& old) : data_(old.data_), size_(old.size_), type_(old.type_) {
+      old.size_ = 0;
+    }
+
+    inline constexpr basic_text& operator =(basic_text&& other) {
+      data_ = other.data_;
+      size_ = other.size_;
+      type_ = other.type_;
+      other.size_ = 0;
+      return *this;
+    }
 
     ~basic_text() {
       if (type_ == text_type::copy && size_) std::free((void*)data_);
@@ -51,11 +61,19 @@ namespace garlic {
     inline const Ch* begin() const { return data_; }
     inline const Ch* end() const { return data_ + size_; }
 
+    inline SizeType size() const noexcept { return size_; }
+
   private:
     const Ch* data_;
     SizeType size_;
     text_type type_;
   };
+
+  template<typename Ch, typename SizeType>
+  static inline std::ostream& operator << (std::ostream& output, const basic_text<Ch, SizeType>& text) {
+    output << text.data();
+    return output;
+  }
 
   using text = basic_text<char>;
 
@@ -86,13 +104,24 @@ namespace garlic {
 
     void push_back(value_type&& value) {
       reserve_item();
-      items_[size_++] = std::move(value);
+      items_[size_++] = std::forward<ValueType>(value);
     }
 
     void push_back(const_reference value) {
       reserve_item();
       items_[size_++] = value;
     }
+
+    inline constexpr sequence& operator =(sequence&& another) {
+      size_ = another.size_;
+      items_ = another.items_;
+      capacity_ = another.capacity_;
+      another.capacity_ = 0;
+      return *this;
+    };
+
+    reference operator [](SizeType index) { return items_[index]; }
+    const_reference operator [](SizeType index) const { return items_[index]; }
 
     inline iterator begin() { return items_; }
     inline iterator end() { return items_ + size_; }
