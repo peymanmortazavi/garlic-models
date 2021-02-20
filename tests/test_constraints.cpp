@@ -20,14 +20,20 @@ TEST(Constraints, FieldConstraint) {
   assert_jsonfile_invalid(module, "AccountCustomMessage", "data/field_constraint/bad2.json");
 
   // Test messages
-  auto results = validate_jsonfile(module, "Account", "data/field_constraint/bad1.json");
-  ASSERT_STREQ(results.details[0].reason.c_str(), "Invalid user object.");
+  {
+    auto results = validate_jsonfile(module, "Account", "data/field_constraint/bad1.json");
+    ASSERT_STREQ(results.details[0].reason.data(), "Invalid user object.");
+  }
 
-  results = validate_jsonfile(module, "Account", "data/field_constraint/bad2.json");
-  ASSERT_STREQ(results.details[0].reason.c_str(), "Invalid email!");
+  {
+    auto results = validate_jsonfile(module, "Account", "data/field_constraint/bad2.json");
+    ASSERT_STREQ(results.details[0].reason.data(), "Invalid email!");
+  }
 
-  results = validate_jsonfile(module, "AccountCustomMessage", "data/field_constraint/bad2.json");
-  ASSERT_STREQ(results.details[0].details[0].reason.c_str(), "Invalid email!");
+  {
+    auto results = validate_jsonfile(module, "AccountCustomMessage", "data/field_constraint/bad2.json");
+    ASSERT_STREQ(results.details[0].details[0].reason.data(), "Invalid email!");
+  }
 
   assert_model_field_constraints(module, "Account", "user", {"User"});
 }
@@ -94,13 +100,13 @@ TEST(Constraints, StopFeature) {
   load_libyaml_module(module, "data/constraint/module.yaml");
 
   auto result = validate_jsonfile(module, "User", "data/constraint/bad1.json");
-  ASSERT_STREQ(result.details[0].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_STREQ(result.details[0].details[0].reason.data(), "Invalid Email!");
   ASSERT_EQ(result.details[0].details[0].details.size(), 0);
 
-  ASSERT_STREQ(result.details[1].details[0].reason.c_str(), "Invalid Email!");
+  ASSERT_STREQ(result.details[1].details[0].reason.data(), "Invalid Email!");
   ASSERT_EQ(result.details[1].details[0].details.size(), 1);
 
-  ASSERT_STREQ(result.details[2].reason.c_str(), "Invalid Email!");
+  ASSERT_STREQ(result.details[2].reason.data(), "Invalid Email!");
   ASSERT_EQ(result.details[2].details.size(), 0);
 }
 

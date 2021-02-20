@@ -124,7 +124,7 @@ void assert_jsonfile_valid(
     bool print=false) {
   auto result = validate_jsonfile(module, model_name, filename);
   if (print) print_constraint_result(result);
-  ASSERT_TRUE(result.valid);
+  ASSERT_TRUE(result.is_valid());
 }
 
 template<typename LayerType>
@@ -135,7 +135,7 @@ void assert_jsonfile_invalid(
     bool print=false) {
   auto result = validate_jsonfile(module, model_name, filename);
   if (print) print_constraint_result(result);
-  ASSERT_FALSE(result.valid);
+  ASSERT_FALSE(result.is_valid());
 }
 
 #endif /* end of include guard: GARLIC_TEST_UTILITY_H */

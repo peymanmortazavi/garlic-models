@@ -49,7 +49,7 @@ void
 assert_field_constraint_result(
     const garlic::ConstraintResult& results,
     const char* name) {
-  ASSERT_FALSE(results.valid);
+  ASSERT_FALSE(results.is_valid());
   ASSERT_TRUE(results.field);
   ASSERT_STREQ(results.name.data(), name);
 }
@@ -59,7 +59,7 @@ assert_constraint_result(
     const garlic::ConstraintResult& results,
     const char* name,
     const char* message) {
-  ASSERT_FALSE(results.valid);
+  ASSERT_FALSE(results.is_valid());
   ASSERT_STREQ(results.name.data(), name);
   ASSERT_STREQ(results.reason.data(), message);
 }

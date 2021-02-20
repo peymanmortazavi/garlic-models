@@ -37,19 +37,23 @@ TEST(ModuleParsing, Basic) {
     ref.add_member("birthdate", "1/4/1993");
     ref.add_member("registration_date", "1/4/21");
 
-    auto results = root.test(v.get_view());
-    ASSERT_TRUE(results.valid);
+    {
+      auto results = root.test(v.get_view());
+      ASSERT_TRUE(results.is_valid());
+    }
 
     ref.add_member("birthdate", "no good date");
     ref.add_member("registration_date", "empty");
 
-    results = root.test(v.get_view());
-    ASSERT_FALSE(results.valid);
-    ASSERT_EQ(results.details.size(), 2);
-    assert_field_constraint_result(results.details[0], "birthdate");
-    assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
-    assert_field_constraint_result(results.details[1], "registration_date");
-    assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+    {
+      auto results = root.test(v.get_view());
+      ASSERT_FALSE(results.is_valid());
+      ASSERT_EQ(results.details.size(), 2);
+      assert_field_constraint_result(results.details[0], "birthdate");
+      assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
+      assert_field_constraint_result(results.details[1], "registration_date");
+      assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+    }
   };
 
   // JSON module using rapidjson.

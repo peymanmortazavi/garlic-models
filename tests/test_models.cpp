@@ -19,13 +19,17 @@ TEST(FieldValidation, Basic) {
   CloveDocument v;
   v.get_reference().set_string("Content-Type: application/garlic");
 
-  auto result = field->validate(v.get_view());
-  ASSERT_TRUE(result.is_valid());
+  {
+    auto result = field->validate(v.get_view());
+    ASSERT_TRUE(result.is_valid());
+  }
 
-  v.get_reference().set_string("10.0.0.1");
-  result = field->validate(v.get_view());
-  ASSERT_FALSE(result.is_valid());
-  ASSERT_EQ(result.failures.size(), 1);
+  {
+    v.get_reference().set_string("10.0.0.1");
+    auto result = field->validate(v.get_view());
+    ASSERT_FALSE(result.is_valid());
+    ASSERT_EQ(result.failures.size(), 1);
+  }
 }
 
 TEST(FieldValidation, ConstraintSkipping) {
@@ -35,17 +39,21 @@ TEST(FieldValidation, ConstraintSkipping) {
   field->add_constraint<RegexConstraint>("\\w");
 
   CloveDocument v;
-  v.get_reference().set_bool(true);
+  v.set_bool(true);
 
-  auto result = field->validate(v.get_view());
-  ASSERT_FALSE(result.is_valid());
-  ASSERT_EQ(result.failures.size(), 1);  // since the first constraint is fatal, only one is expected.
-  ASSERT_STREQ(result.failures[0].name.data(), "type_constraint");
+  {
+    auto result = field->validate(v.get_view());
+    ASSERT_FALSE(result.is_valid());
+    ASSERT_EQ(result.failures.size(), 1);  // since the first constraint is fatal, only one is expected.
+    ASSERT_STREQ(result.failures[0].name.data(), "type_constraint");
+  }
 
-  v.get_reference().set_string("");
-  result = field->validate(v.get_view());
-  ASSERT_FALSE(result.is_valid());
-  ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
-  assert_constraint_result(result.failures[0], "regex_constraint", "invalid value.");
-  assert_constraint_result(result.failures[1], "regex_constraint", "invalid value.");
+  {
+    v.get_reference().set_string("");
+    auto result = field->validate(v.get_view());
+    ASSERT_FALSE(result.is_valid());
+    ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
+    assert_constraint_result(result.failures[0], "regex_constraint", "invalid value.");
+    assert_constraint_result(result.failures[1], "regex_constraint", "invalid value.");
+  }
 }
