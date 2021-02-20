@@ -53,6 +53,14 @@ namespace garlic {
       return *this;
     }
 
+    basic_text copy() const {
+      return basic_text(data_, size_);
+    }
+
+    basic_text deep_copy() const {
+      return basic_text(data_, size_, text_type::copy);
+    }
+
     ~basic_text() { destroy(); }
 
     const Ch* data() const { return data_; }
