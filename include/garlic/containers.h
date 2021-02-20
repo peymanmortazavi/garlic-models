@@ -45,6 +45,7 @@ namespace garlic {
     }
 
     inline constexpr basic_text& operator =(basic_text&& other) {
+      destroy();
       data_ = other.data_;
       size_ = other.size_;
       type_ = other.type_;
@@ -52,9 +53,7 @@ namespace garlic {
       return *this;
     }
 
-    ~basic_text() {
-      if (type_ == text_type::copy && size_) std::free((void*)data_);
-    }
+    ~basic_text() { destroy(); }
 
     const Ch* data() const { return data_; }
 
@@ -67,6 +66,11 @@ namespace garlic {
     const Ch* data_;
     SizeType size_;
     text_type type_;
+
+    inline void destroy() noexcept {
+      if (type_ == text_type::copy && size_)
+        std::free((void*)data_);
+    }
   };
 
   template<typename Ch, typename SizeType>
@@ -97,10 +101,7 @@ namespace garlic {
       old.capacity_ = 0;
     }
 
-    ~sequence() {
-      if (capacity_)
-        free(items_);
-    }
+    ~sequence() { destroy(); }
 
     void push_back(value_type&& value) {
       reserve_item();
@@ -113,6 +114,7 @@ namespace garlic {
     }
 
     inline constexpr sequence& operator =(sequence&& another) {
+      destroy();
       size_ = another.size_;
       items_ = another.items_;
       capacity_ = another.capacity_;
@@ -139,10 +141,17 @@ namespace garlic {
     SizeType size_;
 
   private:
-    inline void reserve_item() {
+    inline void reserve_item() noexcept {
       if (size_ == capacity_) {
         capacity_ += (capacity_ + 1) / 2;
         items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));
+      }
+    }
+
+    inline void destroy() noexcept {
+      if (capacity_) {
+        for (auto it = items_; it < (items_ + size_); ++it) it->~ValueType();
+        free(items_);
       }
     }
   };
