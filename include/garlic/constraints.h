@@ -60,16 +60,6 @@ namespace garlic {
 
   };
 
-  //struct LegacyConstraintResult {
-  //  bool valid = true;
-  //  std::string name;
-  //  std::string reason;
-  //  std::vector<LegacyConstraintResult> details;
-  //  bool field = false;
-
-  //  bool is_scalar() const noexcept { return details.size() == 0; }
-  //};
-
 
   struct ConstraintProperties {
     bool fatal = false;  // should stop looking at other constraints.
