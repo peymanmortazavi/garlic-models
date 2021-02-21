@@ -52,3 +52,7 @@ TEST(GarlicText, Copy) {
   ASSERT_NE(copy1.data(), a.data());  // different pointers.
   ASSERT_NE(copy2.data(), b.data());  // different pointers.
 }
+
+TEST(GarlicText, StaticNoText) {
+  ASSERT_EQ(text::no_text().data(), text::no_text().data());
+}
