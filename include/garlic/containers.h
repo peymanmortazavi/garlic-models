@@ -69,6 +69,11 @@ namespace garlic {
     inline const Ch* end() const { return data_ + size_; }
 
     inline SizeType size() const noexcept { return size_; }
+    inline bool empty() const noexcept { return !size_; }
+
+    static inline basic_text no_text() noexcept {
+      return basic_text("");
+    }
 
   private:
     const Ch* data_;
@@ -83,7 +88,7 @@ namespace garlic {
 
   template<typename Ch, typename SizeType>
   static inline std::ostream& operator << (std::ostream& output, const basic_text<Ch, SizeType>& text) {
-    output << text.data();
+    output.write(text.data(), text.size());
     return output;
   }
 
@@ -121,12 +126,12 @@ namespace garlic {
       items_[size_++] = value;
     }
 
-    inline constexpr sequence& operator =(sequence&& another) {
+    inline constexpr sequence& operator =(sequence&& old) {
       destroy();
-      size_ = another.size_;
-      items_ = another.items_;
-      capacity_ = another.capacity_;
-      another.capacity_ = 0;
+      size_ = old.size_;
+      items_ = old.items_;
+      capacity_ = old.capacity_;
+      old.capacity_ = 0;
       return *this;
     };
 
