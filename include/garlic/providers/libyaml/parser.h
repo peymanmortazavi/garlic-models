@@ -479,7 +479,7 @@ namespace garlic::providers::libyaml {
               &event_, NULL,
               (yaml_char_t*)YAML_STR_TAG,
               (yaml_char_t*)view.data(), view.size(),
-              1, 0,
+              1, 1,
               yaml_scalar_style_t::YAML_DOUBLE_QUOTED_SCALAR_STYLE);
         } else {
           yaml_scalar_event_initialize(
@@ -666,7 +666,7 @@ namespace garlic::providers::libyaml {
             event, NULL,
             (yaml_char_t*)YAML_STR_TAG,
             (yaml_char_t*)view.data(), view.size(),
-            1, 0,
+            1, 1,
             yaml_scalar_style_t::YAML_DOUBLE_QUOTED_SCALAR_STYLE);
       } else {
         yaml_scalar_event_initialize(
