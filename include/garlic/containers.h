@@ -23,7 +23,7 @@ namespace garlic {
         data_ = data;
     }
 
-    basic_text(const Ch* data, SizeType size, text_type type = text_type::reference) : type_(type), size_(size) {
+    basic_text(const Ch* data, SizeType size, text_type type = text_type::reference) : size_(size), type_(type) {
       if (type == text_type::copy && size_)
         data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
       else
@@ -32,7 +32,7 @@ namespace garlic {
 
     basic_text(
         const std::basic_string<Ch>& value,
-        text_type type = text_type::reference) : type_(type), size_(value.size()) {
+        text_type type = text_type::reference) : size_(value.size()), type_(type) {
       if (type == text_type::copy && size_)
         data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), value.data());
       else
