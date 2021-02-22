@@ -375,11 +375,11 @@ namespace garlic {
       if (it != this->end_member()) this->erase_member(it);
     }
     void erase_member(const MemberIterator& position) {
-      position->key.clean();
-      position->value.clean();
+      (*position).key.clean();
+      (*position).value.clean();
       memmove(
-          static_cast<void*>(position.get_pointer()),
-          static_cast<void*>(position.get_pointer() + 1),
+          static_cast<void*>(position.get_inner_iterator()),
+          static_cast<void*>(position.get_inner_iterator() + 1),
           static_cast<SizeType>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
       );
     }
