@@ -1,6 +1,7 @@
 #ifndef GARLIC_MODULE_H
 #define GARLIC_MODULE_H
 
+#include "constraints.h"
 #include "models.h"
 #include "layer.h"
 #include "parsing/constraints.h"
@@ -437,13 +438,13 @@ namespace garlic {
       if (ptr) {
         return std::make_shared<FieldConstraintType>(
             std::make_shared<FieldPtr>(ptr),
-            ConstraintProperties{},
+            ConstraintProperties::create_default(),
             true
         );
       }
       return std::make_shared<FieldConstraintType>(
           std::make_shared<FieldPtr>(nullptr),
-          ConstraintProperties{},
+          ConstraintProperties::create_default(),
           true
       );
     }

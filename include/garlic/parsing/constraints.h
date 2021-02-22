@@ -43,7 +43,7 @@ namespace garlic::parsing {
     read_constraint<Destination>(layer, parser, "of", constraint);
     return std::make_shared<ListConstraint<Destination>>(
         std::move(constraint),
-        build_constraint_properties(layer, "list_constraint", "", true),
+        build_constraint_properties<true>(layer, "list_constraint"),
         get(layer, "ignore_details", false)
         );
   }
@@ -100,7 +100,7 @@ namespace garlic::parsing {
         auto ptr = parser.resolve_field_reference(field.get_cstr());
         result = std::make_shared<FieldConstraint<Destination>>(
             std::make_shared<FieldPtr>(ptr),
-            build_constraint_properties(layer, "", "", true),
+            build_constraint_properties<true>(layer, "", ""),
             get(layer, "hide", false),
             get(layer, "ignore_details", false)
             );

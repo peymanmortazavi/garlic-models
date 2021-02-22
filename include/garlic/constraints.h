@@ -62,9 +62,24 @@ namespace garlic {
 
 
   struct ConstraintProperties {
-    bool fatal = false;  // should stop looking at other constraints.
-    std::string name;  // constraint name.
-    std::string message;  // custom rejection reason.
+    enum flags : uint8_t {
+      none  = 0x1 << 0,
+      fatal = 0x1 << 1,  // should stop looking at other constraints.
+    };
+
+    flags flag = flags::none;
+    garlic::text name;  // constraint name.
+    garlic::text message;  // custom rejection reason.
+
+    static ConstraintProperties create_default(const char* name = "", const char* message="") {
+      return ConstraintProperties {
+        flags::none,
+        garlic::text(name),
+        garlic::text(message)
+      };
+    }
+
+    inline bool is_fatal() const noexcept { return flag & flags::fatal; }
   };
 
 
@@ -116,24 +131,33 @@ namespace garlic {
 
     for (const auto& constraint : constraints) {
       if (auto result = constraint->test(value); !result.is_valid()) {
-        return std::move(result);
+        return result;
       }
     }
     return ConstraintResult::ok();
   }
 
 
-  template<ViewLayer Layer>
+  template<bool Fatal = false, ViewLayer Layer>
   static inline ConstraintProperties
   build_constraint_properties(
-      Layer layer,
+      Layer&& layer,
       const char* name = "",
-      const char* message = "",
-      bool fatal = false) noexcept {
+      const char* message = "") noexcept {
+    auto name_text = garlic::text(name);
+    auto message_text = garlic::text(message);
+    get_member(layer, "name", [&name_text](const auto& result) {
+        auto view = result.get_string_view();
+        name_text = garlic::text(view.data(), view.size(), text_type::copy);
+        });
+    get_member(layer, "message", [&message_text](const auto& result) {
+        auto view = result.get_string_view();
+        message_text = garlic::text(view.data(), view.size(), text_type::copy);
+        });
     return ConstraintProperties {
-      .fatal = get(layer, "fatal", fatal),
-      .name = get(layer, "name", name),
-      .message = get(layer, "message", message)
+      .flag = (get(layer, "fatal", Fatal) ? ConstraintProperties::flags::fatal : ConstraintProperties::flags::none),
+      .name = std::move(name_text),
+      .message = std::move(message_text)
     };
   }
 
@@ -145,14 +169,16 @@ namespace garlic {
 
     virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
     virtual bool quick_test(const LayerType& value) const noexcept = 0;
-    std::string_view get_name() const noexcept { return props_.name; };
-    bool skip_constraints() const noexcept { return props_.fatal; };
+    std::string_view get_name() const noexcept {
+      return std::string_view{props_.name.data(), props_.name.size()};
+    };
+    inline bool skip_constraints() const noexcept { return props_.is_fatal(); };
 
     template<bool Field = false, bool Leaf = true>
     auto fail() const noexcept -> ConstraintResult {
       return ConstraintResult {
-        .name = garlic::text(props_.name, text_type::copy),
-        .reason = garlic::text(props_.message, text_type::copy),
+        .name = props_.name.copy(),
+        .reason = props_.message.copy(),
         .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
         .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
       };
@@ -162,7 +188,7 @@ namespace garlic {
     auto fail(const char* message) const noexcept -> ConstraintResult {
       if (this->props_.message.empty())
         return ConstraintResult {
-          .name = garlic::text(props_.name, text_type::copy),
+          .name = props_.name.copy(),
           .reason = garlic::text(message),
           .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
@@ -174,15 +200,15 @@ namespace garlic {
     auto fail(const char* message, garlic::sequence<ConstraintResult>&& details) const noexcept {
       if (this->props_.message.empty()) {
         return ConstraintResult {
-          .name = garlic::text(props_.name, text_type::copy),
+          .name = props_.name.copy(),
           .reason = garlic::text(message),
           .details = std::move(details),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
       } else {
         return ConstraintResult {
-          .name = garlic::text(props_.name, text_type::copy),
-          .reason = garlic::text(props_.message, text_type::copy),
+          .name = props_.name.copy(),
+          .reason = props_.message.copy(),
           .details = std::move(details),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
@@ -212,9 +238,11 @@ namespace garlic {
     TypeConstraint(
         TypeFlag required_type,
         std::string&& name="type_constraint"
-        ) : flag_(required_type), Constraint<LayerType>({
-          .fatal = true, .name = std::move(name)
-          }) {}
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .flag = ConstraintProperties::flags::fatal,
+          .name = garlic::text(name, text_type::copy),
+          .message = garlic::text("")
+          }), flag_(required_type) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       switch (flag_) {
@@ -277,8 +305,10 @@ namespace garlic {
         SizeType min,
         SizeType max,
         std::string&& name="range_constraint"
-        ) : min_(min), max_(max), Constraint<LayerType>({
-          .fatal = false, .name = std::move(name)
+        ) : min_(min), max_(max), Constraint<LayerType>(ConstraintProperties {
+          .flag = ConstraintProperties::flags::none,
+          .name = garlic::text(std::move(name), text_type::copy),
+          .message = garlic::text("")
           }) {}
 
     RangeConstraint(
@@ -296,11 +326,11 @@ namespace garlic {
         if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.");
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
+        if(static_cast<SizeType>(ivalue) > max_ || static_cast<SizeType>(ivalue) < min_) return this->fail("out of range value.");
       } else if (value.is_list()) {
-        int count = 0;
+        SizeType count = 0;
         for (const auto& item : value.get_list()) {
-          count++;
+          ++count;
           if (count > max_) return this->fail("too many items in the list.");
         }
         if (count < min_) return this->fail("too few items in the list.");
@@ -317,11 +347,11 @@ namespace garlic {
         if(dvalue > max_ || dvalue < min_) return false;
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return false;
+        if(static_cast<SizeType>(ivalue) > max_ || static_cast<SizeType>(ivalue) < min_) return false;
       } else if (value.is_list()) {
-        int count = 0;
+        SizeType count = 0;
         for (const auto& item : value.get_list()) {
-          count++;
+          ++count;
           if (count > max_) return false;
         }
         if (count < min_) return false;
@@ -343,14 +373,16 @@ namespace garlic {
     RegexConstraint(
         std::string pattern,
         std::string name="regex_constraint"
-        ) : pattern_(std::move(pattern)), Constraint<LayerType>({
-          .fatal = false, .name = std::move(name)
-          }) {}
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .flag = ConstraintProperties::flags::none,
+          .name = garlic::text(std::move(name), text_type::copy),
+          .message = garlic::text("")
+          }), pattern_(std::move(pattern)) {}
 
     RegexConstraint(
         std::string pattern,
         ConstraintProperties&& props
-        ) : pattern_(std::move(pattern)), Constraint<LayerType>(std::move(props)) {}
+        ) : Constraint<LayerType>(std::move(props)), pattern_(std::move(pattern)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_string()) return this->ok();
@@ -410,7 +442,7 @@ namespace garlic {
 
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
-    ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
+    ListConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("list_constraint")) {}
 
     ListConstraint(
         ConstraintPtr&& constraint,
@@ -474,7 +506,7 @@ namespace garlic {
                   });
           }
         }
-        index++;
+        ++index;
       }
       return this->ok();
     }
@@ -485,9 +517,7 @@ namespace garlic {
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
-  TupleConstraint() : Constraint<LayerType>({
-      .fatal = false, .name = "tuple_constraint"
-      }) {}
+  TupleConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("tuple_constraint")) {}
 
   TupleConstraint(
     std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
@@ -569,7 +599,7 @@ namespace garlic {
         }
         std::advance(tuple_it, 1);
         std::advance(constraint_it, 1);
-        index++;
+        ++index;
       }
       if (strict_ && tuple_it != value.end_list()) {
         return this->fail("Too many values in the tuple.");
@@ -587,9 +617,7 @@ namespace garlic {
   public:
     using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
 
-    MapConstraint() : Constraint<LayerType>({
-        .fatal = false, .name = "map_constraint"
-        }) {}
+    MapConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("map_constraint")) {}
 
     MapConstraint(
       ConstraintPtr&& key_constraint,
