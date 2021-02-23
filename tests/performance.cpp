@@ -106,7 +106,7 @@ static void BM_Vector_LargeConstraintResult(benchmark::State& state) {
   for (auto _ : state) {
     std::vector<garlic::ConstraintResult> x(8);
     for (auto i = 0; i < iterations; ++i) {
-      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
     }
   }
 }
@@ -116,7 +116,7 @@ static void BM_Sequence_LargeConstraintResult(benchmark::State& state) {
   for (auto _ : state) {
     garlic::sequence<garlic::ConstraintResult> x(8);
     for (auto i = 0; i < iterations; ++i) {
-      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
     }
   }
 }
@@ -128,7 +128,7 @@ static void BM_Vector_ConstraintResult(benchmark::State& state) {
   for (auto _ : state) {
     std::vector<garlic::ConstraintResult> x(8);
     for (auto i = 0; i < iterations; ++i) {
-      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
     }
   }
 }
@@ -138,7 +138,7 @@ static void BM_Sequence_ConstraintResult(benchmark::State& state) {
   for (auto _ : state) {
     garlic::sequence<garlic::ConstraintResult> x(8);
     for (auto i = 0; i < iterations; ++i) {
-      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
     }
   }
 }
