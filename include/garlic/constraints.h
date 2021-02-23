@@ -401,11 +401,6 @@ namespace garlic {
         ConstraintProperties&& props
         ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
 
-    //AnyConstraint(
-    //    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-    //    ConstraintProperties&& props
-    //    ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
-
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (this->validate(value))
         return this->ok();
@@ -520,16 +515,6 @@ namespace garlic {
           strict_(strict),
           Constraint<LayerType>(std::move(props)),
           ignore_details_(ignore_details) {}
-
-    //TupleConstraint(
-    //  const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-    //  bool strict,
-    //  ConstraintProperties&& props,
-    //  bool ignore_details = false
-    //  ) : constraints_(constraints),
-    //      strict_(strict),
-    //      Constraint<LayerType>(std::move(props)),
-    //      ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (ignore_details_)return this->test<true>(value);
