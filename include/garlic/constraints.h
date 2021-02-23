@@ -122,26 +122,27 @@ namespace garlic {
   }
 
 
+  template<ViewLayer Layer>
+  static inline garlic::text 
+  get_text(Layer&& layer, const char* key, garlic::text&& default_value) noexcept {
+    get_member(layer, key, [&default_value](const auto& result) {
+        auto view = result.get_string_view();
+        default_value = garlic::text(view.data(), view.size(), text_type::copy);
+        });
+    return std::move(default_value);
+  }
+
+
   template<bool Fatal = false, ViewLayer Layer>
   static inline ConstraintProperties
   build_constraint_properties(
       Layer&& layer,
       const char* name = "",
       const char* message = "") noexcept {
-    auto name_text = garlic::text(name);
-    auto message_text = garlic::text(message);
-    get_member(layer, "name", [&name_text](const auto& result) {
-        auto view = result.get_string_view();
-        name_text = garlic::text(view.data(), view.size(), text_type::copy);
-        });
-    get_member(layer, "message", [&message_text](const auto& result) {
-        auto view = result.get_string_view();
-        message_text = garlic::text(view.data(), view.size(), text_type::copy);
-        });
     return ConstraintProperties {
       .flag = (get(layer, "fatal", Fatal) ? ConstraintProperties::flags::fatal : ConstraintProperties::flags::none),
-      .name = std::move(name_text),
-      .message = std::move(message_text)
+      .name = get_text(layer, "name", name),
+      .message = get_text(layer, "message", message)
     };
   }
 
