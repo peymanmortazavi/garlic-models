@@ -2,6 +2,7 @@
 #define GARLIC_ENCODING_H
 
 #include "layer.h"
+#include "containers.h"
 #include <type_traits>
 
 namespace garlic {
@@ -74,6 +75,27 @@ namespace garlic {
     safe_decode(Layer layer, Callable&& cb) {
       if (layer.is_string())
         cb(layer.get_string_view());
+    }
+  };
+
+  template<typename Layer>
+  struct coder<text, Layer> {
+    static inline text
+    decode(Layer layer) {
+      auto view = layer.get_string_view();
+      return text(view.data(), view.size());
+    }
+
+    static inline void
+    encode(Layer layer, text value) {
+      layer.set_string(value.data());
+    }
+
+    template<typename Callable>
+    static inline void
+    safe_decode(Layer layer, Callable&& cb) {
+      if (layer.is_string())
+        cb(coder::decode(layer));
     }
   };
 
