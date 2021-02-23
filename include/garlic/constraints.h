@@ -23,7 +23,7 @@ namespace garlic {
       field     = 0x1 << 2,
     };
 
-    garlic::sequence<ConstraintResult> details;
+    sequence<ConstraintResult> details;
     text name;
     text reason;
     flags flag;
@@ -39,7 +39,7 @@ namespace garlic {
     static ConstraintResult leaf_failure(
         text&& name, text&& reason=text::no_text()) noexcept {
       return ConstraintResult {
-        .details = garlic::sequence<ConstraintResult>::no_sequence(),
+        .details = sequence<ConstraintResult>::no_sequence(),
         .name = std::move(name),
         .reason = std::move(reason),
         .flag = Flag
@@ -68,7 +68,7 @@ namespace garlic {
 
     static ConstraintResult ok() noexcept {
       return ConstraintResult {
-        .details = garlic::sequence<ConstraintResult>::no_sequence(),
+        .details = sequence<ConstraintResult>::no_sequence(),
         .name = text::no_text(),
         .reason = text::no_text(),
         .flag = flags::valid
@@ -195,7 +195,7 @@ namespace garlic {
     }
 
     template<bool Field = false>
-    auto fail(const char* message, garlic::sequence<ConstraintResult>&& details) const noexcept {
+    auto fail(const char* message, sequence<ConstraintResult>&& details) const noexcept {
       return ConstraintResult {
         .details = std::move(details),
         .name = props_.name.copy(),
