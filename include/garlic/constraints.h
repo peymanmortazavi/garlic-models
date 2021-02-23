@@ -110,12 +110,9 @@ namespace garlic {
   }
 
 
-  template<typename ConstraintPtrType>
+  template<ViewLayer Layer, typename Container>
   static inline ConstraintResult
-  test_constraints_first_failure(
-      const ViewLayer auto& value,
-      std::vector<ConstraintPtrType> constraints) {
-
+  test_constraints_first_failure(Layer&& value, Container&& constraints) {
     for (const auto& constraint : constraints) {
       if (auto result = constraint->test(value); !result.is_valid()) {
         return result;
