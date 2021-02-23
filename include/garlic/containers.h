@@ -152,6 +152,10 @@ namespace garlic {
     inline SizeType capacity() const noexcept { return capacity_; }
     inline bool empty() const noexcept { return !size_; }
 
+    constexpr static inline sequence no_sequence() noexcept {
+      return sequence(0);
+    }
+
   protected:
     pointer items_;
     SizeType capacity_;
