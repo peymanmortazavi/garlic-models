@@ -83,7 +83,7 @@ static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   state.counters["Total"] = total;
 }
 
-static void BM_Vector(benchmark::State& state) {
+static void BM_Vector_LongDouble(benchmark::State& state) {
   int iterations = (rand() % 1) + 1000;
   for (auto _ : state) {
     std::vector<long double> x(8);
@@ -91,15 +91,59 @@ static void BM_Vector(benchmark::State& state) {
   }
 }
 
-static void BM_Sequence(benchmark::State& state) {
+static void BM_Sequence_LongDouble(benchmark::State& state) {
   int iterations = (rand() % 1) + 1000;
   for (auto _ : state) {
     garlic::sequence<long double> x(8);
     for (auto i = 0; i < iterations; ++i) x.push_back(i);
   }
 }
-BENCHMARK(BM_Vector);
-BENCHMARK(BM_Sequence);
+BENCHMARK(BM_Vector_LongDouble);
+BENCHMARK(BM_Sequence_LongDouble);
+
+static void BM_Vector_LargeConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 128;
+  for (auto _ : state) {
+    std::vector<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+
+static void BM_Sequence_LargeConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 128;
+  for (auto _ : state) {
+    garlic::sequence<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+BENCHMARK(BM_Vector_LargeConstraintResult);
+BENCHMARK(BM_Sequence_LargeConstraintResult);
+
+static void BM_Vector_ConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 7;
+  for (auto _ : state) {
+    std::vector<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+
+static void BM_Sequence_ConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 7;
+  for (auto _ : state) {
+    garlic::sequence<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::scalar_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+BENCHMARK(BM_Vector_ConstraintResult);
+BENCHMARK(BM_Sequence_ConstraintResult);
 
 static void BM_std_string(benchmark::State& state) {
   for (auto _ : state) {
