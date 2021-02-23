@@ -15,6 +15,8 @@ namespace garlic {
   template<typename Ch, typename SizeType = unsigned>
   class basic_text {
   public:
+    basic_text() : size_(0), type_(text_type::reference) {}
+
     basic_text(const Ch* data, text_type type = text_type::reference) : type_(type) {
       size_ = strlen(data);
       if (type == text_type::copy && size_)
@@ -23,7 +25,9 @@ namespace garlic {
         data_ = data;
     }
 
-    basic_text(const Ch* data, SizeType size, text_type type = text_type::reference) : size_(size), type_(type) {
+    basic_text(
+        const Ch* data, SizeType size,
+        text_type type = text_type::reference) : size_(size), type_(type) {
       if (type == text_type::copy && size_)
         data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
       else
@@ -118,12 +122,12 @@ namespace garlic {
 
     void push_back(value_type&& value) {
       reserve_item();
-      items_[size_++] = std::forward<ValueType>(value);
+      new (items_ + size_++) ValueType(std::forward<ValueType>(value));
     }
 
     void push_back(const_reference value) {
       reserve_item();
-      items_[size_++] = value;
+      new (items_ + size_++) ValueType(value);
     }
 
     inline constexpr sequence& operator =(sequence&& old) {
