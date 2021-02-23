@@ -113,8 +113,3 @@ TEST(GarlicSequence, MoveOperators) {
   ASSERT_EQ(another_one.capacity(), 2);
   ASSERT_EQ(another_one.size(), 1);
 }
-
-
-TEST(Random, R) {
-  Model<CloveView> c("Peyman");
-}
