@@ -24,8 +24,8 @@ namespace garlic {
     };
 
     garlic::sequence<ConstraintResult> details;
-    garlic::text name;
-    garlic::text reason;
+    text name;
+    text reason;
     flags flag;
 
     inline bool is_leaf()  const noexcept { return !details.size();  }
@@ -37,7 +37,7 @@ namespace garlic {
 
     template<flags Flag = flags::none>
     static ConstraintResult leaf_failure(
-        garlic::text&& name, garlic::text&& reason=garlic::text::no_text()) noexcept {
+        text&& name, text&& reason=text::no_text()) noexcept {
       return ConstraintResult {
         .details = garlic::sequence<ConstraintResult>::no_sequence(),
         .name = std::move(name),
@@ -47,15 +47,30 @@ namespace garlic {
     }
 
     static inline ConstraintResult leaf_field_failure(
-        garlic::text&& name, garlic::text&& reason=garlic::text::no_text()) noexcept {
+        text&& name, text&& reason=text::no_text()) noexcept {
       return leaf_failure<flags::field>(std::move(name), std::move(reason));
+    }
+
+    static inline ConstraintResult
+    field_failure(
+        text&& name,
+        ConstraintResult&& inner_detail,
+        text&& reason = text::no_text()) noexcept {
+      sequence<ConstraintResult> details(1);
+      details.push_back(std::move(inner_detail));
+      return ConstraintResult {
+        .details = std::move(details),
+        .name = std::move(name),
+        .reason = std::move(reason),
+        .flag = flags::field
+      };
     }
 
     static ConstraintResult ok() noexcept {
       return ConstraintResult {
         .details = garlic::sequence<ConstraintResult>::no_sequence(),
-        .name = garlic::text::no_text(),
-        .reason = garlic::text::no_text(),
+        .name = text::no_text(),
+        .reason = text::no_text(),
         .flag = flags::valid
       };
     }
@@ -70,11 +85,11 @@ namespace garlic {
     };
 
     flags flag = flags::none;
-    garlic::text name;  // constraint name.
-    garlic::text message;  // custom rejection reason.
+    text name;  // constraint name.
+    text message;  // custom rejection reason.
 
     static ConstraintProperties create_default(
-        garlic::text&& name = garlic::text::no_text(), garlic::text&& message = garlic::text::no_text()) {
+        text&& name = text::no_text(), text&& message = text::no_text()) {
       return ConstraintProperties {
         flags::none,
         std::move(name),
@@ -123,11 +138,11 @@ namespace garlic {
 
 
   template<ViewLayer Layer>
-  static inline garlic::text 
-  get_text(Layer&& layer, const char* key, garlic::text&& default_value) noexcept {
+  static inline text 
+  get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
     get_member(layer, key, [&default_value](const auto& result) {
         auto view = result.get_string_view();
-        default_value = garlic::text(view.data(), view.size(), text_type::copy);
+        default_value = text(view.data(), view.size(), text_type::copy);
         });
     return std::move(default_value);
   }
@@ -154,15 +169,13 @@ namespace garlic {
 
     virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
     virtual bool quick_test(const LayerType& value) const noexcept = 0;
-    std::string_view get_name() const noexcept {
-      return std::string_view{props_.name.data(), props_.name.size()};
-    };
+    text get_name() const noexcept { return props_.name.copy(); };
     inline bool skip_constraints() const noexcept { return props_.is_fatal(); };
 
     template<bool Field = false, bool Leaf = true>
     auto fail() const noexcept -> ConstraintResult {
       return ConstraintResult {
-        .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
+        .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
         .name = props_.name.copy(),
         .reason = props_.message.copy(),
         .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
@@ -173,9 +186,9 @@ namespace garlic {
     auto fail(const char* message) const noexcept -> ConstraintResult {
       if (this->props_.message.empty())
         return ConstraintResult {
-          .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
+          .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
           .name = props_.name.copy(),
-          .reason = garlic::text(message),
+          .reason = message,
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
       return this->fail<Field, Leaf>();
@@ -183,28 +196,19 @@ namespace garlic {
 
     template<bool Field = false>
     auto fail(const char* message, garlic::sequence<ConstraintResult>&& details) const noexcept {
-      if (this->props_.message.empty()) {
-        return ConstraintResult {
-          .details = std::move(details),
-          .name = props_.name.copy(),
-          .reason = garlic::text(message),
-          .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
-        };
-      } else {
-        return ConstraintResult {
-          .details = std::move(details),
-          .name = props_.name.copy(),
-          .reason = props_.message.copy(),
-          .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
-        };
-      }
+      return ConstraintResult {
+        .details = std::move(details),
+        .name = props_.name.copy(),
+        .reason = (props_.message.empty() ? message : props_.message.copy()),
+        .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
+      };
     }
 
     template<bool Field = false>
     auto fail(const char* message, ConstraintResult&& inner_detail) const noexcept {
       sequence<ConstraintResult> details(1);
       details.push_back(std::move(inner_detail));
-      return this->fail(message, std::move(details));
+      return this->fail<Field>(message, std::move(details));
     }
 
     inline auto ok() const noexcept -> ConstraintResult {
@@ -222,11 +226,11 @@ namespace garlic {
 
     TypeConstraint(
         TypeFlag required_type,
-        std::string&& name="type_constraint"
+        text&& name = "type_constraint"
         ) : Constraint<LayerType>(ConstraintProperties {
           .flag = ConstraintProperties::flags::fatal,
-          .name = garlic::text(name, text_type::copy),
-          .message = garlic::text("")
+          .name = std::move(name),
+          .message = text::no_text()
           }), flag_(required_type) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -289,11 +293,11 @@ namespace garlic {
     RangeConstraint(
         SizeType min,
         SizeType max,
-        std::string&& name="range_constraint"
+        text&& name = "range_constraint"
         ) : min_(min), max_(max), Constraint<LayerType>(ConstraintProperties {
           .flag = ConstraintProperties::flags::none,
-          .name = garlic::text(std::move(name), text_type::copy),
-          .message = garlic::text("")
+          .name = std::move(name),
+          .message = text::no_text()
           }) {}
 
     RangeConstraint(
@@ -356,18 +360,18 @@ namespace garlic {
   public:
 
     RegexConstraint(
-        std::string pattern,
-        std::string name="regex_constraint"
+        const text& pattern,
+        text&& name = "regex_constraint"
         ) : Constraint<LayerType>(ConstraintProperties {
           .flag = ConstraintProperties::flags::none,
-          .name = garlic::text(std::move(name), text_type::copy),
-          .message = garlic::text("")
-          }), pattern_(std::move(pattern)) {}
+          .name = std::move(name),
+          .message = text::no_text()
+          }), pattern_(pattern.data(), pattern.size()) {}
 
     RegexConstraint(
-        std::string pattern,
+        const text& pattern,
         ConstraintProperties&& props
-        ) : Constraint<LayerType>(std::move(props)), pattern_(std::move(pattern)) {}
+        ) : Constraint<LayerType>(std::move(props)), pattern_(pattern.data(), pattern.size()) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_string()) return this->ok();
@@ -469,12 +473,9 @@ namespace garlic {
           if (!constraint_->quick_test(item)) {
             return this->fail(
                 "Invalid value found in the list.",
-                ConstraintResult {
-                  .details = sequence<ConstraintResult>(0),
-                  .name = garlic::text(std::to_string(index), text_type::copy),
-                  .reason = garlic::text("invalid value."),
-                  .flag = ConstraintResult::flags::field
-                  });
+                ConstraintResult::leaf_field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  "invalid value."));
           }
         } else {
           auto result = constraint_->test(item);
@@ -483,12 +484,11 @@ namespace garlic {
             inner_details.push_back(std::move(result));
             return this->fail(
                 "Invalid value found in the list.",
-                ConstraintResult {
-                  .details = std::move(inner_details),
-                  .name = garlic::text(std::to_string(index), text_type::copy),
-                  .reason = garlic::text("invalid value."),
-                  .flag = ConstraintResult::flags::field
-                  });
+                ConstraintResult::field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  std::move(result),
+                  "invalid value."
+                  ));
           }
         }
         ++index;
@@ -560,12 +560,10 @@ namespace garlic {
           if (!result) {
             return this->fail(
                 "Invalid value found in the tuple.",
-                ConstraintResult {
-                  .details = sequence<ConstraintResult>(0),
-                  .name = garlic::text(std::to_string(index), text_type::copy),
-                  .reason = garlic::text("invalid value."),
-                  .flag = ConstraintResult::flags::field
-                  });
+                ConstraintResult::leaf_field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  "invalid value."
+                  ));
           }
         } else {
           auto result = (*constraint_it)->test(*tuple_it);
@@ -574,12 +572,11 @@ namespace garlic {
             inner_details.push_back(std::move(result));
             return this->fail(
                 "Invalid value found in the tuple.",
-                ConstraintResult {
-                  .details = std::move(inner_details),
-                  .name = garlic::text(std::to_string(index), text_type::copy),
-                  .reason = garlic::text("invalid value."),
-                  .flag = ConstraintResult::flags::field
-                  });
+                ConstraintResult::field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  std::move(result),
+                  "invalid value."
+                  ));
           }
         }
         std::advance(tuple_it, 1);
