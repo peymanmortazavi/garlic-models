@@ -100,14 +100,11 @@ namespace garlic {
   }
 
 
-  template<typename ConstraintPtrType>
+  template<ViewLayer Layer, typename Container>
   static inline bool
-  test_constraints_quick(
-      const ViewLayer auto& value,
-      const std::vector<ConstraintPtrType>& constraints) {
-
+  test_constraints_quick(Layer&& value, Container&& constraints) {
     return std::all_of(
-        constraints.begin(), constraints.end(),
+        std::begin(constraints), std::end(constraints),
         [&value](const auto& constraint) { return constraint->quick_test(value); }
         );
   }
