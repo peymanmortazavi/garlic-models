@@ -393,15 +393,18 @@ namespace garlic {
   template<ViewLayer LayerType>
   class AnyConstraint : public Constraint<LayerType> {
   public:
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
+
     AnyConstraint(
-        std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
+        sequence<constraint_pointer>&& constraints,
         ConstraintProperties&& props
         ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
 
-    AnyConstraint(
-        const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-        ConstraintProperties&& props
-        ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
+    //AnyConstraint(
+    //    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+    //    ConstraintProperties&& props
+    //    ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (this->validate(value))
@@ -414,7 +417,7 @@ namespace garlic {
   }
 
   private:
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    sequence<constraint_pointer> constraints_;
 
     inline bool validate(const LayerType& value) const noexcept {
       return std::any_of(
@@ -429,23 +432,24 @@ namespace garlic {
   class ListConstraint : public Constraint<LayerType> {
   public:
 
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     ListConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("list_constraint")) {}
 
     ListConstraint(
-        ConstraintPtr&& constraint,
+        constraint_pointer&& constraint,
         ConstraintProperties&& props,
         bool ignore_details = false
         ) : constraint_(std::move(constraint)),
             Constraint<LayerType>(std::move(props)), ignore_details_(ignore_details) {}
 
-    ListConstraint(
-        const ConstraintPtr& constraint,
-        ConstraintProperties&& props,
-        bool ignore_details = false
-        ) : constraint_(constraint), Constraint<LayerType>(std::move(props)),
-            ignore_details_(ignore_details) {}
+    //ListConstraint(
+    //    const constraint_pointer& constraint,
+    //    ConstraintProperties&& props,
+    //    bool ignore_details = false
+    //    ) : constraint_(constraint), Constraint<LayerType>(std::move(props)),
+            //ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_list()) return this->fail("Expected a list.");
@@ -462,7 +466,7 @@ namespace garlic {
     }
 
   private:
-    ConstraintPtr constraint_;
+    constraint_pointer constraint_;
     bool ignore_details_;
 
     template<bool IgnoreDetails>
@@ -502,49 +506,52 @@ namespace garlic {
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
-  TupleConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("tuple_constraint")) {}
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
-  TupleConstraint(
-    std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
-    bool strict,
-    ConstraintProperties&& props,
-    bool ignore_details = false
-    ) : constraints_(std::move(constraints)),
-        strict_(strict),
-        Constraint<LayerType>(std::move(props)),
-        ignore_details_(ignore_details) {}
+    TupleConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("tuple_constraint")) {}
 
-  TupleConstraint(
-    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-    bool strict,
-    ConstraintProperties&& props,
-    bool ignore_details = false
-    ) : constraints_(constraints),
-        strict_(strict),
-        Constraint<LayerType>(std::move(props)),
-        ignore_details_(ignore_details) {}
+    TupleConstraint(
+      sequence<constraint_pointer>&& constraints,
+      bool strict,
+      ConstraintProperties&& props,
+      bool ignore_details = false
+      ) : constraints_(std::move(constraints)),
+          strict_(strict),
+          Constraint<LayerType>(std::move(props)),
+          ignore_details_(ignore_details) {}
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
-    if (ignore_details_)return this->test<true>(value);
-    return this->test<false>(value);
-  }
+    //TupleConstraint(
+    //  const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
+    //  bool strict,
+    //  ConstraintProperties&& props,
+    //  bool ignore_details = false
+    //  ) : constraints_(constraints),
+    //      strict_(strict),
+    //      Constraint<LayerType>(std::move(props)),
+    //      ignore_details_(ignore_details) {}
 
-  bool quick_test(const LayerType& value) const noexcept override {
-    if (!value.is_list()) return false;
-    auto tuple_it = value.begin_list();
-    auto constraint_it = constraints_.begin();
-    while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
-      if (!(*constraint_it)->quick_test(*tuple_it)) return false;
-      std::advance(tuple_it, 1);
-      std::advance(constraint_it, 1);
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (ignore_details_)return this->test<true>(value);
+      return this->test<false>(value);
     }
-    if (strict_ && tuple_it != value.end_list()) return false;
-    if (constraint_it != constraints_.end()) return false;
-    return true;
-  }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      if (!value.is_list()) return false;
+      auto tuple_it = value.begin_list();
+      auto constraint_it = constraints_.begin();
+      while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
+        if (!(*constraint_it)->quick_test(*tuple_it)) return false;
+        std::advance(tuple_it, 1);
+        std::advance(constraint_it, 1);
+      }
+      if (strict_ && tuple_it != value.end_list()) return false;
+      if (constraint_it != constraints_.end()) return false;
+      return true;
+    }
 
   private:
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    sequence<constraint_pointer> constraints_;
     bool strict_;
     bool ignore_details_;
 
@@ -597,13 +604,14 @@ namespace garlic {
   template<ViewLayer LayerType>
   class MapConstraint : public Constraint<LayerType> {
   public:
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     MapConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("map_constraint")) {}
 
     MapConstraint(
-      ConstraintPtr&& key_constraint,
-      ConstraintPtr&& value_constraint,
+      constraint_pointer&& key_constraint,
+      constraint_pointer&& value_constraint,
       ConstraintProperties&& props,
       bool ignore_details = false
       ) : key_constraint_(std::move(key_constraint)),
@@ -627,8 +635,8 @@ namespace garlic {
     }
 
   private:
-    ConstraintPtr key_constraint_;
-    ConstraintPtr value_constraint_;
+    constraint_pointer key_constraint_;
+    constraint_pointer value_constraint_;
     bool ignore_details_;
 
     template<bool IgnoreDetails>
@@ -683,12 +691,17 @@ namespace garlic {
   class AllConstraint : public Constraint<LayerType> {
   public:
 
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
-
-    AllConstraint() : Constraint<LayerType>({ .fatal = true }) {}
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     AllConstraint(
-      std::vector<ConstraintPtr>&& constraints,
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .flag = ConstraintProperties::flags::fatal,
+          .name = text::no_text(), .message = text::no_text()
+          }) {}
+
+    AllConstraint(
+      sequence<constraint_pointer>&& constraints,
       ConstraintProperties&& props,
       bool hide = true,
       bool ignore_details = false
@@ -714,7 +727,7 @@ namespace garlic {
     }
 
   private:
-    std::vector<ConstraintPtr> constraints_;
+    sequence<constraint_pointer> constraints_;
     bool hide_;
     bool ignore_details_;
 
