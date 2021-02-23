@@ -1,9 +1,9 @@
 #ifndef GARLIC_CLOVE_H
 #define GARLIC_CLOVE_H
 
-#include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <type_traits>
