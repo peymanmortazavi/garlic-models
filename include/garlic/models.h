@@ -153,9 +153,9 @@ namespace garlic {
           if (auto it = requirements.find(item.first); it != requirements.end()) continue;
           if (!item.second.required) continue;
           details.push_back(ConstraintResult {
-                .details = sequence<ConstraintResult>(0),
-                .name = garlic::text(item.first, text_type::copy),
-                .reason = garlic::text("missing required field!"),
+                .details = sequence<ConstraintResult>::no_sequence(),
+                .name = text(item.first, text_type::copy),
+                .reason = text("missing required field!"),
                 .flag = ConstraintResult::flags::field
               });
         }
@@ -165,8 +165,8 @@ namespace garlic {
       if (!details.empty()) {
         return ConstraintResult {
           .details = std::move(details),
-          .name = garlic::text(properties_.name, text_type::copy),
-          .reason = garlic::text("This model is invalid!"),
+          .name = text(properties_.name, text_type::copy),
+          .reason = text("This model is invalid!"),
           .flag = ConstraintResult::flags::none
         };
       }
@@ -191,9 +191,9 @@ namespace garlic {
         if (!test) {
           const char* reason = field->get_message();
           details.push_back(ConstraintResult {
-              .details = sequence<ConstraintResult>(0),
-              .name = garlic::text(key.get_cstr(), text_type::copy),
-              .reason = (reason == nullptr ? garlic::text::no_text() : garlic::text(reason, text_type::copy)),
+              .details = sequence<ConstraintResult>::no_sequence(),
+              .name = text(key.get_cstr(), text_type::copy),
+              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
               .flag = ConstraintResult::flags::field
               });
         }
@@ -203,8 +203,8 @@ namespace garlic {
           const char* reason = field->get_message();
           details.push_back(ConstraintResult {
               .details = std::move(test.failures),
-              .name = garlic::text(key.get_cstr(), text_type::copy),
-              .reason = (reason == nullptr ? garlic::text::no_text() : garlic::text(reason, text_type::copy)),
+              .name = text(key.get_cstr(), text_type::copy),
+              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
               .flag = ConstraintResult::flags::field
               });
         }
@@ -223,8 +223,8 @@ namespace garlic {
         std::shared_ptr<ModelType> model
     ) : Constraint<LayerType>(ConstraintProperties {
       .flag = ConstraintProperties::flags::fatal,
-      .name = garlic::text(model->get_properties().name),
-      .message = garlic::text::no_text()
+      .name = text(model->get_properties().name),
+      .message = text::no_text()
       }), model_(model) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
