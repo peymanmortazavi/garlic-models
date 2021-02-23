@@ -160,7 +160,7 @@ namespace garlic {
               });
         }
       } else {
-        details.push_back(ConstraintResult::scalar_failure("type", "Expected object."));
+        details.push_back(ConstraintResult::leaf_failure("type", "Expected object."));
       }
       if (!details.empty()) {
         return ConstraintResult {

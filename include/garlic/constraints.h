@@ -36,24 +36,26 @@ namespace garlic {
     inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
 
     template<flags Flag = flags::none>
-    static ConstraintResult scalar_failure(const char* name, const char* reason="") noexcept {
+    static ConstraintResult leaf_failure(
+        garlic::text&& name, garlic::text&& reason=garlic::text::no_text()) noexcept {
       return ConstraintResult {
-        .details = garlic::sequence<ConstraintResult>(0),
-        .name = garlic::text(name),
-        .reason = garlic::text(reason),
+        .details = garlic::sequence<ConstraintResult>::no_sequence(),
+        .name = std::move(name),
+        .reason = std::move(reason),
         .flag = Flag
       };
     }
 
-    static inline ConstraintResult scalar_field_failure(const char* name, const char* reason="") noexcept {
-      return scalar_failure<flags::field>(name, reason);
+    static inline ConstraintResult leaf_field_failure(
+        garlic::text&& name, garlic::text&& reason=garlic::text::no_text()) noexcept {
+      return leaf_failure<flags::field>(std::move(name), std::move(reason));
     }
 
     static ConstraintResult ok() noexcept {
       return ConstraintResult {
-        .details = garlic::sequence<ConstraintResult>(0),
-        .name = garlic::text(""),
-        .reason = garlic::text(""),
+        .details = garlic::sequence<ConstraintResult>::no_sequence(),
+        .name = garlic::text::no_text(),
+        .reason = garlic::text::no_text(),
         .flag = flags::valid
       };
     }
@@ -71,11 +73,12 @@ namespace garlic {
     garlic::text name;  // constraint name.
     garlic::text message;  // custom rejection reason.
 
-    static ConstraintProperties create_default(const char* name = "", const char* message="") {
+    static ConstraintProperties create_default(
+        garlic::text&& name = garlic::text::no_text(), garlic::text&& message = garlic::text::no_text()) {
       return ConstraintProperties {
         flags::none,
-        garlic::text(name),
-        garlic::text(message)
+        std::move(name),
+        std::move(message)
       };
     }
 
