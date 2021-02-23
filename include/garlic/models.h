@@ -50,7 +50,7 @@ namespace garlic {
 
     ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
-      test_constraints(value, properties_.constraints, result.failures);
+      test_constraints(value, properties_.constraints, std::back_inserter(result.failures));
       return result;
     }
 

@@ -86,31 +86,18 @@ namespace garlic {
   };
 
 
-  template<typename ConstraintPtrType>
+  template<ViewLayer Layer, typename Container, typename BackInserterIterator>
   inline void test_constraints(
-      const ViewLayer auto& value,
-      const std::vector<ConstraintPtrType>& constraints,
-      garlic::sequence<ConstraintResult>& results) {
+      Layer&& value,
+      Container&& constraints,
+      BackInserterIterator it) {
     for (const auto& constraint : constraints) {
       if (auto result = constraint->test(value); !result.is_valid()) {
-        results.push_back(std::move(result));
+        it = std::move(result);
         if (constraint->skip_constraints()) break;
       }
     }
   }
-
-  //template<ViewLayer Layer, typename Container, typename BackInserterIterator>
-  //inline void test_constraints(
-  //    Layer&& value,
-  //    Container&& constraints,
-  //    BackInserterIterator it) {
-  //  for (const auto& constraint : constraints) {
-  //    if (auto result = constraint->test(value); !result.is_valid()) {
-  //      it = std::move(result);
-  //      if (constraint->skip_constraints()) break;
-  //    }
-  //  }
-  //}
 
 
   template<typename ConstraintPtrType>
@@ -724,7 +711,7 @@ namespace garlic {
         else return this->fail("Some of the constraints fail on this value.");
       }
       sequence<ConstraintResult> results;
-      test_constraints(value, constraints_, results);
+      test_constraints(value, constraints_, std::back_inserter(results));
       if (results.empty())
         return this->ok();
       return this->fail("Some of the constraints fail on this value.", std::move(results));
