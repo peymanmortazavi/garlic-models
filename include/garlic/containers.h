@@ -75,7 +75,7 @@ namespace garlic {
     inline SizeType size() const noexcept { return size_; }
     inline bool empty() const noexcept { return !size_; }
 
-    static inline basic_text no_text() noexcept {
+    constexpr static inline basic_text no_text() noexcept {
       return basic_text("");
     }
 
