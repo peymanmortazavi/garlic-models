@@ -23,9 +23,9 @@ namespace garlic {
       field     = 0x1 << 2,
     };
 
+    garlic::sequence<ConstraintResult> details;
     garlic::text name;
     garlic::text reason;
-    garlic::sequence<ConstraintResult> details;
     flags flag;
 
     inline bool is_leaf()  const noexcept { return !details.size();  }
@@ -38,9 +38,9 @@ namespace garlic {
     template<flags Flag = flags::none>
     static ConstraintResult scalar_failure(const char* name, const char* reason="") noexcept {
       return ConstraintResult {
+        .details = garlic::sequence<ConstraintResult>(0),
         .name = garlic::text(name),
         .reason = garlic::text(reason),
-        .details = garlic::sequence<ConstraintResult>(0),
         .flag = Flag
       };
     }
@@ -51,9 +51,9 @@ namespace garlic {
 
     static ConstraintResult ok() noexcept {
       return ConstraintResult {
+        .details = garlic::sequence<ConstraintResult>(0),
         .name = garlic::text(""),
         .reason = garlic::text(""),
-        .details = garlic::sequence<ConstraintResult>(0),
         .flag = flags::valid
       };
     }
@@ -177,9 +177,9 @@ namespace garlic {
     template<bool Field = false, bool Leaf = true>
     auto fail() const noexcept -> ConstraintResult {
       return ConstraintResult {
+        .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
         .name = props_.name.copy(),
         .reason = props_.message.copy(),
-        .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
         .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
       };
     }
@@ -188,9 +188,9 @@ namespace garlic {
     auto fail(const char* message) const noexcept -> ConstraintResult {
       if (this->props_.message.empty())
         return ConstraintResult {
+          .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
           .name = props_.name.copy(),
           .reason = garlic::text(message),
-          .details = (Leaf ? garlic::sequence<ConstraintResult>(0) : garlic::sequence<ConstraintResult>()),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
       return this->fail<Field, Leaf>();
@@ -200,16 +200,16 @@ namespace garlic {
     auto fail(const char* message, garlic::sequence<ConstraintResult>&& details) const noexcept {
       if (this->props_.message.empty()) {
         return ConstraintResult {
+          .details = std::move(details),
           .name = props_.name.copy(),
           .reason = garlic::text(message),
-          .details = std::move(details),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
       } else {
         return ConstraintResult {
+          .details = std::move(details),
           .name = props_.name.copy(),
           .reason = props_.message.copy(),
-          .details = std::move(details),
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
       }
@@ -485,9 +485,9 @@ namespace garlic {
             return this->fail(
                 "Invalid value found in the list.",
                 ConstraintResult {
+                  .details = sequence<ConstraintResult>(0),
                   .name = garlic::text(std::to_string(index), text_type::copy),
                   .reason = garlic::text("invalid value."),
-                  .details = sequence<ConstraintResult>(0),
                   .flag = ConstraintResult::flags::field
                   });
           }
@@ -499,9 +499,9 @@ namespace garlic {
             return this->fail(
                 "Invalid value found in the list.",
                 ConstraintResult {
+                  .details = std::move(inner_details),
                   .name = garlic::text(std::to_string(index), text_type::copy),
                   .reason = garlic::text("invalid value."),
-                  .details = std::move(inner_details),
                   .flag = ConstraintResult::flags::field
                   });
           }
@@ -576,9 +576,9 @@ namespace garlic {
             return this->fail(
                 "Invalid value found in the tuple.",
                 ConstraintResult {
+                  .details = sequence<ConstraintResult>(0),
                   .name = garlic::text(std::to_string(index), text_type::copy),
                   .reason = garlic::text("invalid value."),
-                  .details = sequence<ConstraintResult>(0),
                   .flag = ConstraintResult::flags::field
                   });
           }
@@ -590,9 +590,9 @@ namespace garlic {
             return this->fail(
                 "Invalid value found in the tuple.",
                 ConstraintResult {
+                  .details = std::move(inner_details),
                   .name = garlic::text(std::to_string(index), text_type::copy),
                   .reason = garlic::text("invalid value."),
-                  .details = std::move(inner_details),
                   .flag = ConstraintResult::flags::field
                   });
           }

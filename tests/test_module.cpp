@@ -36,25 +36,20 @@ TEST(ModuleParsing, Basic) {
     doc.add_member("birthdate", "1/4/1993");
     doc.add_member("registration_date", "1/4/21");
 
-    //{
-      auto results = root.test(doc.get_view());
-      ASSERT_TRUE(results.is_valid());
-    //}
+    auto results = root.test(doc.get_view());
+    ASSERT_TRUE(results.is_valid());
 
-    doc.remove_member("birthdate");
-    doc.remove_member("registration_date");
     doc.add_member("birthdate", "no good date");
     doc.add_member("registration_date", "empty");
 
-    //{
-      results = root.test(doc);
-      //ASSERT_FALSE(results.is_valid());
-      //ASSERT_EQ(results.details.size(), 2);
-      //assert_field_constraint_result(results.details[0], "birthdate");
-      //assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
-      //assert_field_constraint_result(results.details[1], "registration_date");
-      //assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
-    //}
+    results = root.test(doc);
+    ASSERT_FALSE(results.is_valid());
+    print_constraint_result(results);
+    ASSERT_EQ(results.details.size(), 2);
+    assert_field_constraint_result(results.details[0], "birthdate");
+    assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
+    assert_field_constraint_result(results.details[1], "registration_date");
+    assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
   };
 
   // JSON module using rapidjson.
@@ -81,8 +76,7 @@ TEST(ModuleParsing, Basic) {
     auto module = Module<CloveView>();
     auto file_handle = fopen("data/basic/module.yaml", "r");
     auto doc = garlic::providers::libyaml::Yaml::load(file_handle);
-    YamlView view = doc.get_view();
-    auto parse_result = module.parse(view);
+    auto parse_result = module.parse(doc.get_view());
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
   }
