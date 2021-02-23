@@ -14,10 +14,10 @@
 
 namespace garlic {
 
-  template<garlic::ViewLayer LayerType>
+  template<ViewLayer LayerType>
   class Field {
   public:
-    template<garlic::ViewLayer> friend class Module;
+    template<ViewLayer> friend class Module;
 
     using ConstraintType = Constraint<LayerType>;
     using ConstraintPtr = std::shared_ptr<ConstraintType>;
@@ -76,7 +76,7 @@ namespace garlic {
   template<ViewLayer LayerType>
   class Model {
   public:
-    template<garlic::ViewLayer> friend class Module;
+    template<ViewLayer> friend class Module;
 
     using Layer = LayerType;
     using FieldType = Field<LayerType>;
