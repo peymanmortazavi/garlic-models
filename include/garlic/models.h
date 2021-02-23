@@ -152,12 +152,10 @@ namespace garlic {
         for (const auto& item : properties_.field_map) {
           if (auto it = requirements.find(item.first); it != requirements.end()) continue;
           if (!item.second.required) continue;
-          details.push_back(ConstraintResult {
-                .details = sequence<ConstraintResult>::no_sequence(),
-                .name = text(item.first, text_type::copy),
-                .reason = text("missing required field!"),
-                .flag = ConstraintResult::flags::field
-              });
+          details.push_back(
+              ConstraintResult::leaf_field_failure(
+                text(item.first, text_type::copy),
+                "missing required field!"));
         }
       } else {
         details.push_back(ConstraintResult::leaf_failure("type", "Expected object."));
@@ -187,12 +185,12 @@ namespace garlic {
         const LayerType& value,
         const FieldPtr& field) const {
       if (field->get_properties().ignore_details) {
-        auto test = field->quick_test(value);
-        if (!test) {
+        if (!field->quick_test(value)) {
           const char* reason = field->get_message();
+          auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = sequence<ConstraintResult>::no_sequence(),
-              .name = text(key.get_cstr(), text_type::copy),
+              .name = text(name.data(), name.size(), text_type::copy),
               .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
               .flag = ConstraintResult::flags::field
               });
@@ -201,9 +199,10 @@ namespace garlic {
         auto test = field->validate(value);
         if (!test.is_valid()) {
           const char* reason = field->get_message();
+          auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = std::move(test.failures),
-              .name = text(key.get_cstr(), text_type::copy),
+              .name = text(name.data(), name.size(), text_type::copy),
               .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
               .flag = ConstraintResult::flags::field
               });
