@@ -113,3 +113,31 @@ TEST(GarlicSequence, MoveOperators) {
   ASSERT_EQ(another_one.capacity(), 2);
   ASSERT_EQ(another_one.size(), 1);
 }
+
+TEST(GarlicSequence, PushFront) {
+  sequence<double> one(4);
+  one.push_back(3);
+  one.push_back(4);
+
+  sequence<double> two(2);
+  two.push_back(1);
+  two.push_back(2);
+
+  one.push_front(two.begin(), two.end());
+
+  {
+    double expectation[4] = {1, 2, 3, 4};
+    ASSERT_TRUE(std::equal(one.begin(), one.end(), expectation, expectation + 4));
+  }
+
+  sequence<double> three(4);
+  for (auto i = 0; i < 4; ++i) three.push_back(i);
+  std::cout << three.size() << std::endl;
+  std::cout << three.capacity() << std::endl;
+
+  one.push_front(three.begin(), three.end());
+  {
+    double expectation[8] = {0, 1, 2, 3, 1, 2, 3, 4};
+    ASSERT_TRUE(std::equal(one.begin(), one.end(), expectation, expectation + 8));
+  }
+}

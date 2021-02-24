@@ -130,6 +130,17 @@ namespace garlic {
       new (items_ + size_++) ValueType(value);
     }
 
+    void push_front(const_iterator begin, const_iterator end) noexcept {
+      auto count = end - begin;
+      if (count > capacity_ - size_) {
+        capacity_ += count;
+        items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));
+      }
+      memmove(items_ + count, items_, count * sizeof(ValueType));
+      for (auto i = 0; i < count; ++i) new (items_ + i) ValueType(begin[i]);
+      size_ += count;
+    }
+
     inline constexpr sequence& operator =(sequence&& old) {
       destroy();
       size_ = old.size_;
