@@ -19,8 +19,8 @@ namespace garlic {
   public:
     template<ViewLayer> friend class Module;
 
-    using ConstraintType = Constraint<LayerType>;
-    using ConstraintPtr = std::shared_ptr<ConstraintType>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     struct ValidationResult {
       sequence<ConstraintResult> failures;
@@ -29,22 +29,21 @@ namespace garlic {
     };
 
     struct Properties {
-      std::string name;
+      text name;
       std::map<std::string, std::string> meta;
-      std::vector<ConstraintPtr> constraints;
+      sequence<constraint_pointer> constraints;
       bool ignore_details = false;
     };
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
-    Field(std::string&& name) { properties_.name = std::move(name); }
-    Field(const std::string& name) { properties_.name = name; }
+    Field(text&& name) { properties_.name = std::move(name); }
 
     template<template <typename> typename T, typename... Args>
     void add_constraint(Args&&... args) {
       this->add_constraint(std::make_shared<T<LayerType>>(std::forward<Args>(args)...));
     }
 
-    void add_constraint(ConstraintPtr&& constraint) {
+    void add_constraint(constraint_pointer&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
 
@@ -65,7 +64,7 @@ namespace garlic {
       }
       return nullptr;
     }
-    const std::string& get_name() const noexcept { return properties_.name; }
+    text get_name() const noexcept { return properties_.name.copy(); }
     const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
@@ -78,39 +77,36 @@ namespace garlic {
   public:
     template<ViewLayer> friend class Module;
 
-    using Layer = LayerType;
-    using FieldType = Field<LayerType>;
-    using FieldPtr = std::shared_ptr<FieldType>;
+    using field_type = Field<LayerType>;
+    using field_pointer = std::shared_ptr<field_type>;
 
-    struct FieldDescriptor {
-      FieldPtr field;
+    struct field_descriptor {
+      field_pointer field;
       bool required;
     };
 
     struct Properties {
-      std::string name;
+      text name;
       bool strict = false;
       std::map<std::string, std::string> meta;
-      std::map<std::string, FieldDescriptor> field_map;
+      std::map<std::string, field_descriptor> field_map;
     };
 
     Model() {}
     Model(Properties properties) : properties_(properties) {}
-    Model(std::string&& name) {
+    Model(text&& name) {
       properties_.name = std::move(name);
     }
-    Model(const std::string& name) {
-      properties_.name = name;
-    }
 
-    void add_field(std::string&& name, FieldPtr field, bool required = true) {
+    void add_field(std::string&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
           std::move(name),
           { .field = std::move(field), .required = required }
           );
     }
 
-    FieldPtr get_field(const std::string& name) const {
+    template<typename KeyType>
+    field_pointer get_field(KeyType&& name) const {
       auto it = properties_.field_map.find(name);
       if (it != properties_.field_map.end()) {
         return it->second.field;
@@ -163,7 +159,7 @@ namespace garlic {
       if (!details.empty()) {
         return ConstraintResult {
           .details = std::move(details),
-          .name = text(properties_.name, text_type::copy),
+          .name = properties_.name.deep_copy(),
           .reason = text("This model is invalid!"),
           .flag = ConstraintResult::flags::none
         };
@@ -172,6 +168,7 @@ namespace garlic {
       return ConstraintResult::ok();
     }
 
+    text get_name() const noexcept { return properties_.name.copy(); }
     const Properties& get_properties() const { return properties_; }
 
   protected:
@@ -183,7 +180,7 @@ namespace garlic {
         sequence<ConstraintResult>& details,
         const LayerType& key,
         const LayerType& value,
-        const FieldPtr& field) const {
+        const field_pointer& field) const {
       if (field->get_properties().ignore_details) {
         if (!field->quick_test(value)) {
           const char* reason = field->get_message();
@@ -216,13 +213,14 @@ namespace garlic {
   template<ViewLayer LayerType>
   class ModelConstraint : public Constraint<LayerType> {
   public:
-    using ModelType = Model<LayerType>;
+    using model_type = Model<LayerType>;
+    using model_pointer = std::shared_ptr<model_type>;
 
     ModelConstraint(
-        std::shared_ptr<ModelType> model
+        model_pointer model
     ) : Constraint<LayerType>(ConstraintProperties {
       .flag = ConstraintProperties::flags::fatal,
-      .name = text(model->get_properties().name),
+      .name = model->get_properties().name.copy(),
       .message = text::no_text()
       }), model_(model) {}
 
@@ -235,7 +233,7 @@ namespace garlic {
     }
 
   private:
-    std::shared_ptr<ModelType> model_;
+    model_pointer model_;
   };
 
   // Model Parsing From ViewLayer
@@ -256,11 +254,12 @@ namespace garlic {
   template<ViewLayer LayerType>
   class FieldConstraint : public Constraint<LayerType> {
   public:
-    using FieldPtr = std::shared_ptr<Field<LayerType>>;
-    using FieldReference = std::shared_ptr<FieldPtr>;
+    using field_type = Field<LayerType>;
+    using field_pointer = std::shared_ptr<field_type>;
+    using field_pointer_reference = std::shared_ptr<field_pointer>;  // double pointer.
 
     FieldConstraint(
-        FieldReference field,
+        field_pointer_reference field,
         ConstraintProperties&& props,
         bool hide = false,
         bool ignore_details = false
@@ -288,13 +287,13 @@ namespace garlic {
       return (*field_)->quick_test(value);
     }
 
-    void set_field(FieldPtr field) {
+    void set_field(field_pointer field) {
       field_->swap(field);
       this->update_name();
     }
 
   protected:
-    FieldReference field_;
+    field_pointer_reference field_;
     bool hide_;
     bool ignore_details_;
 
@@ -305,7 +304,7 @@ namespace garlic {
     }
 
     template<typename... Args>
-    inline ConstraintResult custom_message_fail(const FieldPtr& field, Args&&... args) const noexcept {
+    inline ConstraintResult custom_message_fail(const field_pointer& field, Args&&... args) const noexcept {
       if (auto message = field->get_message(); message != nullptr)
         return this->fail(message, std::forward<Args>(args)...);
       return this->fail("", std::forward<Args>(args)...);

@@ -94,7 +94,7 @@ void assert_model_field_name(
   ASSERT_NE(model, nullptr);
   auto field = model->get_field(field_name);
   ASSERT_NE(field, nullptr);
-  ASSERT_STREQ(field->get_name().c_str(), field_type);
+  ASSERT_STREQ(field->get_name().data(), field_type);
 }
 
 template<typename LayerType>

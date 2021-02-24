@@ -1,6 +1,7 @@
 #ifndef GARLIC_MODULE_H
 #define GARLIC_MODULE_H
 
+#include <iterator>
 #include "constraints.h"
 #include "models.h"
 #include "layer.h"
@@ -47,7 +48,7 @@ namespace garlic {
       parse_context context;
 
       get_member(value, "fields", [this, &context](const auto &fields) {
-        for (const auto &field : fields.get_object()) {
+        for (const auto& field : fields.get_object()) {
           // parse field definition.
           this->parse_field(
               field.key.get_string(), field.value, context,
@@ -170,7 +171,7 @@ namespace garlic {
       struct field_info {
         FieldStatus status;
         lazy_model_field lazy_field;
-        typename ModelType::FieldDescriptor descriptor;
+        typename ModelType::field_descriptor descriptor;
       };
       MapOf<field_info> field_table;
       auto& props = model->properties_;
@@ -227,7 +228,7 @@ namespace garlic {
 
     template<typename Callable>
     void parse_model(std::string&& name, const ViewLayer auto& value, parse_context& context, const Callable& cb) {
-      auto ptr = std::make_shared<ModelType>(std::move(name));
+      auto ptr = std::make_shared<ModelType>(text(name, text_type::copy));
       auto& props = ptr->properties_;
 
       this->process_model_meta(props, value);
@@ -244,7 +245,7 @@ namespace garlic {
         });
       });
 
-      auto model_field = this->make_field<ModelConstraint>(std::string{ptr->get_properties().name}, ptr);
+      auto model_field = this->make_field<ModelConstraint>(ptr->get_name().copy(), ptr);
       this->add_field(ptr->get_properties().name.data(), context, std::move(model_field), true);
       cb(std::move(ptr));
     }
@@ -304,7 +305,7 @@ namespace garlic {
         }
         return;
       }
-      auto ptr = std::make_shared<FieldType>(std::move(name));
+      auto ptr = std::make_shared<FieldType>(text(name, text_type::copy));
       auto& props = ptr->properties_;
       auto complete = true;
 
@@ -312,7 +313,8 @@ namespace garlic {
         complete = false;
         this->parse_reference(item.get_cstr(), context, [&props, &complete](const auto& field) {
           complete = true;
-          props.constraints = field->get_properties().constraints;
+          const auto& base_props = field->get_properties().constraints;
+          std::copy(std::begin(base_props), std::end(base_props), std::back_inserter(props.constraints));
         });
         if (!complete) context.fields[item.get_cstr()].dependencies.emplace_back(ptr);
       });
@@ -322,7 +324,7 @@ namespace garlic {
       get_member(value, "constraints", [this, &props, &context](const auto& item) {
         for (const auto& constraint_info : item.get_list()) {
           this->parse_constraint(constraint_info, context, [&props](auto&& ptr) {
-            props.constraints.emplace_back(std::move(ptr));
+            props.constraints.push_back(std::move(ptr));
           });
         }
       });
@@ -344,14 +346,11 @@ namespace garlic {
         const auto& src_constraints = ptr->properties_.constraints;
         for (auto& field : it->second.dependencies) {
           auto& dst_constraints = field->properties_.constraints;
-          dst_constraints.insert(
-              dst_constraints.begin(),
-              src_constraints.begin(), src_constraints.end()
-              );
+          dst_constraints.push_front(src_constraints.begin(), src_constraints.end());
           // if the field is a named one, it can be resolved as it is complete now.
           // anonymous fields can be skipped.
           if (!field->get_properties().name.empty()) {
-            this->resolve_field(field->get_properties().name, context, field);
+            this->resolve_field(field->get_properties().name.data(), context, field);
           }
         }
 
@@ -359,7 +358,7 @@ namespace garlic {
         for (auto& member : it->second.models) {
           member.target->properties_.field_map.emplace(
               std::move(member.key),
-              typename ModelType::FieldDescriptor{.field = ptr, .required = member.required}
+              typename ModelType::field_descriptor{.field = ptr, .required = member.required}
               );
         }
 
@@ -425,11 +424,13 @@ namespace garlic {
     }
 
     template<template<typename> typename ConstraintType, typename... Args>
-    FieldPtr make_field(std::string&& name, Args&&... args) const noexcept {
+    FieldPtr make_field(text&& name, Args&&... args) const noexcept {
+      sequence<std::shared_ptr<Constraint<Destination>>> constraints;
+      constraints.push_back(std::make_shared<ConstraintType<Destination>>(std::forward<Args>(args)...));
       FieldPropertiesOf<Destination> props {
         std::move(name),
         {},
-        {std::make_shared<ConstraintType<Destination>>(std::forward<Args>(args)...)}
+        std::move(constraints)
       };
       return std::make_shared<FieldType>(std::move(props));
     }
