@@ -79,7 +79,7 @@ namespace garlic {
     ~basic_text() { destroy(); }
 
     inline bool operator ==(const basic_text& another) const noexcept {
-      return (another.data_ == data_ && another.size_ == size_) || !strcmp(data_, another.data_);
+      return (another.data_ == data_ && another.size_ == size_) || !strncmp(data_, another.data_, size_);
     }
 
     const Ch* data() const { return data_; }
@@ -216,7 +216,7 @@ namespace std {
   template<typename Ch, typename SizeType>
   struct hash<garlic::basic_text<Ch, SizeType>> {
     size_t operator() (const garlic::basic_text<Ch, SizeType>& value) const {
-      return hash<const Ch*>()(value.data());
+      return hash<std::string_view>()(std::string_view(value.data(), value.size()));
     }
   };
 }
