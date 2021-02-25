@@ -42,8 +42,7 @@ namespace garlic {
         {"object", this->make_field<TypeConstraint>("ObjectField", TypeFlag::Object)},
         {"bool", this->make_field<TypeConstraint>("BooleanField", TypeFlag::Boolean)},
       };
-      for (const auto& pair : static_map)
-        fields_.emplace(pair.first.copy(), pair.second);
+      fields_ = static_map;
     }
 
     template<ViewLayer Layer>
@@ -247,7 +246,7 @@ namespace garlic {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
           this->parse_field(text::no_text(), field.value, context,
               [&props, &field](auto ptr, auto complete, auto optional) {
-            props.field_map[decode<text>(field.key)] = {.field = std::move(ptr), .required = !optional};
+            props.field_map[decode<text>(field.key).deep_copy()] = {.field = std::move(ptr), .required = !optional};
           }, [&field, &context, &ptr](const text& name, auto optional) {
             context.add_lazy_model_field(name, decode<text>(field.key), ptr, !optional);
           });
@@ -266,7 +265,7 @@ namespace garlic {
           cb(it->second);
           return true;
         }
-      } 
+      }
       return false;
     }
 
@@ -371,7 +370,7 @@ namespace garlic {
         // add the field to the depending models.
         for (auto& member : it->second.models) {
           member.target->properties_.field_map.emplace(
-              std::move(member.key),
+              member.key.deep_copy(),
               typename model_type::field_descriptor{.field = ptr, .required = member.required}
               );
         }

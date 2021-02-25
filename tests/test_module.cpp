@@ -44,7 +44,6 @@ TEST(ModuleParsing, Basic) {
 
     results = root.test(doc);
     ASSERT_FALSE(results.is_valid());
-    print_constraint_result(results);
     ASSERT_EQ(results.details.size(), 2);
     assert_field_constraint_result(results.details[0], "birthdate");
     assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
