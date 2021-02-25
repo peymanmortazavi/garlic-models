@@ -15,9 +15,9 @@ namespace garlic {
   template<typename Ch, typename SizeType = unsigned>
   class basic_text {
   public:
-    basic_text() : size_(0), type_(text_type::reference) {}
+    constexpr basic_text() : size_(0), type_(text_type::reference) {}
 
-    basic_text(const Ch* data, text_type type = text_type::reference) : type_(type) {
+    constexpr basic_text(const Ch* data, text_type type = text_type::reference) : type_(type) {
       size_ = strlen(data);
       if (type == text_type::copy && size_)
         data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
@@ -25,7 +25,7 @@ namespace garlic {
         data_ = data;
     }
 
-    basic_text(
+    constexpr basic_text(
         const Ch* data, SizeType size,
         text_type type = text_type::reference) : size_(size), type_(type) {
       if (type == text_type::copy && size_)
@@ -38,11 +38,11 @@ namespace garlic {
         const std::basic_string<Ch>& value,
         text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
 
-    basic_text(
+    constexpr basic_text(
         const std::basic_string_view<Ch>& value,
         text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
 
-    basic_text(
+    constexpr basic_text(
         const basic_text& other
         ) : data_(other.data_), size_(other.size_), type_(text_type::reference) {};
 
@@ -71,15 +71,15 @@ namespace garlic {
       return basic_text(data_, size_, text_type::copy);
     }
 
-    ~basic_text() { destroy(); }
+    constexpr ~basic_text() { destroy(); }
 
-    inline bool operator ==(const basic_text& another) const noexcept {
+    inline constexpr bool operator ==(const basic_text& another) const noexcept {
       return (another.data_ == data_ && another.size_ == size_) || !strncmp(data_, another.data_, size_);
     }
     inline bool operator ==(const std::basic_string<Ch>& value) const noexcept {
       return !strncmp(data_, value.data(), size_);
     }
-    inline bool operator ==(const std::basic_string_view<Ch>& value) const noexcept {
+    inline constexpr bool operator ==(const std::basic_string_view<Ch>& value) const noexcept {
       return !strncmp(data_, value.data(), size_);
     }
 
@@ -90,14 +90,14 @@ namespace garlic {
         --size_;
     }
 
-    inline char back() const { return data_[size_ - 1]; }
+    inline constexpr char back() const { return data_[size_ - 1]; }
 
-    inline const Ch* begin() const { return data_; }
-    inline const Ch* end() const { return data_ + size_; }
+    inline constexpr const Ch* begin() const { return data_; }
+    inline constexpr const Ch* end() const { return data_ + size_; }
 
-    inline SizeType size() const noexcept { return size_; }
-    inline bool empty() const noexcept { return !size_; }
-    inline bool is_view() const noexcept { return type_ == text_type::reference; }
+    inline constexpr SizeType size() const noexcept { return size_; }
+    inline constexpr bool empty() const noexcept { return !size_; }
+    inline constexpr bool is_view() const noexcept { return type_ == text_type::reference; }
 
     constexpr static inline basic_text no_text() noexcept {
       return basic_text("");
@@ -108,7 +108,7 @@ namespace garlic {
     SizeType size_;
     text_type type_;
 
-    inline void destroy() noexcept {
+    constexpr inline void destroy() noexcept {
       if (type_ == text_type::copy && size_)
         std::free((void*)data_);
     }

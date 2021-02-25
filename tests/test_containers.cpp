@@ -69,6 +69,15 @@ TEST(GarlicText, StaticNoText) {
   ASSERT_EQ(text::no_text().data(), text::no_text().data());
 }
 
+TEST(GarlicText, ConstExpr) {
+  constexpr text str = "Some String";
+  constexpr auto size = str.size();
+
+  constexpr text x = str;
+  constexpr std::string_view y = "Some String";
+  constexpr bool result = x == y;
+}
+
 
 TEST(GarlicSequence, Basic) {
   sequence<double> numbers;  // default ctor
