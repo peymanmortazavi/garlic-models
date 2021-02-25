@@ -28,8 +28,9 @@ namespace garlic {
     constexpr basic_text(
         const Ch* data, SizeType size,
         text_type type = text_type::reference) : size_(size), type_(type) {
-      if (type == text_type::copy && size_)
-        data_ = strncpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data, size_);
+      if (type == text_type::copy && size_) {
+        data_ = strncpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data, size_ + 1);
+      }
       else
         data_ = data;
     }
@@ -69,6 +70,9 @@ namespace garlic {
 
     inline basic_text clone() const noexcept {
       return basic_text(data_, size_, text_type::copy);
+    }
+    inline basic_text view() const noexcept {
+      return basic_text(data_, size_, text_type::reference);
     }
 
     constexpr ~basic_text() { destroy(); }

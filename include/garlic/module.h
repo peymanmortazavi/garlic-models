@@ -253,8 +253,8 @@ namespace garlic {
         });
       });
 
-      auto model_field = this->make_field<ModelConstraint>(ptr->get_name(), ptr);
-      this->add_field(ptr->get_name(), context, std::move(model_field), true);
+      auto model_field = this->make_field<ModelConstraint>(ptr->get_name().view(), ptr);
+      this->add_field(ptr->get_name().view(), context, std::move(model_field), true);
       cb(std::move(ptr));
     }
 

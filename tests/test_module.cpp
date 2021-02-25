@@ -103,7 +103,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
   };
 
   for (const auto& item : expectations) {
-    auto field_ptr = module.get_field(item.first.copy());
+    auto field_ptr = module.get_field(item.first);
     ASSERT_NE(field_ptr, nullptr);
     assert_field_constraints(*field_ptr, item.second);
   }

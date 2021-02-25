@@ -22,6 +22,9 @@ TEST(GarlicText, ConstCharConstructor) {
   ASSERT_STREQ(c.data(), static_text);
   ASSERT_STRNE(copy.data(), static_text);
   ASSERT_STREQ(copy.data(), "abcd");
+
+  text d("abcd", 5);
+  ASSERT_STREQ(d.data(), "abcd");
 }
 
 TEST(GarlicText, StdStringConstructor) {

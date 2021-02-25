@@ -150,7 +150,7 @@ namespace garlic {
           if (!item.second.required) continue;
           details.push_back(
               ConstraintResult::leaf_field_failure(
-                item.first,
+                item.first.view(),
                 "missing required field!"));
         }
       } else {
