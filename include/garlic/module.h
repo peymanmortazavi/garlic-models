@@ -57,7 +57,7 @@ namespace garlic {
           this->parse_field(
               decode<text>(field.key), field.value, context,
               [this, &context, &field](auto ptr, auto complete, auto) {
-                this->add_field(decode<text>(field.key), context, std::move(ptr), complete);
+                this->add_field(decode<text>(field.key).deep_copy(), context, std::move(ptr), complete);
               },
               [](const auto&, auto) {});
         }
@@ -377,7 +377,7 @@ namespace garlic {
 
         // register all the field aliases.
         for (auto& alias : it->second.fields) {
-          this->add_field(alias.copy(), context, ptr, true);
+          this->add_field(alias.deep_copy(), context, ptr, true);
         }
 
         for(auto& constraint : it->second.constraints) {
@@ -395,7 +395,7 @@ namespace garlic {
       } else {
         context.fields[key];  // create a record so it would be deemed as incomplete.
       }
-      fields_.emplace(key.deep_copy(), std::move(ptr));  // register the field.
+      fields_.emplace(std::move(key), std::move(ptr));  // register the field.
     }
 
     template<ViewLayer Source, typename Callable>
