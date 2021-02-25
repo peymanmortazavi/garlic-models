@@ -4,6 +4,7 @@
 #include "layer.h"
 #include "utility.h"
 #include "meta.h"
+#include "containers.h"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -16,73 +17,147 @@
 namespace garlic {
 
   struct ConstraintResult {
-    bool valid = true;
-    std::string name;
-    std::string reason;
-    std::vector<ConstraintResult> details;
-    bool field = false;
+    enum flags : uint8_t {
+      none      = 0x1 << 0,
+      valid     = 0x1 << 1,
+      field     = 0x1 << 2,
+    };
 
-    bool is_scalar() const noexcept { return details.size() == 0; }
+    sequence<ConstraintResult> details;
+    text name;
+    text reason;
+    flags flag;
+
+    inline bool is_leaf()  const noexcept { return !details.size();  }
+    inline bool is_valid() const noexcept { return flag & flags::valid; }
+    inline bool is_field() const noexcept { return flag & flags::field; }
+
+    inline void set_valid() noexcept { flag = static_cast<flags>(flag & flags::valid); }
+    inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
+
+    template<flags Flag = flags::none>
+    static ConstraintResult leaf_failure(
+        text&& name, text&& reason=text::no_text()) noexcept {
+      return ConstraintResult {
+        .details = sequence<ConstraintResult>::no_sequence(),
+        .name = std::move(name),
+        .reason = std::move(reason),
+        .flag = Flag
+      };
+    }
+
+    static inline ConstraintResult leaf_field_failure(
+        text&& name, text&& reason=text::no_text()) noexcept {
+      return leaf_failure<flags::field>(std::move(name), std::move(reason));
+    }
+
+    static inline ConstraintResult
+    field_failure(
+        text&& name,
+        ConstraintResult&& inner_detail,
+        text&& reason = text::no_text()) noexcept {
+      sequence<ConstraintResult> details(1);
+      details.push_back(std::move(inner_detail));
+      return ConstraintResult {
+        .details = std::move(details),
+        .name = std::move(name),
+        .reason = std::move(reason),
+        .flag = flags::field
+      };
+    }
+
+    static ConstraintResult ok() noexcept {
+      return ConstraintResult {
+        .details = sequence<ConstraintResult>::no_sequence(),
+        .name = text::no_text(),
+        .reason = text::no_text(),
+        .flag = flags::valid
+      };
+    }
+
   };
 
 
   struct ConstraintProperties {
-    bool fatal = false;  // should stop looking at other constraints.
-    std::string name;  // constraint name.
-    std::string message;  // custom rejection reason.
+    enum flags : uint8_t {
+      none  = 0x1 << 0,
+      fatal = 0x1 << 1,  // should stop looking at other constraints.
+    };
+
+    text name;  // constraint name.
+    text message;  // custom rejection reason.
+    flags flag = flags::none;
+
+    static ConstraintProperties create_default(
+        text&& name = text::no_text(), text&& message = text::no_text()) {
+      return ConstraintProperties {
+        std::move(name),
+        std::move(message),
+        flags::none,
+      };
+    }
+
+    inline bool is_fatal() const noexcept { return flag & flags::fatal; }
   };
 
 
-  template<typename ConstraintPtrType>
+  template<ViewLayer Layer, typename Container, typename BackInserterIterator>
   inline void test_constraints(
-      const ViewLayer auto& value,
-      const std::vector<ConstraintPtrType>& constraints,
-      std::vector<ConstraintResult>& results) {
+      Layer&& value,
+      Container&& constraints,
+      BackInserterIterator it) {
     for (const auto& constraint : constraints) {
-      if (auto result = constraint->test(value); !result.valid) {
-        results.push_back(std::move(result));
+      if (auto result = constraint->test(value); !result.is_valid()) {
+        it = std::move(result);
         if (constraint->skip_constraints()) break;
       }
     }
   }
 
 
-  template<typename ConstraintPtrType>
-  inline bool test_constraints_quick(
-      const ViewLayer auto& value,
-      const std::vector<ConstraintPtrType>& constraints) {
+  template<ViewLayer Layer, typename Container>
+  static inline bool
+  test_constraints_quick(Layer&& value, Container&& constraints) {
     return std::all_of(
-        constraints.begin(), constraints.end(),
+        std::begin(constraints), std::end(constraints),
         [&value](const auto& constraint) { return constraint->quick_test(value); }
         );
   }
 
 
-  template<typename ConstraintPtrType>
-  inline ConstraintResult test_constraints_first_failure(
-      const ViewLayer auto& value,
-      std::vector<ConstraintPtrType> constraints
-      ) {
+  template<ViewLayer Layer, typename Container>
+  static inline ConstraintResult
+  test_constraints_first_failure(Layer&& value, Container&& constraints) {
     for (const auto& constraint : constraints) {
-      if (auto result = constraint->test(value); !result.valid) {
-        return std::move(result);
+      if (auto result = constraint->test(value); !result.is_valid()) {
+        return result;
       }
     }
-    return { .valid = true };
+    return ConstraintResult::ok();
   }
 
 
   template<ViewLayer Layer>
+  static inline text 
+  get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
+    get_member(layer, key, [&default_value](const auto& result) {
+        auto view = result.get_string_view();
+        default_value = text(view.data(), view.size(), text_type::copy);
+        });
+    return std::move(default_value);
+  }
+
+
+  template<bool Fatal = false, ViewLayer Layer>
   static inline ConstraintProperties
   build_constraint_properties(
-      Layer layer,
+      Layer&& layer,
       const char* name = "",
-      const char* message = "",
-      bool fatal = false) noexcept {
+      const char* message = "") noexcept {
     return ConstraintProperties {
-      .fatal = get(layer, "fatal", fatal),
-      .name = get(layer, "name", name),
-      .message = get(layer, "message", message)
+      .name = get_text(layer, "name", name),
+      .message = get_text(layer, "message", message),
+      .flag = (get(layer, "fatal", Fatal) ? ConstraintProperties::flags::fatal : ConstraintProperties::flags::none),
     };
   }
 
@@ -94,58 +169,50 @@ namespace garlic {
 
     virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
     virtual bool quick_test(const LayerType& value) const noexcept = 0;
-    std::string_view get_name() const noexcept { return props_.name; };
-    bool skip_constraints() const noexcept { return props_.fatal; };
+    const text& get_name() const noexcept { return props_.name; };
+    inline bool skip_constraints() const noexcept { return props_.is_fatal(); };
 
-    auto fail(bool field = false) const noexcept -> ConstraintResult {
-      return ConstraintResult{
-        .valid = false,
-        .name = this->props_.name,
-        .reason = this->props_.message,
-        .field = field
+    template<bool Field = false, bool Leaf = true>
+    auto fail() const noexcept -> ConstraintResult {
+      return ConstraintResult {
+        .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
+        .name = props_.name,
+        .reason = props_.message,
+        .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
       };
     }
 
-    auto fail(const char* message, bool field=false) const noexcept -> ConstraintResult {
-      if (!this->props_.message.empty()) {
-        return ConstraintResult{
-          .valid = false,
-          .name = this->props_.name,
-          .reason = props_.message,
-          .field = field
-        };
-      } else {
-        return ConstraintResult{
-          .valid = false,
-          .name = this->props_.name,
+    template<bool Field = false, bool Leaf = true>
+    auto fail(const char* message) const noexcept -> ConstraintResult {
+      if (this->props_.message.empty())
+        return ConstraintResult {
+          .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
+          .name = props_.name,
           .reason = message,
-          .field = field
+          .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
-      }
+      return this->fail<Field, Leaf>();
     }
 
-    auto fail(const char* message, std::vector<ConstraintResult>&& details, bool field=false) const noexcept {
-      if (!this->props_.message.empty()) {
-        return ConstraintResult {
-          .valid = false,
-          .name = this->props_.name,
-          .reason = props_.message,
-          .details = std::move(details),
-          .field = field,
-        };
-      } else {
-        return ConstraintResult {
-          .valid = false,
-          .name = this->props_.name,
-          .reason = message,
-          .details = std::move(details),
-          .field = field
-        };
-      }
+    template<bool Field = false>
+    auto fail(const char* message, sequence<ConstraintResult>&& details) const noexcept {
+      return ConstraintResult {
+        .details = std::move(details),
+        .name = props_.name,
+        .reason = (props_.message.empty() ? message : props_.message),
+        .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
+      };
     }
 
-    auto ok() const noexcept -> ConstraintResult {
-      return ConstraintResult{ .valid = true };
+    template<bool Field = false>
+    auto fail(const char* message, ConstraintResult&& inner_detail) const noexcept {
+      sequence<ConstraintResult> details(1);
+      details.push_back(std::move(inner_detail));
+      return this->fail<Field>(message, std::move(details));
+    }
+
+    inline auto ok() const noexcept -> ConstraintResult {
+      return ConstraintResult::ok();
     }
 
   protected:
@@ -159,10 +226,12 @@ namespace garlic {
 
     TypeConstraint(
         TypeFlag required_type,
-        std::string&& name="type_constraint"
-    ) : flag_(required_type), Constraint<LayerType>({
-      .fatal = true, .name = std::move(name)
-      }) {}
+        text&& name = "type_constraint"
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .name = std::move(name),
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::fatal,
+          }), flag_(required_type) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       switch (flag_) {
@@ -224,16 +293,18 @@ namespace garlic {
     RangeConstraint(
         SizeType min,
         SizeType max,
-        std::string&& name="range_constraint"
-    ) : min_(min), max_(max), Constraint<LayerType>({
-      .fatal = false, .name = std::move(name)
-      }) {}
+        text&& name = "range_constraint"
+        ) : min_(min), max_(max), Constraint<LayerType>(ConstraintProperties {
+          .name = std::move(name),
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::none,
+          }) {}
 
     RangeConstraint(
         SizeType min,
         SizeType max,
         ConstraintProperties&& props
-    ) : min_(min), max_(max), Constraint<LayerType>(std::move(props)) {}
+        ) : min_(min), max_(max), Constraint<LayerType>(std::move(props)) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (value.is_string()) {
@@ -244,11 +315,11 @@ namespace garlic {
         if(dvalue > max_ || dvalue < min_) return this->fail("out of range value.");
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return this->fail("out of range value.");
+        if(static_cast<SizeType>(ivalue) > max_ || static_cast<SizeType>(ivalue) < min_) return this->fail("out of range value.");
       } else if (value.is_list()) {
-        int count = 0;
+        SizeType count = 0;
         for (const auto& item : value.get_list()) {
-          count++;
+          ++count;
           if (count > max_) return this->fail("too many items in the list.");
         }
         if (count < min_) return this->fail("too few items in the list.");
@@ -265,11 +336,11 @@ namespace garlic {
         if(dvalue > max_ || dvalue < min_) return false;
       } else if (value.is_int()) {
         auto ivalue = value.get_int();
-        if(ivalue > max_ || ivalue < min_) return false;
+        if(static_cast<SizeType>(ivalue) > max_ || static_cast<SizeType>(ivalue) < min_) return false;
       } else if (value.is_list()) {
-        int count = 0;
+        SizeType count = 0;
         for (const auto& item : value.get_list()) {
-          count++;
+          ++count;
           if (count > max_) return false;
         }
         if (count < min_) return false;
@@ -289,16 +360,18 @@ namespace garlic {
   public:
 
     RegexConstraint(
-        std::string pattern,
-        std::string name="regex_constraint"
-    ) : pattern_(std::move(pattern)), Constraint<LayerType>({
-      .fatal = false, .name = std::move(name)
-      }) {}
+        const text& pattern,
+        text&& name = "regex_constraint"
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .name = std::move(name),
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::none,
+          }), pattern_(pattern.data(), pattern.size()) {}
 
     RegexConstraint(
-        std::string pattern,
+        const text& pattern,
         ConstraintProperties&& props
-    ) : pattern_(std::move(pattern)), Constraint<LayerType>(std::move(props)) {}
+        ) : Constraint<LayerType>(std::move(props)), pattern_(pattern.data(), pattern.size()) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_string()) return this->ok();
@@ -320,29 +393,26 @@ namespace garlic {
   template<ViewLayer LayerType>
   class AnyConstraint : public Constraint<LayerType> {
   public:
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
-  AnyConstraint(
-      std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
-      ConstraintProperties&& props
-  ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
+    AnyConstraint(
+        sequence<constraint_pointer>&& constraints,
+        ConstraintProperties&& props
+        ) : constraints_(std::move(constraints)), Constraint<LayerType>(std::move(props)) {}
 
-  AnyConstraint(
-      const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-      ConstraintProperties&& props
-  ) : constraints_(constraints), Constraint<LayerType>(std::move(props)) {}
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (this->validate(value))
+        return this->ok();
+      return this->fail("None of the constraints read this value.");
+    }
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
-    if (this->validate(value))
-      return this->ok();
-    return this->fail("None of the constraints read this value.");
-  }
-
-  bool quick_test(const LayerType& value) const noexcept override {
-    return this->validate(value);
+    bool quick_test(const LayerType& value) const noexcept override {
+      return this->validate(value);
   }
 
   private:
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    sequence<constraint_pointer> constraints_;
 
     inline bool validate(const LayerType& value) const noexcept {
       return std::any_of(
@@ -357,25 +427,17 @@ namespace garlic {
   class ListConstraint : public Constraint<LayerType> {
   public:
 
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
-    ListConstraint() : Constraint<LayerType>({false, "list_constraint"}) {}
-
-    ListConstraint(
-      ConstraintPtr&& constraint,
-      ConstraintProperties&& props,
-      bool ignore_details = false
-    ) : constraint_(std::move(constraint)),
-        Constraint<LayerType>(std::move(props)),
-        ignore_details_(ignore_details) {}
+    ListConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("list_constraint")) {}
 
     ListConstraint(
-      const ConstraintPtr& constraint,
-      ConstraintProperties&& props,
-      bool ignore_details = false
-    ) : constraint_(constraint),
-        Constraint<LayerType>(std::move(props)),
-        ignore_details_(ignore_details) {}
+        constraint_pointer&& constraint,
+        ConstraintProperties&& props,
+        bool ignore_details = false
+        ) : constraint_(std::move(constraint)),
+            Constraint<LayerType>(std::move(props)), ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_list()) return this->fail("Expected a list.");
@@ -392,7 +454,7 @@ namespace garlic {
     }
 
   private:
-    ConstraintPtr constraint_;
+    constraint_pointer constraint_;
     bool ignore_details_;
 
     template<bool IgnoreDetails>
@@ -401,26 +463,27 @@ namespace garlic {
       for (const auto& item : value.get_list()) {
         if (IgnoreDetails) {
           if (!constraint_->quick_test(item)) {
-            return this->fail("Invalid value found in the list.", {{
-                    .valid = false,
-                    .name = std::to_string(index),
-                    .reason = "invalid value.",
-                    .field = true
-                  }});
+            return this->fail(
+                "Invalid value found in the list.",
+                ConstraintResult::leaf_field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  "invalid value."));
           }
         } else {
           auto result = constraint_->test(item);
-          if (!result.valid) {
-            return this->fail("Invalid value found in the list.", {{
-                    .valid = false,
-                    .name = std::to_string(index),
-                    .reason = "invalid value.",
-                    .details = {std::move(result)},
-                    .field = true
-                  }});
+          if (!result.is_valid()) {
+            sequence<ConstraintResult> inner_details(1);
+            inner_details.push_back(std::move(result));
+            return this->fail(
+                "Invalid value found in the list.",
+                ConstraintResult::field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  std::move(result),
+                  "invalid value."
+                  ));
           }
         }
-        index++;
+        ++index;
       }
       return this->ok();
     }
@@ -431,51 +494,42 @@ namespace garlic {
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
-  TupleConstraint() : Constraint<LayerType>({
-      .fatal = false, .name = "tuple_constraint"
-      }) {}
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
-  TupleConstraint(
-    std::vector<std::shared_ptr<Constraint<LayerType>>>&& constraints,
-    bool strict,
-    ConstraintProperties&& props,
-    bool ignore_details = false
-  ) : constraints_(std::move(constraints)),
-      strict_(strict),
-      Constraint<LayerType>(std::move(props)),
-      ignore_details_(ignore_details) {}
+    TupleConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("tuple_constraint")) {}
 
-  TupleConstraint(
-    const std::vector<std::shared_ptr<Constraint<LayerType>>>& constraints,
-    bool strict,
-    ConstraintProperties&& props,
-    bool ignore_details = false
-  ) : constraints_(constraints),
-      strict_(strict),
-      Constraint<LayerType>(std::move(props)),
-      ignore_details_(ignore_details) {}
+    TupleConstraint(
+      sequence<constraint_pointer>&& constraints,
+      bool strict,
+      ConstraintProperties&& props,
+      bool ignore_details = false
+      ) : constraints_(std::move(constraints)),
+          strict_(strict),
+          Constraint<LayerType>(std::move(props)),
+          ignore_details_(ignore_details) {}
 
-  ConstraintResult test(const LayerType& value) const noexcept override {
-    if (ignore_details_) return this->test<true>(value);
-    return this->test<false>(value);
-  }
-
-  bool quick_test(const LayerType& value) const noexcept override {
-    if (!value.is_list()) return false;
-    auto tuple_it = value.begin_list();
-    auto constraint_it = constraints_.begin();
-    while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
-      if (!(*constraint_it)->quick_test(*tuple_it)) return false;
-      std::advance(tuple_it, 1);
-      std::advance(constraint_it, 1);
+    ConstraintResult test(const LayerType& value) const noexcept override {
+      if (ignore_details_)return this->test<true>(value);
+      return this->test<false>(value);
     }
-    if (strict_ && tuple_it != value.end_list()) return false;
-    if (constraint_it != constraints_.end()) return false;
-    return true;
-  }
+
+    bool quick_test(const LayerType& value) const noexcept override {
+      if (!value.is_list()) return false;
+      auto tuple_it = value.begin_list();
+      auto constraint_it = constraints_.begin();
+      while (constraint_it != constraints_.end() && tuple_it != value.end_list()) {
+        if (!(*constraint_it)->quick_test(*tuple_it)) return false;
+        std::advance(tuple_it, 1);
+        std::advance(constraint_it, 1);
+      }
+      if (strict_ && tuple_it != value.end_list()) return false;
+      if (constraint_it != constraints_.end()) return false;
+      return true;
+    }
 
   private:
-    std::vector<std::shared_ptr<Constraint<LayerType>>> constraints_;
+    sequence<constraint_pointer> constraints_;
     bool strict_;
     bool ignore_details_;
 
@@ -489,28 +543,30 @@ namespace garlic {
         if (IgnoreDetails) {
           auto result = (*constraint_it)->quick_test(*tuple_it);
           if (!result) {
-            return this->fail("Invalid value found in the tuple.", {{
-                    .valid = false,
-                    .name = std::to_string(index),
-                    .reason = "invalid value.",
-                    .field = true
-                  }});
+            return this->fail(
+                "Invalid value found in the tuple.",
+                ConstraintResult::leaf_field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  "invalid value."
+                  ));
           }
         } else {
           auto result = (*constraint_it)->test(*tuple_it);
-          if (!result.valid) {
-            return this->fail("Invalid value found in the tuple.", {{
-                    .valid = false,
-                    .name = std::to_string(index),
-                    .reason = "invalid value.",
-                    .details = {std::move(result)},
-                    .field = true
-                  }});
+          if (!result.is_valid()) {
+            sequence<ConstraintResult> inner_details(1);
+            inner_details.push_back(std::move(result));
+            return this->fail(
+                "Invalid value found in the tuple.",
+                ConstraintResult::field_failure(
+                  text(std::to_string(index), text_type::copy),
+                  std::move(result),
+                  "invalid value."
+                  ));
           }
         }
         std::advance(tuple_it, 1);
         std::advance(constraint_it, 1);
-        index++;
+        ++index;
       }
       if (strict_ && tuple_it != value.end_list()) {
         return this->fail("Too many values in the tuple.");
@@ -526,21 +582,20 @@ namespace garlic {
   template<ViewLayer LayerType>
   class MapConstraint : public Constraint<LayerType> {
   public:
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
-    MapConstraint() : Constraint<LayerType>({
-        .fatal = false, .name = "map_constraint"
-        }) {}
+    MapConstraint() : Constraint<LayerType>(ConstraintProperties::create_default("map_constraint")) {}
 
     MapConstraint(
-      ConstraintPtr&& key_constraint,
-      ConstraintPtr&& value_constraint,
+      constraint_pointer&& key_constraint,
+      constraint_pointer&& value_constraint,
       ConstraintProperties&& props,
       bool ignore_details = false
-    ) : key_constraint_(std::move(key_constraint)),
-        value_constraint_(std::move(value_constraint)),
-        Constraint<LayerType>(std::move(props)),
-        ignore_details_(ignore_details) {}
+      ) : key_constraint_(std::move(key_constraint)),
+          value_constraint_(std::move(value_constraint)),
+          Constraint<LayerType>(std::move(props)),
+          ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_object()) return this->fail("Expected an object.");
@@ -558,8 +613,8 @@ namespace garlic {
     }
 
   private:
-    ConstraintPtr key_constraint_;
-    ConstraintPtr value_constraint_;
+    constraint_pointer key_constraint_;
+    constraint_pointer value_constraint_;
     bool ignore_details_;
 
     template<bool IgnoreDetails>
@@ -578,8 +633,8 @@ namespace garlic {
           if (IgnoreDetails && !key_constraint_->quick_test(item.key)) {
             return this->fail("Object contains invalid key.");
           } else {
-            if (auto result = key_constraint_->test(item.key); !result.valid) {
-              return this->fail("Object contains invalid key.", {std::move(result)});
+            if (auto result = key_constraint_->test(item.key); !result.is_valid()) {
+              return this->fail("Object contains invalid key.", std::move(result));
             }
           }
         }
@@ -587,8 +642,8 @@ namespace garlic {
           if (IgnoreDetails && !value_constraint_->quick_test(item.value)) {
             return this->fail("Object contains invalid value.");
           } else {
-            if (auto result = value_constraint_->test(item.value); !result.valid) {
-              return this->fail("Object contains invalid value.", {std::move(result)});
+            if (auto result = value_constraint_->test(item.value); !result.is_valid()) {
+              return this->fail("Object contains invalid value.", std::move(result));
             }
           }
         }
@@ -614,18 +669,24 @@ namespace garlic {
   class AllConstraint : public Constraint<LayerType> {
   public:
 
-    using ConstraintPtr = std::shared_ptr<Constraint<LayerType>>;
-
-    AllConstraint() : Constraint<LayerType>({ .fatal = true }) {}
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     AllConstraint(
-        std::vector<ConstraintPtr>&& constraints,
-        ConstraintProperties&& props,
-        bool hide = true,
-        bool ignore_details = false
-    ) : constraints_(std::move(constraints)),
-        Constraint<LayerType>(std::move(props)),
-        hide_(hide), ignore_details_(ignore_details) {}
+        ) : Constraint<LayerType>(ConstraintProperties {
+          .name = text::no_text(),
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::fatal,
+          }) {}
+
+    AllConstraint(
+      sequence<constraint_pointer>&& constraints,
+      ConstraintProperties&& props,
+      bool hide = true,
+      bool ignore_details = false
+      ) : constraints_(std::move(constraints)),
+          Constraint<LayerType>(std::move(props)),
+          hide_(hide), ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (hide_) return this->test_hide(value);
@@ -633,9 +694,10 @@ namespace garlic {
         if (test_constraints_quick(value, constraints_)) return this->ok();
         else return this->fail("Some of the constraints fail on this value.");
       }
-      std::vector<ConstraintResult> results;
-      test_constraints(value, constraints_, results);
-      if (results.empty()) return this->ok();
+      sequence<ConstraintResult> results;
+      test_constraints(value, constraints_, std::back_inserter(results));
+      if (results.empty())
+        return this->ok();
       return this->fail("Some of the constraints fail on this value.", std::move(results));
     }
 
@@ -644,7 +706,7 @@ namespace garlic {
     }
 
   private:
-    std::vector<ConstraintPtr> constraints_;
+    sequence<constraint_pointer> constraints_;
     bool hide_;
     bool ignore_details_;
 

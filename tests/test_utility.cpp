@@ -28,12 +28,12 @@ void
 print_constraint_result(
     const garlic::ConstraintResult& result,
     int level) {
-  if (result.valid) {
+  if (result.is_valid()) {
     std::cout << "Passed all the checks." << std::endl;
   } else {
     std::string space = "";
     for (auto i = 0; i < level; i++) { space += "  "; }
-    if (result.field) {
+    if (result.is_field()) {
       std::cout << space << "Field: " << result.name << std::endl;
     } else {
       std::cout << space << "Constraint: " << result.name << std::endl;
@@ -49,8 +49,8 @@ void
 assert_field_constraint_result(
     const garlic::ConstraintResult& results,
     const char* name) {
-  ASSERT_FALSE(results.valid);
-  ASSERT_TRUE(results.field);
+  ASSERT_FALSE(results.is_valid());
+  ASSERT_TRUE(results.is_field());
   ASSERT_STREQ(results.name.data(), name);
 }
 
@@ -59,7 +59,7 @@ assert_constraint_result(
     const garlic::ConstraintResult& results,
     const char* name,
     const char* message) {
-  ASSERT_FALSE(results.valid);
+  ASSERT_FALSE(results.is_valid());
   ASSERT_STREQ(results.name.data(), name);
   ASSERT_STREQ(results.reason.data(), message);
 }

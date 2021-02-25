@@ -1,9 +1,9 @@
 #ifndef GARLIC_CLOVE_H
 #define GARLIC_CLOVE_H
 
-#include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -184,11 +184,11 @@ namespace garlic {
     }
     void set_string(const std::string& str) {
       this->prepare_string(str.size());
-      strcpy(this->data_.string.data, str.c_str());
+      strncpy(this->data_.string.data, str.c_str(), str.size());
     }
     void set_string(std::string_view str) {
       this->prepare_string(str.size());
-      strcpy(this->data_.string.data, str.data());
+      strncpy(this->data_.string.data, str.data(), str.size());
     }
     void set_double(double value) {
       this->clean();
@@ -217,17 +217,17 @@ namespace garlic {
           allocator_.allocate(256 * sizeof(DataType))
       );
       this->data_.list.length = 0;
-      this->data_.list.capacity = 256;
+      this->data_.list.capacity = 16;
     }
     void set_object() {
       if (this->is_object()) return;
       this->clean();
       this->data_.type = TypeFlag::Object;
       this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.allocate(128 * sizeof(MemberPair<DataType>))
+          allocator_.allocate(16 * sizeof(MemberPair<DataType>))
       );
       this->data_.object.length = 0;
-      this->data_.object.capacity = 128;
+      this->data_.object.capacity = 16;
     }
 
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
@@ -274,8 +274,7 @@ namespace garlic {
     }
     void push_back(DataType&& value) {
       this->check_list();
-      this->data_.list.data[this->data_.list.length] = std::move(value);
-      this->data_.list.length++;
+      this->data_.list.data[this->data_.list.length++] = std::move(value);
     }
     void push_back() { this->push_back(DataType{}); }
     void push_back(const std::string& value) {
@@ -376,11 +375,11 @@ namespace garlic {
       if (it != this->end_member()) this->erase_member(it);
     }
     void erase_member(const MemberIterator& position) {
-      position->key.clean();
-      position->value.clean();
+      (*position).key.clean();
+      (*position).value.clean();
       memmove(
-          static_cast<void*>(position.get_pointer()),
-          static_cast<void*>(position.get_pointer() + 1),
+          static_cast<void*>(position.get_inner_iterator()),
+          static_cast<void*>(position.get_inner_iterator() + 1),
           static_cast<SizeType>(this->end_member().get_inner_iterator() - position.get_inner_iterator() - 1) * sizeof(MemberPair<DataType>)
       );
     }
@@ -395,20 +394,28 @@ namespace garlic {
     void check_list() {
       // make sure we have enough space for another item.
       if (this->data_.list.length >= this->data_.list.capacity) {
+        auto new_capacity = this->data_.list.capacity + (this->data_.list.capacity + 1) / 2;
         this->data_.list.data = reinterpret_cast<typename DataType::List::Container>(
-          allocator_.reallocate(this->data_.list.data, this->data_.list.capacity, this->data_.list.capacity * 2)
+          allocator_.reallocate(
+            this->data_.list.data,
+            this->data_.list.capacity * sizeof(DataType),
+            new_capacity * sizeof(DataType))
         );
-        this->data_.list.capacity *= 2;
+        this->data_.list.capacity = new_capacity;
       }
     }
 
     void check_members() {
       // make sure we have enough space for another member.
       if (this->data_.object.length >= this->data_.object.capacity) {
+        auto new_capacity = this->data_.object.capacity + (this->data_.object.capacity + 1) / 2;
         this->data_.object.data = reinterpret_cast<typename DataType::Object::Container>(
-          allocator_.reallocate(this->data_.object.data, this->data_.object.capacity, this->data_.object.capacity * 2)
+          allocator_.reallocate(
+            this->data_.object.data,
+            this->data_.object.capacity * sizeof(DataType),
+            new_capacity * sizeof(DataType))
         );
-        this->data_.object.capacity *= 2;
+        this->data_.object.capacity = new_capacity;
       }
     }
 

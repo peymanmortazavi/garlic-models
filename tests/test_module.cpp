@@ -29,22 +29,21 @@ TEST(ModuleParsing, Basic) {
 
     auto root = ModelConstraint<CloveView>(user_model);
 
-    CloveDocument v;
-    auto ref = v.get_reference();
-    ref.set_object();
-    ref.add_member("first_name", "Garlic");
-    ref.add_member("last_name", "Models");
-    ref.add_member("birthdate", "1/4/1993");
-    ref.add_member("registration_date", "1/4/21");
+    CloveDocument doc;
+    doc.set_object();
+    doc.add_member("first_name", "Garlic");
+    doc.add_member("last_name", "Models");
+    doc.add_member("birthdate", "1/4/1993");
+    doc.add_member("registration_date", "1/4/21");
 
-    auto results = root.test(v.get_view());
-    ASSERT_TRUE(results.valid);
+    auto results = root.test(doc.get_view());
+    ASSERT_TRUE(results.is_valid());
 
-    ref.add_member("birthdate", "no good date");
-    ref.add_member("registration_date", "empty");
+    doc.add_member("birthdate", "no good date");
+    doc.add_member("registration_date", "empty");
 
-    results = root.test(v.get_view());
-    ASSERT_FALSE(results.valid);
+    results = root.test(doc);
+    ASSERT_FALSE(results.is_valid());
     ASSERT_EQ(results.details.size(), 2);
     assert_field_constraint_result(results.details[0], "birthdate");
     assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
@@ -76,8 +75,7 @@ TEST(ModuleParsing, Basic) {
     auto module = Module<CloveView>();
     auto file_handle = fopen("data/basic/module.yaml", "r");
     auto doc = garlic::providers::libyaml::Yaml::load(file_handle);
-    YamlView view = doc.get_view();
-    auto parse_result = module.parse(view);
+    auto parse_result = module.parse(doc.get_view());
     ASSERT_TRUE(parse_result.valid);
     test_module(module);
   }
@@ -93,7 +91,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
   auto parse_result = module.parse(view);
   ASSERT_TRUE(parse_result.valid);
 
-  map<string, deque<string>> expectations = {
+  unordered_map<text, deque<string>> expectations = {
     {"NoDependencyField",           {"c0"}},
     {"RegularDependencyField",      {"c0", "c1"}},
     {"RegularAlias",                {"c0", "c1"}},

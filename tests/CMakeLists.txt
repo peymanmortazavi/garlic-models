@@ -10,7 +10,6 @@ option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." OFF)
 option(GARLIC_TEST_PROVIDERS "Build tests for the built-in providers." ON)
 
 option(GARLIC_BUILD_LAB "Build lab tests." OFF)
-set(GARLIC_BUILD_LAB OFF)
 
 enable_testing()
 
@@ -21,6 +20,7 @@ set(TEST_SOURCES
     test_module.cpp
     test_encoding.cpp
     test_constraints.cpp
+    test_containers.cpp
     test_helpers.cpp
     test_utility.cpp)
 

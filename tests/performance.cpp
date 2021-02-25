@@ -2,6 +2,7 @@
 #include <garlic/garlic.h>
 #include "garlic/providers/libyaml/parser.h"
 #include "garlic/providers/rapidjson.h"
+#include "garlic/containers.h"
 #include "test_utility.h"
 
 
@@ -12,7 +13,7 @@ static void BM_LibYamlModuleLoad(benchmark::State& state) {
     module.parse(doc.get_view());
   }
 }
-BENCHMARK(BM_LibYamlModuleLoad);
+//BENCHMARK(BM_LibYamlModuleLoad);
 
 static void BM_LoadRapidJsonModule(benchmark::State& state) {
   garlic::Module<garlic::providers::rapidjson::JsonView> module;
@@ -22,7 +23,7 @@ static void BM_LoadRapidJsonModule(benchmark::State& state) {
     module.get_model("Module")->validate(doc.get_view());
   }
 }
-BENCHMARK(BM_LoadRapidJsonModule);
+//BENCHMARK(BM_LoadRapidJsonModule);
 
 static rapidjson::Document& CreateLargeRapidJsonDocument() {
   static rapidjson::Document* d;
@@ -82,7 +83,83 @@ static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
   state.counters["Total"] = total;
 }
 
-BENCHMARK(BM_LoadRapidJsonDocument_Native);
-BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
+static void BM_Vector_LongDouble(benchmark::State& state) {
+  int iterations = (rand() % 1) + 1000;
+  for (auto _ : state) {
+    std::vector<long double> x(8);
+    for (auto i = 0; i < iterations; ++i) x.push_back(i);
+  }
+}
+
+static void BM_Sequence_LongDouble(benchmark::State& state) {
+  int iterations = (rand() % 1) + 1000;
+  for (auto _ : state) {
+    garlic::sequence<long double> x(8);
+    for (auto i = 0; i < iterations; ++i) x.push_back(i);
+  }
+}
+BENCHMARK(BM_Vector_LongDouble);
+BENCHMARK(BM_Sequence_LongDouble);
+
+static void BM_Vector_LargeConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 128;
+  for (auto _ : state) {
+    std::vector<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+
+static void BM_Sequence_LargeConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 128;
+  for (auto _ : state) {
+    garlic::sequence<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+BENCHMARK(BM_Vector_LargeConstraintResult);
+BENCHMARK(BM_Sequence_LargeConstraintResult);
+
+static void BM_Vector_ConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 7;
+  for (auto _ : state) {
+    std::vector<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+
+static void BM_Sequence_ConstraintResult(benchmark::State& state) {
+  int iterations = (rand() % 1) + 7;
+  for (auto _ : state) {
+    garlic::sequence<garlic::ConstraintResult> x(8);
+    for (auto i = 0; i < iterations; ++i) {
+      x.push_back(garlic::ConstraintResult::leaf_field_failure("Some Text", "Blah"));
+    }
+  }
+}
+BENCHMARK(BM_Vector_ConstraintResult);
+BENCHMARK(BM_Sequence_ConstraintResult);
+
+static void BM_std_string(benchmark::State& state) {
+  for (auto _ : state) {
+    std::string x("This is something quite long and we need to overlook this.");
+  }
+}
+
+static void BM_garlic_text(benchmark::State& state) {
+  for (auto _ : state) {
+    garlic::text x("This is something quite long and we need to overlook this.", garlic::text_type::copy);
+  }
+}
+BENCHMARK(BM_std_string);
+BENCHMARK(BM_garlic_text);
+
+//BENCHMARK(BM_LoadRapidJsonDocument_Native);
+//BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
 
 BENCHMARK_MAIN();

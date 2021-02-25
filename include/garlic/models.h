@@ -4,9 +4,9 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
-#include <vector>
+#include <unordered_map>
 #include "layer.h"
 #include "constraints.h"
 #include "utility.h"
@@ -14,43 +14,42 @@
 
 namespace garlic {
 
-  template<garlic::ViewLayer LayerType>
+  template<ViewLayer LayerType>
   class Field {
   public:
-    template<garlic::ViewLayer> friend class Module;
+    template<ViewLayer> friend class Module;
 
-    using ConstraintType = Constraint<LayerType>;
-    using ConstraintPtr = std::shared_ptr<ConstraintType>;
+    using constraint_type = Constraint<LayerType>;
+    using constraint_pointer = std::shared_ptr<constraint_type>;
 
     struct ValidationResult {
-      std::vector<ConstraintResult> failures;
+      sequence<ConstraintResult> failures;
 
-      inline bool is_valid() const noexcept { return !failures.size(); }
+      inline bool is_valid() const noexcept { return failures.empty(); }
     };
 
     struct Properties {
-      std::string name;
-      std::map<std::string, std::string> meta;
-      std::vector<ConstraintPtr> constraints;
+      std::unordered_map<text, text> meta;
+      sequence<constraint_pointer> constraints;
+      text name;
       bool ignore_details = false;
     };
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
-    Field(std::string&& name) { properties_.name = std::move(name); }
-    Field(const std::string& name) { properties_.name = name; }
+    Field(text&& name) { properties_.name = std::move(name); }
 
     template<template <typename> typename T, typename... Args>
     void add_constraint(Args&&... args) {
       this->add_constraint(std::make_shared<T<LayerType>>(std::forward<Args>(args)...));
     }
 
-    void add_constraint(ConstraintPtr&& constraint) {
+    void add_constraint(constraint_pointer&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
 
     ValidationResult validate(const LayerType& value) const {
       ValidationResult result;
-      test_constraints(value, properties_.constraints, result.failures);
+      test_constraints(value, properties_.constraints, std::back_inserter(result.failures));
       return result;
     }
 
@@ -61,11 +60,11 @@ namespace garlic {
     const char* get_message() const noexcept {
       const auto& meta = properties_.meta;
       if (auto it = meta.find("message"); it != meta.end()) {
-        return it->second.c_str();
+        return it->second.data();
       }
       return nullptr;
     }
-    const std::string& get_name() const noexcept { return properties_.name; }
+    const text& get_name() const noexcept { return properties_.name; }
     const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
@@ -76,41 +75,38 @@ namespace garlic {
   template<ViewLayer LayerType>
   class Model {
   public:
-    template<garlic::ViewLayer> friend class Module;
+    template<ViewLayer> friend class Module;
 
-    using Layer = LayerType;
-    using FieldType = Field<LayerType>;
-    using FieldPtr = std::shared_ptr<FieldType>;
+    using field_type = Field<LayerType>;
+    using field_pointer = std::shared_ptr<field_type>;
 
-    struct FieldDescriptor {
-      FieldPtr field;
+    struct field_descriptor {
+      field_pointer field;
       bool required;
     };
 
     struct Properties {
-      std::string name;
+      std::unordered_map<text, field_descriptor> field_map;
+      std::unordered_map<text, text> meta;
+      text name;
       bool strict = false;
-      std::map<std::string, std::string> meta;
-      std::map<std::string, FieldDescriptor> field_map;
     };
 
     Model() {}
-    Model(Properties properties) : properties_(properties) {}
-    Model(std::string&& name) {
+    Model(Properties&& properties) : properties_(std::move(properties)) {}
+    Model(text&& name) {
       properties_.name = std::move(name);
     }
-    Model(const std::string& name) {
-      properties_.name = name;
-    }
 
-    void add_field(std::string&& name, FieldPtr field, bool required = true) {
+    void add_field(text&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
           std::move(name),
           { .field = std::move(field), .required = required }
           );
     }
 
-    FieldPtr get_field(const std::string& name) const {
+    template<typename KeyType>
+    field_pointer get_field(KeyType&& name) const {
       auto it = properties_.field_map.find(name);
       if (it != properties_.field_map.end()) {
         return it->second.field;
@@ -120,7 +116,7 @@ namespace garlic {
 
     bool quick_test(const LayerType& value) const {
       if (!value.is_object()) return false;
-      std::set<std::string_view> requirements;
+      std::unordered_set<text> requirements;
       for (const auto& member : value.get_object()) {
         auto it = properties_.field_map.find(member.key.get_cstr());
         if (it == properties_.field_map.end()) continue;
@@ -138,42 +134,41 @@ namespace garlic {
     }
 
     ConstraintResult validate(const LayerType& value) const {
-      ConstraintResult result;
+      sequence<ConstraintResult> details;
       if (value.is_object()) {
         // todo : if the container allows for atomic table look up, swap the loop.
-        std::set<std::string_view> requirements;
+        std::unordered_set<text> requirements;
         for (const auto& member : value.get_object()) {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
-            this->test_field(result, member.key, member.value, it->second.field);
+            this->test_field(details, member.key, member.value, it->second.field);
             requirements.emplace(it->first);
           }
         }
         for (const auto& item : properties_.field_map) {
           if (auto it = requirements.find(item.first); it != requirements.end()) continue;
           if (!item.second.required) continue;
-          result.details.push_back({
-                .valid = false,
-                .name = item.first,
-                .reason = "missing required field!",
-                .field = true
-              });
+          details.push_back(
+              ConstraintResult::leaf_field_failure(
+                item.first.view(),
+                "missing required field!"));
         }
       } else {
-        result.details.push_back({
-            .valid = false,
-            .name = "type",
-            .reason = "Expected object."
-        });
+        details.push_back(ConstraintResult::leaf_failure("type", "Expected object."));
       }
-      if (!result.details.empty()) {
-        result.valid = false;
-        result.name = properties_.name;
-        result.reason = "This model is invalid!";
+      if (!details.empty()) {
+        return ConstraintResult {
+          .details = std::move(details),
+          .name = properties_.name.clone(),
+          .reason = text("This model is invalid!"),
+          .flag = ConstraintResult::flags::none
+        };
       }
-      return result;
+
+      return ConstraintResult::ok();
     }
 
+    const text& get_name() const noexcept { return properties_.name; }
     const Properties& get_properties() const { return properties_; }
 
   protected:
@@ -182,31 +177,31 @@ namespace garlic {
   private:
     inline void
     test_field(
-        ConstraintResult& result,
+        sequence<ConstraintResult>& details,
         const LayerType& key,
         const LayerType& value,
-        const FieldPtr& field) const {
+        const field_pointer& field) const {
       if (field->get_properties().ignore_details) {
-        auto test = field->quick_test(value);
-        if (!test) {
+        if (!field->quick_test(value)) {
           const char* reason = field->get_message();
-          result.details.push_back({
-                .valid = false,
-                .name = key.get_cstr(),
-                .reason = (reason == nullptr ? "" : reason),
-                .field = true
+          auto name = key.get_string_view();
+          details.push_back(ConstraintResult {
+              .details = sequence<ConstraintResult>::no_sequence(),
+              .name = text(name.data(), name.size(), text_type::copy),
+              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
+              .flag = ConstraintResult::flags::field
               });
         }
       } else {
         auto test = field->validate(value);
         if (!test.is_valid()) {
           const char* reason = field->get_message();
-          result.details.push_back({
-                .valid = false,
-                .name = key.get_cstr(),
-                .reason = (reason == nullptr ? "" : reason),
-                .details = std::move(test.failures),
-                .field = true
+          auto name = key.get_string_view();
+          details.push_back(ConstraintResult {
+              .details = std::move(test.failures),
+              .name = text(name.data(), name.size(), text_type::copy),
+              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
+              .flag = ConstraintResult::flags::field
               });
         }
       }
@@ -218,13 +213,16 @@ namespace garlic {
   template<ViewLayer LayerType>
   class ModelConstraint : public Constraint<LayerType> {
   public:
-    using ModelType = Model<LayerType>;
+    using model_type = Model<LayerType>;
+    using model_pointer = std::shared_ptr<model_type>;
 
     ModelConstraint(
-        std::shared_ptr<ModelType> model
-    ) : model_(std::move(model)), Constraint<LayerType>({
-      .fatal = true, .name = model->get_properties().name
-      }) {}
+        model_pointer model
+    ) : Constraint<LayerType>(ConstraintProperties {
+      .name = model->get_properties().name,
+      .message = text::no_text(),
+      .flag = ConstraintProperties::flags::fatal,
+      }), model_(model) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       return model_->validate(value);
@@ -235,7 +233,7 @@ namespace garlic {
     }
 
   private:
-    std::shared_ptr<ModelType> model_;
+    model_pointer model_;
   };
 
   // Model Parsing From ViewLayer
@@ -256,11 +254,12 @@ namespace garlic {
   template<ViewLayer LayerType>
   class FieldConstraint : public Constraint<LayerType> {
   public:
-    using FieldPtr = std::shared_ptr<Field<LayerType>>;
-    using FieldReference = std::shared_ptr<FieldPtr>;
+    using field_type = Field<LayerType>;
+    using field_pointer = std::shared_ptr<field_type>;
+    using field_pointer_reference = std::shared_ptr<field_pointer>;  // double pointer.
 
     FieldConstraint(
-        FieldReference field,
+        field_pointer_reference field,
         ConstraintProperties&& props,
         bool hide = false,
         bool ignore_details = false
@@ -288,13 +287,13 @@ namespace garlic {
       return (*field_)->quick_test(value);
     }
 
-    void set_field(FieldPtr field) {
+    void set_field(field_pointer field) {
       field_->swap(field);
       this->update_name();
     }
 
   protected:
-    FieldReference field_;
+    field_pointer_reference field_;
     bool hide_;
     bool ignore_details_;
 
@@ -305,7 +304,7 @@ namespace garlic {
     }
 
     template<typename... Args>
-    inline ConstraintResult custom_message_fail(const FieldPtr& field, Args&&... args) const noexcept {
+    inline ConstraintResult custom_message_fail(const field_pointer& field, Args&&... args) const noexcept {
       if (auto message = field->get_message(); message != nullptr)
         return this->fail(message, std::forward<Args>(args)...);
       return this->fail("", std::forward<Args>(args)...);
