@@ -57,7 +57,7 @@ namespace garlic {
           this->parse_field(
               decode<text>(field.key), field.value, context,
               [this, &context, &field](auto ptr, auto complete, auto) {
-                this->add_field(decode<text>(field.key).deep_copy(), context, std::move(ptr), complete);
+                this->add_field(decode<text>(field.key).clone(), context, std::move(ptr), complete);
               },
               [](const auto&, auto) {});
         }
@@ -121,10 +121,10 @@ namespace garlic {
       table<model_pointer, table<text, lazy_model_field>> lazy_model_fields;
 
       void add_lazy_model_field(const text& field, const text& key, model_pointer ptr, bool required) {
-        lazy_model_fields[ptr].emplace(key.copy(), lazy_model_field {.name = field.copy(), .required = required});
+        lazy_model_fields[ptr].emplace(key, lazy_model_field {.name = field, .required = required});
         fields[field].models.push_back(
             lazy_pair {
-              .key = key.copy(),
+              .key = key,
               .target = std::move(ptr),
               .required = required
             });
@@ -160,14 +160,14 @@ namespace garlic {
 
     void process_model_meta(ModelPropertiesOf<Destination>& props, const ViewLayer auto& value) {
       get_member(value, "description", [&props](const auto& item) {
-        props.meta.emplace("description", decode<text>(item).deep_copy());
+        props.meta.emplace("description", decode<text>(item).clone());
       });
 
       get_member(value, "meta", [&props](const auto& item) {
         std::for_each(item.begin_member(), item.end_member(), [&props](const auto& meta_member) {
           props.meta.emplace(
-              decode<text>(meta_member.key).deep_copy(),
-              decode<text>(meta_member.value).deep_copy());
+              decode<text>(meta_member.key).clone(),
+              decode<text>(meta_member.value).clone());
         });
       });
     }
@@ -226,7 +226,7 @@ namespace garlic {
                 item.second.lazy_field.required);
             break;
           case field_status::available:
-            props.field_map.emplace(item.first.deep_copy(), item.second.descriptor);
+            props.field_map.emplace(item.first.clone(), item.second.descriptor);
             break;
           default:
             continue;
@@ -236,7 +236,7 @@ namespace garlic {
 
     template<typename Callable>
     void parse_model(const text& name, const ViewLayer auto& layer, parse_context& context, const Callable& cb) {
-      auto ptr = std::make_shared<model_type>(name.deep_copy());
+      auto ptr = std::make_shared<model_type>(name.clone());
       auto& props = ptr->properties_;
 
       this->process_model_meta(props, layer);
@@ -246,7 +246,7 @@ namespace garlic {
         std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
           this->parse_field(text::no_text(), field.value, context,
               [&props, &field](auto ptr, auto complete, auto optional) {
-            props.field_map[decode<text>(field.key).deep_copy()] = {.field = std::move(ptr), .required = !optional};
+            props.field_map[decode<text>(field.key).clone()] = {.field = std::move(ptr), .required = !optional};
           }, [&field, &context, &ptr](const text& name, auto optional) {
             context.add_lazy_model_field(name, decode<text>(field.key), ptr, !optional);
           });
@@ -273,15 +273,15 @@ namespace garlic {
       get_member(layer, "meta", [&props](const auto& item) {
         for (const auto& member : item.get_object()) {
           props.meta.emplace(
-              decode<text>(member.key).deep_copy(),
-              decode<text>(member.value).deep_copy());
+              decode<text>(member.key).clone(),
+              decode<text>(member.value).clone());
         }
       });
 
       auto add_meta_field = [&layer, &props](text&& name) {
         get_member(layer, name.data(), [&props, &name](const auto& item) {
           // since name is from stack, no need to copy its content.
-          props.meta.emplace(name.copy(), decode<text>(item).deep_copy());
+          props.meta.emplace(name, decode<text>(item).clone());
         });
       };
 
@@ -310,13 +310,13 @@ namespace garlic {
               });
         if (!ready) {
           if (!name.empty()) {
-            context.fields[field_name].fields.push_back(name.copy());
+            context.fields[field_name].fields.push_back(name);
           }
-          fcb(field_name.copy(), optional);
+          fcb(field_name, optional);
         }
         return;
       }
-      auto ptr = std::make_shared<field_type>(name.deep_copy());
+      auto ptr = std::make_shared<field_type>(name.clone());
       auto& props = ptr->properties_;
       auto complete = true;
 
@@ -329,7 +329,7 @@ namespace garlic {
           std::copy(std::begin(base_props), std::end(base_props), std::back_inserter(props.constraints));
         });
         if (!complete)
-          context.fields[reference_name.copy()].dependencies.push_back(ptr);
+          context.fields[reference_name].dependencies.push_back(ptr);
       });
 
       this->process_field_meta(props, layer);
@@ -370,14 +370,14 @@ namespace garlic {
         // add the field to the depending models.
         for (auto& member : it->second.models) {
           member.target->properties_.field_map.emplace(
-              member.key.deep_copy(),
+              member.key.clone(),
               typename model_type::field_descriptor{.field = ptr, .required = member.required}
               );
         }
 
         // register all the field aliases.
         for (auto& alias : it->second.fields) {
-          this->add_field(alias.deep_copy(), context, ptr, true);
+          this->add_field(alias.clone(), context, ptr, true);
         }
 
         for(auto& constraint : it->second.constraints) {

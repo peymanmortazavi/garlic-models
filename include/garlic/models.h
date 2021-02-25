@@ -64,7 +64,7 @@ namespace garlic {
       }
       return nullptr;
     }
-    text get_name() const noexcept { return properties_.name.copy(); }
+    const text& get_name() const noexcept { return properties_.name; }
     const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
@@ -123,7 +123,7 @@ namespace garlic {
         if (!it->second.field->quick_test(member.value)) {
           return false;
         }
-        requirements.emplace(it->first.copy());
+        requirements.emplace(it->first);
       }
       for (const auto& item : properties_.field_map) {
         if (auto it = requirements.find(item.first); it != requirements.end()) continue;
@@ -142,7 +142,7 @@ namespace garlic {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
             this->test_field(details, member.key, member.value, it->second.field);
-            requirements.emplace(it->first.copy());
+            requirements.emplace(it->first);
           }
         }
         for (const auto& item : properties_.field_map) {
@@ -150,7 +150,7 @@ namespace garlic {
           if (!item.second.required) continue;
           details.push_back(
               ConstraintResult::leaf_field_failure(
-                item.first.copy(),
+                item.first,
                 "missing required field!"));
         }
       } else {
@@ -159,7 +159,7 @@ namespace garlic {
       if (!details.empty()) {
         return ConstraintResult {
           .details = std::move(details),
-          .name = properties_.name.deep_copy(),
+          .name = properties_.name.clone(),
           .reason = text("This model is invalid!"),
           .flag = ConstraintResult::flags::none
         };
@@ -168,7 +168,7 @@ namespace garlic {
       return ConstraintResult::ok();
     }
 
-    text get_name() const noexcept { return properties_.name.copy(); }
+    const text& get_name() const noexcept { return properties_.name; }
     const Properties& get_properties() const { return properties_; }
 
   protected:
@@ -220,7 +220,7 @@ namespace garlic {
         model_pointer model
     ) : Constraint<LayerType>(ConstraintProperties {
       .flag = ConstraintProperties::flags::fatal,
-      .name = model->get_properties().name.copy(),
+      .name = model->get_properties().name,
       .message = text::no_text()
       }), model_(model) {}
 

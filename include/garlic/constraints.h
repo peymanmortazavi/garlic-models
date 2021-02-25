@@ -169,15 +169,15 @@ namespace garlic {
 
     virtual ConstraintResult test(const LayerType& value) const noexcept = 0;
     virtual bool quick_test(const LayerType& value) const noexcept = 0;
-    text get_name() const noexcept { return props_.name.copy(); };
+    const text& get_name() const noexcept { return props_.name; };
     inline bool skip_constraints() const noexcept { return props_.is_fatal(); };
 
     template<bool Field = false, bool Leaf = true>
     auto fail() const noexcept -> ConstraintResult {
       return ConstraintResult {
         .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
-        .name = props_.name.copy(),
-        .reason = props_.message.copy(),
+        .name = props_.name,
+        .reason = props_.message,
         .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
       };
     }
@@ -187,7 +187,7 @@ namespace garlic {
       if (this->props_.message.empty())
         return ConstraintResult {
           .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
-          .name = props_.name.copy(),
+          .name = props_.name,
           .reason = message,
           .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
         };
@@ -198,8 +198,8 @@ namespace garlic {
     auto fail(const char* message, sequence<ConstraintResult>&& details) const noexcept {
       return ConstraintResult {
         .details = std::move(details),
-        .name = props_.name.copy(),
-        .reason = (props_.message.empty() ? message : props_.message.copy()),
+        .name = props_.name,
+        .reason = (props_.message.empty() ? message : props_.message),
         .flag = (Field ? ConstraintResult::flags::field : ConstraintResult::flags::none)
       };
     }

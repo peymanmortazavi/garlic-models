@@ -53,11 +53,11 @@ TEST(GarlicText, Copy) {
   text a = "abcd";
   text b ("abcd", text_type::copy);
 
-  text c = a.copy();
-  text d = b.copy();
+  text c = a;
+  text d = b;
 
-  text copy1 = a.deep_copy();
-  text copy2 = b.deep_copy();
+  text copy1 = a.clone();
+  text copy2 = b.clone();
 
   ASSERT_EQ(c.data(), a.data());  // same pointers.
   ASSERT_EQ(d.data(), b.data());  // same pointers.

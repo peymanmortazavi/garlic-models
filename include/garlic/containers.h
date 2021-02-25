@@ -67,11 +67,7 @@ namespace garlic {
       return *this;
     }
 
-    basic_text copy() const {
-      return basic_text(data_, size_);
-    }
-
-    basic_text deep_copy() const {
+    inline basic_text clone() const noexcept {
       return basic_text(data_, size_, text_type::copy);
     }
 
@@ -101,6 +97,7 @@ namespace garlic {
 
     inline SizeType size() const noexcept { return size_; }
     inline bool empty() const noexcept { return !size_; }
+    inline bool is_view() const noexcept { return type_ == text_type::reference; }
 
     constexpr static inline basic_text no_text() noexcept {
       return basic_text("");
