@@ -29,9 +29,9 @@ namespace garlic {
     };
 
     struct Properties {
-      text name;
       std::unordered_map<text, text> meta;
       sequence<constraint_pointer> constraints;
+      text name;
       bool ignore_details = false;
     };
     
@@ -86,10 +86,10 @@ namespace garlic {
     };
 
     struct Properties {
+      std::unordered_map<text, field_descriptor> field_map;
+      std::unordered_map<text, text> meta;
       text name;
       bool strict = false;
-      std::unordered_map<text, text> meta;
-      std::unordered_map<text, field_descriptor> field_map;
     };
 
     Model() {}
@@ -219,9 +219,9 @@ namespace garlic {
     ModelConstraint(
         model_pointer model
     ) : Constraint<LayerType>(ConstraintProperties {
-      .flag = ConstraintProperties::flags::fatal,
       .name = model->get_properties().name,
-      .message = text::no_text()
+      .message = text::no_text(),
+      .flag = ConstraintProperties::flags::fatal,
       }), model_(model) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {

@@ -84,16 +84,16 @@ namespace garlic {
       fatal = 0x1 << 1,  // should stop looking at other constraints.
     };
 
-    flags flag = flags::none;
     text name;  // constraint name.
     text message;  // custom rejection reason.
+    flags flag = flags::none;
 
     static ConstraintProperties create_default(
         text&& name = text::no_text(), text&& message = text::no_text()) {
       return ConstraintProperties {
-        flags::none,
         std::move(name),
-        std::move(message)
+        std::move(message),
+        flags::none,
       };
     }
 
@@ -155,9 +155,9 @@ namespace garlic {
       const char* name = "",
       const char* message = "") noexcept {
     return ConstraintProperties {
-      .flag = (get(layer, "fatal", Fatal) ? ConstraintProperties::flags::fatal : ConstraintProperties::flags::none),
       .name = get_text(layer, "name", name),
-      .message = get_text(layer, "message", message)
+      .message = get_text(layer, "message", message),
+      .flag = (get(layer, "fatal", Fatal) ? ConstraintProperties::flags::fatal : ConstraintProperties::flags::none),
     };
   }
 
@@ -228,9 +228,9 @@ namespace garlic {
         TypeFlag required_type,
         text&& name = "type_constraint"
         ) : Constraint<LayerType>(ConstraintProperties {
-          .flag = ConstraintProperties::flags::fatal,
           .name = std::move(name),
-          .message = text::no_text()
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::fatal,
           }), flag_(required_type) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
@@ -295,9 +295,9 @@ namespace garlic {
         SizeType max,
         text&& name = "range_constraint"
         ) : min_(min), max_(max), Constraint<LayerType>(ConstraintProperties {
-          .flag = ConstraintProperties::flags::none,
           .name = std::move(name),
-          .message = text::no_text()
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::none,
           }) {}
 
     RangeConstraint(
@@ -363,9 +363,9 @@ namespace garlic {
         const text& pattern,
         text&& name = "regex_constraint"
         ) : Constraint<LayerType>(ConstraintProperties {
-          .flag = ConstraintProperties::flags::none,
           .name = std::move(name),
-          .message = text::no_text()
+          .message = text::no_text(),
+          .flag = ConstraintProperties::flags::none,
           }), pattern_(pattern.data(), pattern.size()) {}
 
     RegexConstraint(
@@ -438,13 +438,6 @@ namespace garlic {
         bool ignore_details = false
         ) : constraint_(std::move(constraint)),
             Constraint<LayerType>(std::move(props)), ignore_details_(ignore_details) {}
-
-    //ListConstraint(
-    //    const constraint_pointer& constraint,
-    //    ConstraintProperties&& props,
-    //    bool ignore_details = false
-    //    ) : constraint_(constraint), Constraint<LayerType>(std::move(props)),
-            //ignore_details_(ignore_details) {}
 
     ConstraintResult test(const LayerType& value) const noexcept override {
       if (!value.is_list()) return this->fail("Expected a list.");
@@ -681,8 +674,9 @@ namespace garlic {
 
     AllConstraint(
         ) : Constraint<LayerType>(ConstraintProperties {
+          .name = text::no_text(),
+          .message = text::no_text(),
           .flag = ConstraintProperties::flags::fatal,
-          .name = text::no_text(), .message = text::no_text()
           }) {}
 
     AllConstraint(

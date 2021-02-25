@@ -442,9 +442,10 @@ namespace garlic {
       sequence<constraint_pointer> constraints;
       constraints.push_back(std::make_shared<ConstraintType<Layer>>(std::forward<Args>(args)...));
       return std::make_shared<field_type>(FieldPropertiesOf<Layer> {
-          std::move(name),
-          {},
-          std::move(constraints)
+          .meta = {},
+          .constraints = std::move(constraints),
+          .name = std::move(name),
+          .ignore_details = false
           });
     }
 
