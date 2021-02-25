@@ -29,7 +29,7 @@ namespace garlic {
         const Ch* data, SizeType size,
         text_type type = text_type::reference) : size_(size), type_(type) {
       if (type == text_type::copy && size_)
-        data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data);
+        data_ = strncpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), data, size_);
       else
         data_ = data;
     }
