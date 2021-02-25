@@ -36,12 +36,11 @@ namespace garlic {
 
     basic_text(
         const std::basic_string<Ch>& value,
-        text_type type = text_type::reference) : size_(value.size()), type_(type) {
-      if (type == text_type::copy && size_)
-        data_ = strcpy((Ch*)malloc((size_ + 1) * sizeof(Ch)), value.data());
-      else
-        data_ = value.data();
-    }
+        text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
+
+    basic_text(
+        const std::basic_string_view<Ch>& value,
+        text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
 
     basic_text(
         const basic_text& other

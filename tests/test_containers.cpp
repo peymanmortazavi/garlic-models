@@ -40,6 +40,11 @@ TEST(GarlicText, StdStringConstructor) {
   ASSERT_STREQ(copy.data(), "abcd");
 }
 
+TEST(GarlicText, StdStringViewConstructor) {
+  std::string_view a = "Some String";
+  text b = a;
+}
+
 TEST(GarlicText, Copy) {
   text a = "abcd";
   text b ("abcd", text_type::copy);
