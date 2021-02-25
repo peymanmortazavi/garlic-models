@@ -43,9 +43,20 @@ namespace garlic {
         data_ = value.data();
     }
 
-    basic_text(const basic_text&) = delete;  // no copy
+    basic_text(
+        const basic_text& other
+        ) : data_(other.data_), size_(other.size_), type_(text_type::reference) {};
+
     basic_text(basic_text&& old) : data_(old.data_), size_(old.size_), type_(old.type_) {
       old.size_ = 0;
+    }
+
+    inline constexpr basic_text& operator =(const basic_text& other) {
+      destroy();
+      data_ = other.data_;
+      size_ = other.size_;
+      type_ = text_type::reference;
+      return *this;
     }
 
     inline constexpr basic_text& operator =(basic_text&& other) {
@@ -72,6 +83,13 @@ namespace garlic {
     }
 
     const Ch* data() const { return data_; }
+
+    inline void pop_back() noexcept {
+      if (size_)
+        --size_;
+    }
+
+    inline char back() const { return data_[size_ - 1]; }
 
     inline const Ch* begin() const { return data_; }
     inline const Ch* end() const { return data_ + size_; }

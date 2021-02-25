@@ -4,9 +4,9 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
-#include <vector>
+#include <unordered_map>
 #include "layer.h"
 #include "constraints.h"
 #include "utility.h"
@@ -30,7 +30,7 @@ namespace garlic {
 
     struct Properties {
       text name;
-      std::map<std::string, std::string> meta;
+      std::unordered_map<text, text> meta;
       sequence<constraint_pointer> constraints;
       bool ignore_details = false;
     };
@@ -60,7 +60,7 @@ namespace garlic {
     const char* get_message() const noexcept {
       const auto& meta = properties_.meta;
       if (auto it = meta.find("message"); it != meta.end()) {
-        return it->second.c_str();
+        return it->second.data();
       }
       return nullptr;
     }
@@ -88,17 +88,17 @@ namespace garlic {
     struct Properties {
       text name;
       bool strict = false;
-      std::map<std::string, std::string> meta;
-      std::map<std::string, field_descriptor> field_map;
+      std::unordered_map<text, text> meta;
+      std::unordered_map<text, field_descriptor> field_map;
     };
 
     Model() {}
-    Model(Properties properties) : properties_(properties) {}
+    Model(Properties&& properties) : properties_(std::move(properties)) {}
     Model(text&& name) {
       properties_.name = std::move(name);
     }
 
-    void add_field(std::string&& name, field_pointer field, bool required = true) {
+    void add_field(text&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
           std::move(name),
           { .field = std::move(field), .required = required }
@@ -116,14 +116,14 @@ namespace garlic {
 
     bool quick_test(const LayerType& value) const {
       if (!value.is_object()) return false;
-      std::set<std::string_view> requirements;
+      std::unordered_set<text> requirements;
       for (const auto& member : value.get_object()) {
         auto it = properties_.field_map.find(member.key.get_cstr());
         if (it == properties_.field_map.end()) continue;
         if (!it->second.field->quick_test(member.value)) {
           return false;
         }
-        requirements.emplace(it->first);
+        requirements.emplace(it->first.copy());
       }
       for (const auto& item : properties_.field_map) {
         if (auto it = requirements.find(item.first); it != requirements.end()) continue;
@@ -137,12 +137,12 @@ namespace garlic {
       sequence<ConstraintResult> details;
       if (value.is_object()) {
         // todo : if the container allows for atomic table look up, swap the loop.
-        std::set<std::string_view> requirements;
+        std::unordered_set<text> requirements;
         for (const auto& member : value.get_object()) {
           auto it = properties_.field_map.find(member.key.get_cstr());
           if (it != properties_.field_map.end()) {
             this->test_field(details, member.key, member.value, it->second.field);
-            requirements.emplace(it->first);
+            requirements.emplace(it->first.copy());
           }
         }
         for (const auto& item : properties_.field_map) {
@@ -150,7 +150,7 @@ namespace garlic {
           if (!item.second.required) continue;
           details.push_back(
               ConstraintResult::leaf_field_failure(
-                text(item.first, text_type::copy),
+                item.first.copy(),
                 "missing required field!"));
         }
       } else {

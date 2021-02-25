@@ -92,7 +92,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
   auto parse_result = module.parse(view);
   ASSERT_TRUE(parse_result.valid);
 
-  map<string, deque<string>> expectations = {
+  unordered_map<text, deque<string>> expectations = {
     {"NoDependencyField",           {"c0"}},
     {"RegularDependencyField",      {"c0", "c1"}},
     {"RegularAlias",                {"c0", "c1"}},
@@ -104,7 +104,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
   };
 
   for (const auto& item : expectations) {
-    auto field_ptr = module.get_field(item.first);
+    auto field_ptr = module.get_field(item.first.copy());
     ASSERT_NE(field_ptr, nullptr);
     assert_field_constraints(*field_ptr, item.second);
   }
