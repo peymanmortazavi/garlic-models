@@ -12,18 +12,18 @@
 
 namespace garlic {
 
-  template<ViewLayer Destination>
+  template<ViewLayer Layer>
   class Module {
   public:
     template <typename Key, typename Value> using table = std::unordered_map<Key, Value>;
-    using model_type               = Model<Destination>;
+    using model_type               = Model<Layer>;
     using model_pointer            = std::shared_ptr<model_type>;
-    using field_type               = Field<Destination>;
+    using field_type               = Field<Layer>;
     using field_pointer            = std::shared_ptr<field_type>;
     using model_table              = table<text, model_pointer>;
     using field_table              = table<text, field_pointer>;
-    using constraint_type          = Constraint<Destination>;
-    using field_constraint_type    = FieldConstraint<Destination>;
+    using constraint_type          = Constraint<Layer>;
+    using field_constraint_type    = FieldConstraint<Layer>;
     using constraint_pointer       = std::shared_ptr<constraint_type>;
     using field_constraint_pointer = std::shared_ptr<field_constraint_type>;
 
@@ -45,8 +45,8 @@ namespace garlic {
       fields_ = static_map;
     }
 
-    template<ViewLayer Layer>
-    ParsingResult parse(Layer&& layer) noexcept {
+    template<ViewLayer Input>
+    ParsingResult parse(Input&& layer) noexcept {
       if (!layer.is_object()) return {false};
       
       parse_context context;
@@ -140,8 +140,8 @@ namespace garlic {
           Module& module
       ) : context(context), module(module) {}
 
-      template<ViewLayer Source, typename Callable>
-      void parse_constraint(const Source& value, const Callable& cb) {
+      template<ViewLayer Input, typename Callable>
+      void parse_constraint(const Input& value, const Callable& cb) {
         module.parse_constraint(value, context, cb);
       }
 
@@ -158,7 +158,7 @@ namespace garlic {
       }
     };
 
-    void process_model_meta(ModelPropertiesOf<Destination>& props, const ViewLayer auto& value) {
+    void process_model_meta(ModelPropertiesOf<Layer>& props, const ViewLayer auto& value) {
       get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", decode<text>(item).clone());
       });
@@ -269,7 +269,7 @@ namespace garlic {
       return false;
     }
 
-    void process_field_meta(FieldPropertiesOf<Destination>& props, const ViewLayer auto& layer) {
+    void process_field_meta(FieldPropertiesOf<Layer>& props, const ViewLayer auto& layer) {
       get_member(layer, "meta", [&props](const auto& item) {
         for (const auto& member : item.get_object()) {
           props.meta.emplace(
@@ -398,19 +398,19 @@ namespace garlic {
       fields_.emplace(std::move(key), std::move(ptr));  // register the field.
     }
 
-    template<ViewLayer Source, typename Callable>
-    void parse_constraint(const Source& value, parse_context& context, const Callable& cb) noexcept {
-      typedef constraint_pointer (*ConstraintInitializer)(const Source&, parser);
+    template<ViewLayer Input, typename Callable>
+    void parse_constraint(const Input& value, parse_context& context, const Callable& cb) noexcept {
+      typedef constraint_pointer (*ConstraintInitializer)(const Input&, parser);
       static const table<text, ConstraintInitializer> ctors = {
-        {"regex", &parsing::parse_regex<Destination, Source>},
-        {"range", &parsing::parse_range<Destination, Source>},
-        {"field", &parsing::parse_field<Destination, Source>},
-        {"any", &parsing::parse_any<Destination, Source>},
-        {"all", &parsing::parse_all<Destination, Source>},
-        {"list", &parsing::parse_list<Destination, Source>},
-        {"tuple", &parsing::parse_tuple<Destination, Source>},
-        {"map", &parsing::parse_map<Destination, Source>},
-        {"literal", &parsing::parse_literal<Destination, Source>},
+        {"regex", &parsing::parse_regex<Layer, Input>},
+        {"range", &parsing::parse_range<Layer, Input>},
+        {"field", &parsing::parse_field<Layer, Input>},
+        {"any", &parsing::parse_any<Layer, Input>},
+        {"all", &parsing::parse_all<Layer, Input>},
+        {"list", &parsing::parse_list<Layer, Input>},
+        {"tuple", &parsing::parse_tuple<Layer, Input>},
+        {"map", &parsing::parse_map<Layer, Input>},
+        {"literal", &parsing::parse_literal<Layer, Input>},
       };
 
       if (value.is_string()) {
@@ -440,8 +440,8 @@ namespace garlic {
     template<template<typename> typename ConstraintType, typename... Args>
     field_pointer make_field(text&& name, Args&&... args) const noexcept {
       sequence<constraint_pointer> constraints;
-      constraints.push_back(std::make_shared<ConstraintType<Destination>>(std::forward<Args>(args)...));
-      return std::make_shared<field_type>(FieldPropertiesOf<Destination> {
+      constraints.push_back(std::make_shared<ConstraintType<Layer>>(std::forward<Args>(args)...));
+      return std::make_shared<field_type>(FieldPropertiesOf<Layer> {
           std::move(name),
           {},
           std::move(constraints)
