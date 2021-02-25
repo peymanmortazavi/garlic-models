@@ -80,6 +80,12 @@ namespace garlic {
     inline bool operator ==(const basic_text& another) const noexcept {
       return (another.data_ == data_ && another.size_ == size_) || !strncmp(data_, another.data_, size_);
     }
+    inline bool operator ==(const std::basic_string<Ch>& value) const noexcept {
+      return !strncmp(data_, value.data(), size_);
+    }
+    inline bool operator ==(const std::basic_string_view<Ch>& value) const noexcept {
+      return !strncmp(data_, value.data(), size_);
+    }
 
     const Ch* data() const { return data_; }
 

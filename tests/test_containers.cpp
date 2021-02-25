@@ -38,11 +38,15 @@ TEST(GarlicText, StdStringConstructor) {
   ASSERT_STREQ(c.data(), txt.data());
   ASSERT_STRNE(copy.data(), txt.data());
   ASSERT_STREQ(copy.data(), "abcd");
+
+  ASSERT_EQ(txt, std::string("1234"));
 }
 
 TEST(GarlicText, StdStringViewConstructor) {
   std::string_view a = "Some String";
   text b = a;
+
+  ASSERT_EQ(b, std::string("Some String"));
 }
 
 TEST(GarlicText, Copy) {
