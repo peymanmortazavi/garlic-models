@@ -132,8 +132,6 @@ TEST(GarlicSequence, PushFront) {
 
   sequence<double> three(4);
   for (auto i = 0; i < 4; ++i) three.push_back(i);
-  std::cout << three.size() << std::endl;
-  std::cout << three.capacity() << std::endl;
 
   one.push_front(three.begin(), three.end());
   {
