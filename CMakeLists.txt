@@ -21,7 +21,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_subdirectory("src")
+
+add_library(GarlicModel INTERFACE)
+target_include_directories(
+    GarlicModel
+      INTERFACE
+        "$<BUILD_INTERFACE:${GarlicModel_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
+)
 
 # Installation
 include(CMakePackageConfigHelpers)  # To load the write_basic_package_version_file macro.
@@ -37,6 +44,7 @@ install(EXPORT ${PROJECT_TARGET_EXPORT_NAME}
   NAMESPACE ${PROJECT_NAME}::
   DESTINATION ${CMAKE_FILES_INSTALL_DIR})
 install(FILES ${CMAKE_BINARY_DIR}/garlicmodel.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/garlic" DESTINATION include FILES_MATCHING PATTERN "*.h")
 set(CONFIG_FILE ${GENERATED}/${PROJECT_NAME}Config.cmake)
 configure_package_config_file("cmake/Config.cmake.in"
   "${CONFIG_FILE}" INSTALL_DESTINATION ${CMAKE_FILES_INSTALL_DIR})
