@@ -5,6 +5,7 @@ services:
         build:
             context: ../
             dockerfile: docker/gcc/Dockerfile
+            target: GCC_10
         volumes:
             - ../:/project
         command: make -j8
