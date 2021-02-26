@@ -8,7 +8,7 @@ fi
 
 mkdir build
 cd build
-conan install ..
+conan install --build=missing ..
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 make
 cd .. && ln -s build/compile_commands.json  # for tools like ccls.

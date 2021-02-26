@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+    gcc_10:
+        build:
+            context: ../
+            dockerfile: docker/gcc/Dockerfile
+        volumes:
+            - ../:/project
+        command: make -j8
