@@ -12,9 +12,9 @@
 #define GARLIC_REF garlic::RefLayer
 #define GARLIC_ITERATOR_WRAPPER garlic::IteratorWrapper
 #else
-#define GARLIC_VIEW template
-#define GARLIC_REF template
-#define GARLIC_ITERATOR_WRAPPER template
+#define GARLIC_VIEW typename
+#define GARLIC_REF typename
+#define GARLIC_ITERATOR_WRAPPER typename
 #endif
 
 namespace garlic {
@@ -329,7 +329,7 @@ namespace garlic {
     return left.get_inner_iterator() - right.get_inner_iterator();
   }
 
-  template<RefLayer LayerType>
+  template<GARLIC_REF LayerType>
   class back_inserter_iterator {
   public:
     using difference_type = ptrdiff_t;
@@ -354,7 +354,7 @@ namespace garlic {
     LayerType layer_;
   };
 
-  template<RefLayer LayerType>
+  template<GARLIC_REF LayerType>
   static inline back_inserter_iterator<LayerType>
   back_inserter(LayerType&& layer) {
     return back_inserter_iterator<LayerType>(std::forward<LayerType>(layer));

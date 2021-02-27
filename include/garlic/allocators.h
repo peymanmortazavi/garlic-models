@@ -16,7 +16,7 @@ namespace garlic {
   };
 #define GARLIC_ALLOCATOR garlic::Allocator
 #else
-#define GARLIC_ALLOCATOR template
+#define GARLIC_ALLOCATOR typename
 #endif
 
   class CAllocator {
