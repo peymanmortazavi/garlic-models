@@ -11,8 +11,12 @@ jobs:
             - name: Checkout Code
               uses: actions/checkout@v2
 
-            - name: Docker Login
-              run: $ echo ${{ secrets.GH_TOKEN }} | docker login ghcr.io -u peymanmortazavi --password-stdin
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v1
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GH_TOKEN }}
 
             - name: Build Image
               run: docker build -t ghcr.io/peymanmortazavi/garlic-model:gcc-10 --target GCC_10 --file docker/Dockerfile .
