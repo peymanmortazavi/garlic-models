@@ -167,16 +167,16 @@ namespace garlic {
   }
 
 
-  template<typename Callable>
+  template<GARLIC_VIEW Layer, typename Callable>
   static inline void
-  get_member(const GARLIC_VIEW auto& value, const char* key, Callable&& cb) noexcept {
+  get_member(const Layer& value, const char* key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
 
-  template<typename Callable>
+  template<GARLIC_VIEW Layer, typename Callable>
   static inline void
-  get_member(const GARLIC_VIEW auto& value, std::string_view key, Callable&& cb) noexcept {
+  get_member(const Layer& value, std::string_view key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
