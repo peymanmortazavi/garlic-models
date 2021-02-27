@@ -1,11 +1,21 @@
 #ifndef GARLIC_LAYER_H
 #define GARLIC_LAYER_H
 
+#if __cpp_concepts >= 201907L
 #include <concepts>
+#define GARLIC_USE_CONCEPTS
+#define GARLIC_VIEW garlic::ViewLayer
+#define GARLIC_REF garlic::RefLayer
+#define GARLIC_ITERATOR_WRAPPER garlic::IteratorWrapper
+#else
+#define GARLIC_VIEW typename
+#define GARLIC_REF typename
+#define GARLIC_ITERATOR_WRAPPER typename
+#endif
+
 #include <cstddef>
 #include <string>
 #include <iterator>
-
 
 namespace garlic {
 
@@ -23,6 +33,8 @@ namespace garlic {
   template<typename T> using ValueIteratorOf = typename std::decay_t<T>::ValueIterator;
   template<typename T> using ConstMemberIteratorOf = typename std::decay_t<T>::ConstMemberIterator;
   template<typename T> using MemberIteratorOf = typename std::decay_t<T>::MemberIterator;
+
+#ifdef GARLIC_USE_CONCEPTS
 
   template<typename T>
   concept member_pair = requires(T pair) {
@@ -140,6 +152,7 @@ namespace garlic {
     /* TODO:  <28-01-21, Peyman> Figure out why the next line doesn't compile. */
     // { container.wrap() } -> std::same_as<typename T::output_type>;
   };
+#endif
 
   template<typename ValueType, typename Iterator>
   struct BasicIteratorWrapper {
@@ -153,7 +166,7 @@ namespace garlic {
     }
   };
 
-  template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
+  template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class ForwardIterator {
   public:
     using difference_type = DifferenceType;
@@ -193,7 +206,7 @@ namespace garlic {
     Container container_;
   };
 
-  template<IteratorWrapper Container, typename DifferenceType = std::ptrdiff_t>
+  template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class RandomAccessIterator {
   public:
     using difference_type = DifferenceType;
@@ -316,7 +329,7 @@ namespace garlic {
     return left.get_inner_iterator() - right.get_inner_iterator();
   }
 
-  template<RefLayer LayerType>
+  template<GARLIC_REF LayerType>
   class back_inserter_iterator {
   public:
     using difference_type = ptrdiff_t;
@@ -341,7 +354,7 @@ namespace garlic {
     LayerType layer_;
   };
 
-  template<RefLayer LayerType>
+  template<GARLIC_REF LayerType>
   static inline back_inserter_iterator<LayerType>
   back_inserter(LayerType&& layer) {
     return back_inserter_iterator<LayerType>(std::forward<LayerType>(layer));

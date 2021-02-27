@@ -12,7 +12,7 @@
 
 namespace garlic {
 
-  template<ViewLayer Layer>
+  template<GARLIC_VIEW Layer>
   class Module {
   public:
     template <typename Key, typename Value> using table = std::unordered_map<Key, Value>;
@@ -45,7 +45,7 @@ namespace garlic {
       fields_ = static_map;
     }
 
-    template<ViewLayer Input>
+    template<GARLIC_VIEW Input>
     ParsingResult parse(Input&& layer) noexcept {
       if (!layer.is_object()) return {false};
       
@@ -140,7 +140,7 @@ namespace garlic {
           Module& module
       ) : context(context), module(module) {}
 
-      template<ViewLayer Input, typename Callable>
+      template<GARLIC_VIEW Input, typename Callable>
       void parse_constraint(const Input& value, const Callable& cb) {
         module.parse_constraint(value, context, cb);
       }
@@ -158,7 +158,8 @@ namespace garlic {
       }
     };
 
-    void process_model_meta(ModelPropertiesOf<Layer>& props, const ViewLayer auto& value) {
+    template<GARLIC_VIEW Input>
+    void process_model_meta(ModelPropertiesOf<Layer>& props, const Input& value) {
       get_member(value, "description", [&props](const auto& item) {
         props.meta.emplace("description", decode<text>(item).clone());
       });
@@ -172,7 +173,8 @@ namespace garlic {
       });
     }
 
-    void process_model_inheritance(const model_pointer& model, parse_context& context, const ViewLayer auto& value) {
+    template<GARLIC_VIEW Input>
+    void process_model_inheritance(const model_pointer& model, parse_context& context, const Input& value) {
       enum field_status : uint8_t { lazy = 1, available = 2, exclude = 3 };
       struct field_info {
         field_status status;
@@ -234,8 +236,8 @@ namespace garlic {
       }
     }
 
-    template<typename Callable>
-    void parse_model(const text& name, const ViewLayer auto& layer, parse_context& context, const Callable& cb) {
+    template<GARLIC_VIEW Input, typename Callable>
+    void parse_model(const text& name, const Input& layer, parse_context& context, const Callable& cb) {
       auto ptr = std::make_shared<model_type>(name.clone());
       auto& props = ptr->properties_;
 
@@ -269,7 +271,8 @@ namespace garlic {
       return false;
     }
 
-    void process_field_meta(FieldPropertiesOf<Layer>& props, const ViewLayer auto& layer) {
+    template<GARLIC_VIEW Input>
+    void process_field_meta(FieldPropertiesOf<Layer>& props, const Input& layer) {
       get_member(layer, "meta", [&props](const auto& item) {
         for (const auto& member : item.get_object()) {
           props.meta.emplace(
@@ -290,9 +293,9 @@ namespace garlic {
       add_meta_field("message");
     }
 
-    template<typename SuccessCallable, typename FailCallable>
+    template<GARLIC_VIEW Input, typename SuccessCallable, typename FailCallable>
     void parse_field(
-        text&& name, const ViewLayer auto& layer,
+        text&& name, const Input& layer,
         parse_context& context, SuccessCallable&& cb,
         FailCallable&& fcb
         ) noexcept {
@@ -398,7 +401,7 @@ namespace garlic {
       fields_.emplace(std::move(key), std::move(ptr));  // register the field.
     }
 
-    template<ViewLayer Input, typename Callable>
+    template<GARLIC_VIEW Input, typename Callable>
     void parse_constraint(const Input& value, parse_context& context, const Callable& cb) noexcept {
       typedef constraint_pointer (*ConstraintInitializer)(const Input&, parser);
       static const table<text, ConstraintInitializer> ctors = {

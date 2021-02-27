@@ -17,7 +17,7 @@
 
 namespace garlic {
 
-  template<ViewLayer L1, ViewLayer L2>
+  template<GARLIC_VIEW L1, GARLIC_VIEW L2>
   static inline std::enable_if_t<!is_comparable<L1, L2>::value, bool>
   cmp_layers(const L1& layer1, const L2& layer2) {
     if (layer1.is_int() && layer2.is_int() && layer1.get_int() == layer2.get_int()) return true;
@@ -45,7 +45,7 @@ namespace garlic {
     return false;
   }
 
-  template<ViewLayer Layer1, ViewLayer Layer2>
+  template<GARLIC_VIEW Layer1, GARLIC_VIEW Layer2>
   static inline std::enable_if_t<is_comparable<Layer1, Layer2>::value, bool>
   cmp_layers(const Layer1& layer1, const Layer2& layer2) {
     return layer1 == layer2;
@@ -94,7 +94,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType, typename Callable>
+  template<GARLIC_VIEW LayerType, typename Callable>
   static inline void
   resolve_layer_cb(const LayerType& value, std::string_view path, Callable&& cb) {
     lazy_string_splitter parts{path};
@@ -127,7 +127,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer>
+  template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   safe_resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
@@ -139,7 +139,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, typename Callable>
+  template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   safe_resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
     resolve_layer_cb(value, key, [&cb](const auto& result) {
@@ -148,7 +148,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer>
+  template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
@@ -158,7 +158,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, typename Callable>
+  template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
     resolve_layer_cb(value, key, [&cb](const auto& result) {
@@ -167,28 +167,28 @@ namespace garlic {
   }
 
 
-  template<typename Callable>
+  template<GARLIC_VIEW Layer, typename Callable>
   static inline void
-  get_member(const ViewLayer auto& value, const char* key, Callable&& cb) noexcept {
+  get_member(const Layer& value, const char* key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
 
-  template<typename Callable>
+  template<GARLIC_VIEW Layer, typename Callable>
   static inline void
-  get_member(const ViewLayer auto& value, std::string_view key, Callable&& cb) noexcept {
+  get_member(const Layer& value, std::string_view key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
 
-  template<ViewLayer Layer, std::integral IndexType, typename Callable>
+  template<GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
   get_item(Layer layer, IndexType index, Callable&& cb) noexcept {
     if (auto it = layer.begin_list() += index; it < layer.end_list()) cb(*it);
   }
 
 
-  template<ViewLayer Layer, std::integral IndexType, typename Callable>
+  template<GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline std::enable_if_t<!std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
   get_item(Layer layer, IndexType index, Callable&& cb) noexcept {
     auto it = layer.begin_list();
@@ -211,21 +211,21 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer>
+  template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   get(Layer layer, const char* key) {
     return decode<OutputType, Layer>((*layer.find_member(key)).value);
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value, OutputType>
   get(Layer layer, IndexType index) {
     return decode<OutputType, Layer>(layer.begin_list()[index]);
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline std::enable_if_t<!std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value, OutputType>
   get(Layer layer, IndexType index) {
     auto it = layer.begin_list();
@@ -237,7 +237,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer>
+  template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   get(Layer layer, const char* key, OutputType default_value) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
@@ -247,7 +247,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
   get(Layer layer, IndexType index, OutputType default_value) {
     get_item(layer, index, [&default_value](const auto& result) {
@@ -257,7 +257,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, typename Callable, ViewLayer Layer>
+  template<typename OutputType, typename Callable, GARLIC_VIEW Layer>
   static inline void
   get_cb(Layer layer, const char* key, Callable&& cb) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
@@ -266,7 +266,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType, typename Callable>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
   get_cb(Layer layer, IndexType index, Callable&& cb) {
     get_item(layer, index, [&cb](const auto& result){
@@ -275,7 +275,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer>
+  template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   safe_get(Layer layer, const char* key, OutputType&& default_value) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
@@ -287,7 +287,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
   safe_get(Layer layer, IndexType index, OutputType&& default_value) {
     get_item(layer, index, [&default_value](const auto& result) {
@@ -299,7 +299,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, typename Callable>
+  template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   safe_get_cb(Layer layer, const char* key, Callable&& cb) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
@@ -308,7 +308,7 @@ namespace garlic {
   }
 
 
-  template<typename OutputType, ViewLayer Layer, std::integral IndexType, typename Callable>
+  template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
   safe_get_cb(Layer layer, IndexType index, Callable&& cb) {
     get_item(layer, index, [&cb](const auto& result) {
@@ -317,7 +317,7 @@ namespace garlic {
   }
 
 
-  template<ViewLayer Layer, RefLayer Output>
+  template<GARLIC_VIEW Layer, GARLIC_REF Output>
   static inline void
   copy_layer(Layer layer, Output output) {
     if (layer.is_double()) {

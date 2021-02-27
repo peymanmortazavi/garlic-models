@@ -6,7 +6,7 @@
 
 namespace garlic {
 
-
+#if __cpp_concepts >= 201907L
   template<typename T> concept Allocator = requires(T t) {
     { T::needs_free } -> std::convertible_to<bool>;
 
@@ -14,6 +14,10 @@ namespace garlic {
     { t.reallocate(nullptr, 0, 1) } -> std::convertible_to<void*>;
     { t.free(nullptr) };
   };
+#define GARLIC_ALLOCATOR garlic::Allocator
+#else
+#define GARLIC_ALLOCATOR typename
+#endif
 
   class CAllocator {
   public:
