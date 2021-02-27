@@ -11,8 +11,5 @@ jobs:
             - name: Checkout Code
               uses: actions/checkout@v2
 
-            - name: Build Image
-              run: docker build -t ci --target GCC_10 --file docker/Dockerfile .
-
             - name: Build and Run Tests
-              run: docker run --rm ci bash -c "make -j8 && make test"
+              run: docker run --rm ghcr.io/peymanmortazavi/garlic-model:gcc-10 bash -c "make -j8 && make test"
