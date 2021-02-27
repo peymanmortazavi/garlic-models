@@ -2,7 +2,6 @@ name: Garlic Model PR Tests
 
 on:
     pull_request:
-        branches: [main]
 
 jobs:
     gcc_10:
