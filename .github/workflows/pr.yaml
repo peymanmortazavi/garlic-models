@@ -1,0 +1,19 @@
+name: Garlic Model PR Tests
+
+on:
+    pull_request:
+        branches: [main]
+
+jobs:
+    gcc_10:
+        name: Compile with GCC 10 and C++ 20
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v2
+
+            - name: Build Image
+              run: docker build -t ci --target GCC_10 --file docker/Dockerfile .
+
+            - name: Build and Run Tests
+              run: docker run --rm ci bash -c "make -j8 && make test"
