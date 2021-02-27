@@ -12,7 +12,7 @@ jobs:
               uses: actions/checkout@v2
 
             - name: Docker Login
-              run: $ echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u peymanmortazavi --password-stdin
+              run: $ echo ${{ secrets.GH_TOKEN }} | docker login ghcr.io -u peymanmortazavi --password-stdin
 
             - name: Build Image
               run: docker build -t ghcr.io/peymanmortazavi/garlic-model:gcc-10 --target GCC_10 --file docker/Dockerfile .
