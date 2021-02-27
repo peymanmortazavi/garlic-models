@@ -14,10 +14,10 @@
 
 namespace garlic {
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class Field {
   public:
-    template<ViewLayer> friend class Module;
+    template<GARLIC_VIEW> friend class Module;
 
     using constraint_type = Constraint<LayerType>;
     using constraint_pointer = std::shared_ptr<constraint_type>;
@@ -72,10 +72,10 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class Model {
   public:
-    template<ViewLayer> friend class Module;
+    template<GARLIC_VIEW> friend class Module;
 
     using field_type = Field<LayerType>;
     using field_pointer = std::shared_ptr<field_type>;
@@ -210,7 +210,7 @@ namespace garlic {
 
 
   // Model Constraint
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class ModelConstraint : public Constraint<LayerType> {
   public:
     using model_type = Model<LayerType>;
@@ -240,18 +240,18 @@ namespace garlic {
   template<typename T> using ModelPropertiesOf = typename Model<T>::Properties;
   template<typename T> using FieldPropertiesOf = typename Field<T>::Properties;
   
-  template<ViewLayer LayerType, typename...Args>
+  template<GARLIC_VIEW LayerType, typename...Args>
   std::shared_ptr<Field<LayerType>> make_field(Args&&... args) {
     return std::make_shared<Field<LayerType>>(std::forward<Args>(args)...);
   }
 
-  template<ViewLayer LayerType, typename...Args>
+  template<GARLIC_VIEW LayerType, typename...Args>
   std::shared_ptr<Model<LayerType>> make_model(Args&&...args) {
     return std::make_shared<Model<LayerType>>(std::forward<Args>(args)...);
   }
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class FieldConstraint : public Constraint<LayerType> {
   public:
     using field_type = Field<LayerType>;

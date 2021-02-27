@@ -101,7 +101,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer Layer, typename Container, typename BackInserterIterator>
+  template<GARLIC_VIEW Layer, typename Container, typename BackInserterIterator>
   inline void test_constraints(
       Layer&& value,
       Container&& constraints,
@@ -115,7 +115,7 @@ namespace garlic {
   }
 
 
-  template<ViewLayer Layer, typename Container>
+  template<GARLIC_VIEW Layer, typename Container>
   static inline bool
   test_constraints_quick(Layer&& value, Container&& constraints) {
     return std::all_of(
@@ -125,7 +125,7 @@ namespace garlic {
   }
 
 
-  template<ViewLayer Layer, typename Container>
+  template<GARLIC_VIEW Layer, typename Container>
   static inline ConstraintResult
   test_constraints_first_failure(Layer&& value, Container&& constraints) {
     for (const auto& constraint : constraints) {
@@ -137,7 +137,7 @@ namespace garlic {
   }
 
 
-  template<ViewLayer Layer>
+  template<GARLIC_VIEW Layer>
   static inline text 
   get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
     get_member(layer, key, [&default_value](const auto& result) {
@@ -148,7 +148,7 @@ namespace garlic {
   }
 
 
-  template<bool Fatal = false, ViewLayer Layer>
+  template<bool Fatal = false, GARLIC_VIEW Layer>
   static inline ConstraintProperties
   build_constraint_properties(
       Layer&& layer,
@@ -162,7 +162,7 @@ namespace garlic {
   }
 
 
-  template<garlic::ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class Constraint {
   public:
     explicit Constraint(ConstraintProperties&& props) : props_(std::move(props)) {}
@@ -220,7 +220,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class TypeConstraint : public Constraint<LayerType> {
   public:
 
@@ -285,7 +285,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class RangeConstraint : public Constraint<LayerType> {
   public:
     using SizeType = size_t;
@@ -355,7 +355,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class RegexConstraint : public Constraint<LayerType> {
   public:
 
@@ -390,7 +390,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class AnyConstraint : public Constraint<LayerType> {
   public:
     using constraint_type = Constraint<LayerType>;
@@ -423,7 +423,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class ListConstraint : public Constraint<LayerType> {
   public:
 
@@ -490,7 +490,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class TupleConstraint : public Constraint<LayerType> {
   public:
 
@@ -579,7 +579,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class MapConstraint : public Constraint<LayerType> {
   public:
     using constraint_type = Constraint<LayerType>;
@@ -665,7 +665,7 @@ namespace garlic {
   };
 
 
-  template<ViewLayer LayerType>
+  template<GARLIC_VIEW LayerType>
   class AllConstraint : public Constraint<LayerType> {
   public:
 
@@ -715,7 +715,7 @@ namespace garlic {
     }
   };
 
-  template<ViewLayer LayerType, typename ValueType = VoidType>
+  template<GARLIC_VIEW LayerType, typename ValueType = VoidType>
   class LiteralConstraint : public Constraint<LayerType> {
   public:
 

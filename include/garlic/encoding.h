@@ -233,37 +233,37 @@ namespace garlic {
       && !has_explicit_encoder<Type, Layer>::value;
   }
 
-  template<typename Type, ViewLayer Layer>
+  template<typename Type, GARLIC_VIEW Layer>
   static inline std::enable_if_t<internal::use_decode_layer_method<Type, Layer>, Type>
   decode(Layer layer) { return Type::decode(layer); }
 
-  template<typename Type, ViewLayer Layer>
+  template<typename Type, GARLIC_VIEW Layer>
   static inline std::enable_if_t<internal::use_decode_constructor<Type, Layer>, Type>
   decode(Layer layer) { return Type(layer); }
 
-  template<typename Type, ViewLayer Layer>
+  template<typename Type, GARLIC_VIEW Layer>
   static inline std::enable_if_t<internal::use_explicit_decoder<Type, Layer>, Type>
   decode(Layer layer) { return coder<Type, Layer>::decode(layer); }
 
-  template<typename Type, ViewLayer Layer, typename Callable>
+  template<typename Type, GARLIC_VIEW Layer, typename Callable>
   static inline std::enable_if_t<internal::use_explicit_safe_decoder<Type, Layer>>
   safe_decode(Layer layer, Callable&& cb) {
     coder<Type, Layer>::safe_decode(layer, cb);
   }
 
-  template<typename Type, ViewLayer Layer, typename Callable>
+  template<typename Type, GARLIC_VIEW Layer, typename Callable>
   static inline std::enable_if_t<internal::use_safe_decode_layer_method<Type, Layer>>
   safe_decode(Layer layer, Callable&& cb) {
     Type::safe_decode(layer, cb);
   }
 
-  template<RefLayer Layer, typename Type>
+  template<GARLIC_REF Layer, typename Type>
   static inline std::enable_if_t<internal::use_explicit_encoder<Type, Layer>>
   encode(Layer layer, const Type& value) {
     coder<Type, Layer>::encode(layer, value);
   }
 
-  template<RefLayer Layer, typename Type>
+  template<GARLIC_REF Layer, typename Type>
   static inline std::enable_if_t<internal::use_encode_layer_method<Type, Layer>>
   encode(Layer layer, const Type& value) {
     Type::encode(layer, value);

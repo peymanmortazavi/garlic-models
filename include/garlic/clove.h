@@ -27,7 +27,7 @@ namespace garlic {
     Container data;
   };
 
-  template<Allocator Allocator, typename SizeType = unsigned>
+  template<GARLIC_ALLOCATOR Allocator, typename SizeType = unsigned>
   struct GenericData {
     using List = Array<GenericData, SizeType>;
     using Object = Array<MemberPair<GenericData>, SizeType>;
@@ -90,7 +90,7 @@ namespace garlic {
     }
   };
 
-  template<Allocator Allocator, typename SizeType = unsigned>
+  template<GARLIC_ALLOCATOR Allocator, typename SizeType = unsigned>
   class GenericCloveView {
   public:
     using DataType = GenericData<Allocator, SizeType>;
@@ -154,7 +154,7 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator, typename SizeType = unsigned>
+  template<GARLIC_ALLOCATOR Allocator, typename SizeType = unsigned>
   class GenericCloveRef : public GenericCloveView<Allocator> {
   public:
     using ViewType = GenericCloveView<Allocator, SizeType>;
@@ -457,7 +457,7 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator, typename SizeType = unsigned>
+  template<GARLIC_ALLOCATOR Allocator, typename SizeType = unsigned>
   class GenericCloveDocument : public GenericCloveRef<Allocator, SizeType> {
   public:
     using DataType = GenericData<Allocator, SizeType>;
@@ -480,7 +480,7 @@ namespace garlic {
   };
 
 
-  template<Allocator Allocator, typename SizeType = unsigned>
+  template<GARLIC_ALLOCATOR Allocator, typename SizeType = unsigned>
   class GenericCloveValue : public GenericCloveRef<Allocator, SizeType> {
   public:
     using DataType = GenericData<Allocator>;
