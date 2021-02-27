@@ -1,12 +1,8 @@
 #ifndef GARLIC_LAYER_H
 #define GARLIC_LAYER_H
 
-#include <concepts>
-#include <cstddef>
-#include <string>
-#include <iterator>
-
 #if __cpp_concepts >= 201907L
+#include <concepts>
 #define GARLIC_USE_CONCEPTS
 #define GARLIC_VIEW garlic::ViewLayer
 #define GARLIC_REF garlic::RefLayer
@@ -16,6 +12,10 @@
 #define GARLIC_REF typename
 #define GARLIC_ITERATOR_WRAPPER typename
 #endif
+
+#include <cstddef>
+#include <string>
+#include <iterator>
 
 namespace garlic {
 
