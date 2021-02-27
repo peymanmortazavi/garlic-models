@@ -18,3 +18,17 @@ RUN mkdir /output \
     && cmake \
         -DCMAKE_BUILD_TYPE=Release /project
 WORKDIR /output
+
+
+# Clang 11 Target
+FROM BASE AS CLANG_11
+RUN apt install clang-tools-11 -y
+RUN mkdir /output \
+    && cd /output \
+    && export CC=/usr/bin/clang-11 && export CXX=/usr/bin/clang++-11 \
+    && conan profile new default --detect \
+    && conan profile update settings.compiler.libcxx=libstdc++11 default \
+    && conan install --build=missing -s build_type=Release /project \
+    && cmake \
+        -DCMAKE_BUILD_TYPE=Release /project
+WORKDIR /output
