@@ -10,7 +10,7 @@ namespace garlic::parsing {
 
   template<typename T> using ConstraintPtrOf = std::shared_ptr<Constraint<T>>;
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_any(const Input& layer, Parser parser) noexcept {
     sequence<ConstraintPtrOf<Output>> constraints;
@@ -22,7 +22,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_all(const Input& layer, Parser parser) noexcept {
     sequence<ConstraintPtrOf<Output>> constraints;
@@ -36,7 +36,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_list(const Input& layer, Parser parser) noexcept {
     ConstraintPtrOf<Output> constraint;
@@ -49,7 +49,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_tuple(const Input& layer, Parser parser) noexcept {
     sequence<ConstraintPtrOf<Output>> constraints;
@@ -63,7 +63,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_range(const Input& layer, Parser parser) noexcept {
     using SizeType = typename RangeConstraint<Output>::SizeType;
@@ -82,7 +82,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_regex(const Input& layer, Parser parser) noexcept {
     return std::make_shared<RegexConstraint<Output>>(
@@ -92,7 +92,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_field(const Input& layer, Parser parser) noexcept {
     using field_pointer = std::shared_ptr<Field<Output>>;
@@ -114,7 +114,7 @@ namespace garlic::parsing {
   }
 
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_map(const Input& layer, Parser parser) noexcept {
     ConstraintPtrOf<Output> key_constraint;
@@ -128,7 +128,7 @@ namespace garlic::parsing {
         );
   }
 
-  template<ViewLayer Output, ViewLayer Input, typename Parser>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
   static ConstraintPtrOf<Output>
   parse_literal(const Input& layer, Parser parser) noexcept {
     auto props = build_constraint_properties(layer, "literal_constraint");
@@ -164,7 +164,7 @@ namespace garlic::parsing {
 
 
 
-  template<ViewLayer Output, ViewLayer Input, typename ParserType>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename ParserType>
   static void
   read_constraint(
       const Input& layer,
@@ -179,7 +179,7 @@ namespace garlic::parsing {
   }
 
   
-  template<ViewLayer Output, ViewLayer Input, typename ParserType, typename BackInserterIterator>
+  template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename ParserType, typename BackInserterIterator>
   static void
   read_constraints(
       const Input& layer,
