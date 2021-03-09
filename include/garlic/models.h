@@ -101,7 +101,7 @@ namespace garlic {
     void add_field(text&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
           std::move(name),
-          { .field = std::move(field), .required = required }
+          field_descriptor { .field = std::move(field), .required = required }
           );
     }
 
