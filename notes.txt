@@ -17,3 +17,13 @@
   4. Work on CI and previous compilers before addressing new constraints.
   5. Attempt to add support for JSON Schema so we can produce some metrics.
   6. Python module test run.
+
+
+-- Make sure we have a clean and nice way to produce the constriants
+-- No performance cost to this.
+-- Make sure to setup a proper destructor on a unique_ptr to the void* context.
+-- Make sure to fix the UINT32_MAX error.
+
+figured out the context issue by using the context destructor I Guess, not sure if it's worth it honestly
+but in any case, we sould make the ConstriantContext easy to use and inherit from to make the constraint tags
+easy to make.
