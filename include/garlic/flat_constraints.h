@@ -13,70 +13,71 @@
 #include <regex>
 #include <string>
 #include <type_traits>
+#include "constraints.h"
 
 
 namespace garlic {
 
-  struct ConstraintResult {
-    enum flags : uint8_t {
-      none      = 0x1 << 0,
-      valid     = 0x1 << 1,
-      field     = 0x1 << 2,
-    };
+  //struct ConstraintResult {
+  //  enum flags : uint8_t {
+  //    none      = 0x1 << 0,
+  //    valid     = 0x1 << 1,
+  //    field     = 0x1 << 2,
+  //  };
 
-    sequence<ConstraintResult> details;
-    text name;
-    text reason;
-    flags flag;
+  //  sequence<ConstraintResult> details;
+  //  text name;
+  //  text reason;
+  //  flags flag;
 
-    inline bool is_leaf()  const noexcept { return !details.size();  }
-    inline bool is_valid() const noexcept { return flag & flags::valid; }
-    inline bool is_field() const noexcept { return flag & flags::field; }
+  //  inline bool is_leaf()  const noexcept { return !details.size();  }
+  //  inline bool is_valid() const noexcept { return flag & flags::valid; }
+  //  inline bool is_field() const noexcept { return flag & flags::field; }
 
-    inline void set_valid() noexcept { flag = static_cast<flags>(flag & flags::valid); }
-    inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
+  //  inline void set_valid() noexcept { flag = static_cast<flags>(flag & flags::valid); }
+  //  inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
 
-    template<flags Flag = flags::none>
-    static ConstraintResult leaf_failure(
-        text&& name, text&& reason=text::no_text()) noexcept {
-      return ConstraintResult {
-        .details = sequence<ConstraintResult>::no_sequence(),
-        .name = std::move(name),
-        .reason = std::move(reason),
-        .flag = Flag
-      };
-    }
+  //  template<flags Flag = flags::none>
+  //  static ConstraintResult leaf_failure(
+  //      text&& name, text&& reason=text::no_text()) noexcept {
+  //    return ConstraintResult {
+  //      .details = sequence<ConstraintResult>::no_sequence(),
+  //      .name = std::move(name),
+  //      .reason = std::move(reason),
+  //      .flag = Flag
+  //    };
+  //  }
 
-    static inline ConstraintResult leaf_field_failure(
-        text&& name, text&& reason=text::no_text()) noexcept {
-      return leaf_failure<flags::field>(std::move(name), std::move(reason));
-    }
+  //  static inline ConstraintResult leaf_field_failure(
+  //      text&& name, text&& reason=text::no_text()) noexcept {
+  //    return leaf_failure<flags::field>(std::move(name), std::move(reason));
+  //  }
 
-    static inline ConstraintResult
-    field_failure(
-        text&& name,
-        ConstraintResult&& inner_detail,
-        text&& reason = text::no_text()) noexcept {
-      sequence<ConstraintResult> details(1);
-      details.push_back(std::move(inner_detail));
-      return ConstraintResult {
-        .details = std::move(details),
-        .name = std::move(name),
-        .reason = std::move(reason),
-        .flag = flags::field
-      };
-    }
+  //  static inline ConstraintResult
+  //  field_failure(
+  //      text&& name,
+  //      ConstraintResult&& inner_detail,
+  //      text&& reason = text::no_text()) noexcept {
+  //    sequence<ConstraintResult> details(1);
+  //    details.push_back(std::move(inner_detail));
+  //    return ConstraintResult {
+  //      .details = std::move(details),
+  //      .name = std::move(name),
+  //      .reason = std::move(reason),
+  //      .flag = flags::field
+  //    };
+  //  }
 
-    static ConstraintResult ok() noexcept {
-      return ConstraintResult {
-        .details = sequence<ConstraintResult>::no_sequence(),
-        .name = text::no_text(),
-        .reason = text::no_text(),
-        .flag = flags::valid
-      };
-    }
+  //  static ConstraintResult ok() noexcept {
+  //    return ConstraintResult {
+  //      .details = sequence<ConstraintResult>::no_sequence(),
+  //      .name = text::no_text(),
+  //      .reason = text::no_text(),
+  //      .flag = flags::valid
+  //    };
+  //  }
 
-  };
+  //};
 
 
   class constraint_context {
@@ -145,15 +146,15 @@ namespace garlic {
   };
 
 
-  template<GARLIC_VIEW Layer>
-  static inline text 
-  get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
-    get_member(layer, key, [&default_value](const auto& result) {
-        auto view = result.get_string_view();
-        default_value = text(view.data(), view.size(), text_type::copy);
-        });
-    return std::move(default_value);
-  }
+  //template<GARLIC_VIEW Layer>
+  //static inline text 
+  //get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
+  //  get_member(layer, key, [&default_value](const auto& result) {
+  //      auto view = result.get_string_view();
+  //      default_value = text(view.data(), view.size(), text_type::copy);
+  //      });
+  //  return std::move(default_value);
+  //}
 
 
   //template<bool Fatal = false, GARLIC_VIEW Layer>
@@ -248,7 +249,7 @@ namespace garlic {
 
   class FlatConstraint final {
   private:
-    using context_pointer = std::unique_ptr<constraint_context>;
+    using context_pointer = std::shared_ptr<constraint_context>;
     context_pointer context_;
     unsigned index_;
 
@@ -258,6 +259,14 @@ namespace garlic {
     template<typename Tag, typename... Args>
     static FlatConstraint make(Args&&... args) noexcept;
 
+    static FlatConstraint empty() noexcept {
+      return FlatConstraint(0, nullptr);
+    }
+
+    inline operator bool () const noexcept {
+      return context_ == nullptr;
+    }
+
     template<GARLIC_VIEW Layer>
     inline ConstraintResult test(const Layer& value) const noexcept;
 
@@ -265,6 +274,10 @@ namespace garlic {
     inline bool quick_test(const Layer& value) const noexcept;
 
     inline const constraint_context& context() const noexcept {
+      return *context_;
+    }
+
+    inline constraint_context& context() noexcept {
       return *context_;
     }
 
@@ -279,9 +292,9 @@ namespace garlic {
       Container&& constraints,
       BackInserterIterator it) {
     for (const auto& constraint : constraints) {
-      if (auto result = constraint->test(value); !result.is_valid()) {
+      if (auto result = constraint.test(value); !result.is_valid()) {
         it = std::move(result);
-        if (constraint->context().is_fatal())
+        if (constraint.context().is_fatal())
           break;
       }
     }
@@ -293,7 +306,7 @@ namespace garlic {
   test_flat_constraints_quick(Layer&& value, Container&& constraints) {
     return std::all_of(
         std::begin(constraints), std::end(constraints),
-        [&value](const auto& constraint) { return constraint->quick_test(value); }
+        [&value](const auto& constraint) { return constraint.quick_test(value); }
         );
   }
 
@@ -302,7 +315,7 @@ namespace garlic {
   static inline ConstraintResult
   test_flat_constraints_first_failure(Layer&& value, Container&& constraints) {
     for (const auto& constraint : constraints) {
-      if (auto result = constraint->test(value); !result.is_valid()) {
+      if (auto result = constraint.test(value); !result.is_valid()) {
         return result;
       }
     }
@@ -472,14 +485,13 @@ namespace garlic {
 
 
   struct any_tag {
+    /* TODO:  <09-03-21, Peyman> Support initializer list to improve style. */
     struct Context : public constraint_context {
-      using constraint_pointer = std::shared_ptr<FlatConstraint>;
-
       template<typename... Args>
-      Context(sequence<constraint_pointer>&& constraints, Args&&... args
+      Context(sequence<FlatConstraint>&& constraints, Args&&... args
           ) : constraint_context(std::forward<Args>(args)...), constraints(std::move(constraints)) {}
 
-      sequence<constraint_pointer> constraints;
+      sequence<FlatConstraint> constraints;
     };
 
     using context_type = Context;
@@ -498,23 +510,21 @@ namespace garlic {
       return std::any_of(
           context.constraints.begin(),
           context.constraints.end(),
-          [&layer](const auto& item) { return item->quick_test(layer); });
+          [&layer](const auto& item) { return item.quick_test(layer); });
     }
   };
 
 
   struct list_tag {
     struct Context : public constraint_context {
-      using constraint_pointer = std::shared_ptr<FlatConstraint>;
-
       template<typename... Args>
       Context(
-          constraint_pointer&& ref, bool ignore_details = false,
+          FlatConstraint&& constraint, bool ignore_details = false,
           text&& name = "list_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
-              constraint(std::move(ref)), ignore_details(ignore_details) {}
+              constraint(std::move(constraint)), ignore_details(ignore_details) {}
 
-      constraint_pointer constraint;
+      FlatConstraint constraint;
       bool ignore_details;
     };
 
@@ -535,7 +545,7 @@ namespace garlic {
       if (!layer.is_list()) return false;
       return std::all_of(
           layer.begin_list(), layer.end_list(),
-          [&context](const auto& item) { return context.constraint->quick_test(item); }
+          [&context](const auto& item) { return context.constraint.quick_test(item); }
           );
     }
 
@@ -544,7 +554,7 @@ namespace garlic {
       size_t index = 0;
       for (const auto& item : layer.get_list()) {
         if (IgnoreDetails) {  // no runtime penalty since IgnoreDetails is a template parameter.
-          if (!context.constraint->quick_test(item)) {
+          if (!context.constraint.quick_test(item)) {
             return context.fail(
                 "Invalid value found in the list.",
                 ConstraintResult::leaf_field_failure(
@@ -552,7 +562,7 @@ namespace garlic {
                   "invalid value."));
           }
         } else {
-          auto result = context.constraint->test(item);
+          auto result = context.constraint.test(item);
           if (!result.is_valid()) {
             sequence<ConstraintResult> inner_details(1);
             inner_details.push_back(std::move(result));
@@ -574,16 +584,14 @@ namespace garlic {
   class tuple_tag {
   public:
     struct Context : public constraint_context {
-      using constraint_pointer = std::shared_ptr<FlatConstraint>;
-
       template<typename... Args>
       Context(
-          sequence<constraint_pointer>&& constraints, bool strict, bool ignore_details,
+          sequence<FlatConstraint>&& constraints, bool strict = true, bool ignore_details = false,
           text&& name = "tuple_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
               constraints(std::move(constraints)), strict(strict), ignore_details(ignore_details) {}
 
-      sequence<constraint_pointer> constraints;
+      sequence<FlatConstraint> constraints;
       bool strict;
       bool ignore_details;
     };
@@ -597,7 +605,7 @@ namespace garlic {
       auto tuple_it = layer.begin_list();
       auto constraint_it = context.constraints.begin();
       while (constraint_it != context.constraints.end() && tuple_it != layer.end_list()) {
-        if (!(*constraint_it)->quick_test(*tuple_it)) return false;
+        if (!constraint_it->quick_test(*tuple_it)) return false;
         std::advance(tuple_it, 1);
         std::advance(constraint_it, 1);
       }
@@ -625,7 +633,7 @@ namespace garlic {
       auto constraint_it = context.constraints.begin();
       while (constraint_it != context.constraints.end() && tuple_it != layer.end_list()) {
         if (IgnoreDetails) {
-          auto result = (*constraint_it)->quick_test(*tuple_it);
+          auto result = constraint_it->quick_test(*tuple_it);
           if (!result) {
             return context.fail(
                 "Invalid value found in the tuple.",
@@ -635,7 +643,7 @@ namespace garlic {
                   ));
           }
         } else {
-          auto result = (*constraint_it)->test(*tuple_it);
+          auto result = constraint_it->test(*tuple_it);
           if (!result.is_valid()) {
             sequence<ConstraintResult> inner_details(1);
             inner_details.push_back(std::move(result));
@@ -665,17 +673,15 @@ namespace garlic {
   class map_tag {
   public:
     struct Context : public constraint_context {
-      using constriant_pointer = std::shared_ptr<FlatConstraint>;
-
       template<typename... Args>
       Context(
-          constriant_pointer&& key_constraint, constriant_pointer&& value_constraint, bool ignore_details = false,
+          FlatConstraint&& key_constraint, FlatConstraint&& value_constraint, bool ignore_details = false,
           text&& name = "map_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
               key(std::move(key_constraint)), value(std::move(value_constraint)), ignore_details(ignore_details) {}
 
-      constriant_pointer key;
-      constriant_pointer value;
+      FlatConstraint key;
+      FlatConstraint value;
       bool ignore_details;
     };
 
@@ -709,8 +715,8 @@ namespace garlic {
       return std::all_of(
           layer.begin_member(), layer.end_member(),
           [&context](const auto& item) {
-            if (HasKeyConstraint && !context.key->quick_test(item.key)) return false;
-            if (HasValueConstraint && !context.value->quick_test(item.value)) return false;
+            if (HasKeyConstraint && !context.key.quick_test(item.key)) return false;
+            if (HasValueConstraint && !context.value.quick_test(item.value)) return false;
             return true;
             });
     }
@@ -730,19 +736,19 @@ namespace garlic {
     test(const Layer& layer, const Context& context) noexcept {
       for (const auto& item : layer.get_object()) {
         if (HasKeyConstraint) {
-          if (IgnoreDetails && !context.key->quick_test(item.key)) {
+          if (IgnoreDetails && !context.key.quick_test(item.key)) {
             return context.fail("Object contains invalid key.");
           } else {
-            if (auto result = context.key->test(item.key); !result.is_valid()) {
+            if (auto result = context.key.test(item.key); !result.is_valid()) {
               return context.fail("Object contains invalid key.", std::move(result));
             }
           }
         }
         if (HasValueConstraint) {
-          if (IgnoreDetails && !context.value->quick_test(item.value)) {
+          if (IgnoreDetails && !context.value.quick_test(item.value)) {
             return context.fail("Object contains invalid value.");
           } else {
-            if (auto result = context.value->test(item.value); !result.is_valid()) {
+            if (auto result = context.value.test(item.value); !result.is_valid()) {
               return context.fail("Object contains invalid value.", std::move(result));
             }
           }
@@ -754,16 +760,14 @@ namespace garlic {
 
   struct all_tag {
     struct Context : public constraint_context {
-      using constraint_pointer = std::shared_ptr<FlatConstraint>;
-
       template<typename... Args>
       Context(
-          sequence<constraint_pointer>&& constraints, bool hide = true, bool ignore_details = false,
+          sequence<FlatConstraint>&& constraints, bool hide = true, bool ignore_details = false,
           Args&&... args
           ) : constraint_context(std::forward<Args>(args)...),
               constraints(std::move(constraints)), hide(hide), ignore_details(ignore_details) {}
 
-      sequence<constraint_pointer> constraints;
+      sequence<FlatConstraint> constraints;
       bool hide;
       bool ignore_details;
     };
@@ -891,8 +895,6 @@ namespace garlic {
   public:
     template<GARLIC_VIEW> friend class Module;
 
-    using constraint_pointer = std::shared_ptr<FlatConstraint>;
-
     struct ValidationResult {
       sequence<ConstraintResult> failures;
 
@@ -901,7 +903,7 @@ namespace garlic {
 
     struct Properties {
       std::unordered_map<text, text> meta;
-      sequence<constraint_pointer> constraints;
+      sequence<FlatConstraint> constraints;
       text name;
       bool ignore_details = false;
     };
@@ -914,7 +916,7 @@ namespace garlic {
       this->add_constraint(make_constraint<Tag>(std::forward<Args>(args)...));
     }
 
-    void add_constraint(constraint_pointer&& constraint) {
+    void add_constraint(FlatConstraint&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
 
@@ -1189,7 +1191,7 @@ namespace garlic {
    FlatConstraint FlatConstraint::make(Args&&... args) noexcept {
     return FlatConstraint(
         constraint_registry::position_of<Tag>(),
-        std::make_unique<typename Tag::context_type>(std::forward<Args>(args)...));
+        std::make_shared<typename Tag::context_type>(std::forward<Args>(args)...));
   }
 
   template<GARLIC_VIEW Layer>
@@ -1207,12 +1209,9 @@ namespace garlic {
   }
 
   template<typename Tag, typename... Args>
-  inline std::shared_ptr<FlatConstraint>
+  inline FlatConstraint
   make_constraint(Args&&... args) noexcept {
-    return std::shared_ptr<FlatConstraint>(
-        new FlatConstraint(
-          constraint_registry::position_of<Tag>(),
-          std::make_unique<typename Tag::context_type>(std::forward<Args>(args)...)));
+    return FlatConstraint::make<Tag>(std::forward<Args>(args)...);
   }
 
 }
