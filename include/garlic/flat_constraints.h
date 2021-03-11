@@ -897,7 +897,6 @@ namespace garlic {
 
   class FlatField {
   public:
-    template<GARLIC_VIEW> friend class Module;
 
     struct ValidationResult {
       sequence<ConstraintResult> failures;
@@ -965,7 +964,6 @@ namespace garlic {
 
   class FlatModel {
   public:
-    template<GARLIC_VIEW> friend class Module;
 
     using field_pointer = std::shared_ptr<FlatField>;
 
@@ -980,6 +978,8 @@ namespace garlic {
       text name;
       bool strict = false;
     };
+
+    using const_field_iterator = typename std::unordered_map<text, field_descriptor>::const_iterator;
 
     FlatModel() {}
     FlatModel(Properties&& properties) : properties_(std::move(properties)) {}
@@ -1002,6 +1002,13 @@ namespace garlic {
       }
       return nullptr;
     }
+
+    auto& meta() noexcept { return properties_.meta; }
+    const auto& meta() const noexcept { return properties_.meta; }
+
+    const_field_iterator begin_field() const noexcept { return properties_.field_map.begin(); }
+    const_field_iterator end_field() const noexcept { return properties_.field_map.end(); }
+    const_field_iterator find_field(const text& name) const noexcept { return properties_.field_map.find(name); }
 
     template<GARLIC_VIEW Layer>
     bool quick_test(const Layer& layer) const noexcept {

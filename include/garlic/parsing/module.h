@@ -4,6 +4,7 @@
 #include <memory>
 #include "flat_constraints.h"
 #include "../flat_module.h"
+#include "garlic/flat_constraints.h"
 #include "garlic/lib/expected.h"
 #include "garlic/utility.h"
 
@@ -28,6 +29,11 @@ namespace garlic::parsing {
       sequence<model_field> models;
       sequence<text> aliases;
       sequence<FlatConstraint> constraints;  // field constraints.
+    };
+
+    struct deferred_field_record {
+      text field_name;
+      bool required;
     };
 
     /*
@@ -56,6 +62,7 @@ namespace garlic::parsing {
     };
 
     table<text, field_dependent_record> field_dependents_;  // field to its dependents.
+    table<model_pointer, table<text, deferred_field_record>> model_deferred_fields_;
     FlatModule& module_;
 
     template<GARLIC_VIEW Input>
@@ -78,6 +85,21 @@ namespace garlic::parsing {
       add_meta_field("label");
       add_meta_field("description");
       add_meta_field("message");
+    }
+
+    template<GARLIC_VIEW Layer>
+    void process_model_meta(FlatModel& model, Layer&& layer) {
+      get_member(layer, "description", [&model](const auto& item) {
+        model.meta().emplace("description", decode<text>(item).clone());
+      });
+
+      get_member(layer, "meta", [&model](const auto& item) {
+        std::for_each(item.begin_member(), item.end_member(), [&model](const auto& meta_member) {
+          model.meta().emplace(
+              decode<text>(meta_member.key).clone(),
+              decode<text>(meta_member.value).clone());
+        });
+      });
     }
 
     template<GARLIC_VIEW Layer, typename SuccessCallable, typename FailCallable>
@@ -149,28 +171,104 @@ namespace garlic::parsing {
       return false;
     }
 
+    void add_deferred_model_field(model_pointer model, text&& key, text&& field, bool required) {
+      model_deferred_fields_[model].emplace(key, deferred_field_record { .field_name = field, .required = required });
+      field_dependents_[field].models.push_back(
+          model_field {
+          .key = key,
+          .model = std::move(model),
+          .required = required
+          });
+    }
+
+    template<GARLIC_VIEW Layer>
+    void process_model_inheritance(model_pointer model, Layer&& layer) noexcept {
+      enum class field_status : uint8_t { deferred, ready, excluded };
+      struct field_info {
+        FlatModel::field_descriptor ready_field;
+        deferred_field_record deferred_field;
+        field_status status;
+      };
+      table<text, field_info> fields;
+      auto apply_inheritance = [this, &fields, &model](text&& model_name) {
+          auto it = module_.find_model(model_name);
+          if (it == module_.end_model()) {}  // report parsing error here.
+          std::for_each(
+              it->second->begin_field(), it->second->end_field(),
+              [&fields](const auto& item) {
+                auto& info = fields[item.first];
+                if (info.status == field_status::excluded)
+                  return;
+                info.status = field_status::ready;
+                info.ready_field = item.second;
+              });
+          find(model_deferred_fields_, it->second, [&fields](const auto& deferred_fields) {
+              for (const auto& item : deferred_fields.second) {
+                auto& info = fields[item.first];
+                if (info.status == field_status::excluded)
+                  continue;
+                info.status = field_status::deferred;
+                info.deferred_field = item.second;
+              }
+          });
+      };
+      get_member(layer, "exclude_fields", [&fields](const auto& excludes) {
+          for (const auto& field : excludes.get_list()) {
+            fields[decode<text>(field)].status = field_status::excluded;
+          }
+      });
+      get_member(layer, "inherit", [&apply_inheritance](const auto& inherit) {
+          if (inherit.is_string()) {
+            apply_inheritance(decode<text>(inherit));
+            return;
+          }
+          for (const auto& model_name : inherit.get_list()) {
+            apply_inheritance(decode<text>(model_name));
+          }
+      });
+      for (const auto& item : fields) {
+        switch (item.second.status) {
+          case field_status::deferred:
+            add_deferred_model_field(
+                model,
+                item.first.view(),
+                item.second.deferred_field.field_name.view(),
+                item.second.deferred_field.required);
+            break;
+          case field_status::ready:
+            model->add_field(
+                item.first.clone(),
+                item.second.ready_field.field,
+                item.second.ready_field.required);
+            break;
+          default:
+            continue;
+        }
+      }
+    }
+
     template<GARLIC_VIEW Layer, typename Callable>
-    void parse_model(const text& name, Layer&& layer, Callable&& cb) {
-      //auto ptr = std::make_shared<FlatModel>(name.clone());
-      //auto& props = ptr->properties_;
+    void parse_model(text&& name, Layer&& layer, Callable&& cb) {
+      auto model_ptr = std::make_shared<FlatModel>(name.clone());
 
-      //this->process_model_meta(props, layer);
-      //this->process_model_inheritance(ptr, context, layer);
+      this->process_model_meta(*model_ptr, layer);
+      this->process_model_inheritance(model_ptr, layer);
 
-      //get_member(layer, "fields", [this, &props, &context, &ptr](const auto& value) {
-      //  std::for_each(value.begin_member(), value.end_member(), [this, &props, &context, &ptr](const auto& field) {
-      //    this->parse_field(text::no_text(), field.value, context,
-      //        [&props, &field](auto ptr, auto complete, auto optional) {
-      //      props.field_map[decode<text>(field.key).clone()] = {.field = std::move(ptr), .required = !optional};
-      //    }, [&field, &context, &ptr](const text& name, auto optional) {
-      //      context.add_lazy_model_field(name, decode<text>(field.key), ptr, !optional);
-      //    });
-      //  });
-      //});
+      get_member(layer, "fields", [this, &model_ptr](const auto& value) {
+        std::for_each(value.begin_member(), value.end_member(), [this, &model_ptr](const auto& item) {
+          this->parse_field(text::no_text(), item.value,
+              [&model_ptr, &item](auto ptr, auto complete, auto optional) {
+                model_ptr->add_field(decode<text>(item.key).clone(), ptr, !optional);
+          }, [this, &model_ptr, &item](const text& name, auto optional) {
+            add_deferred_model_field(model_ptr, decode<text>(item.key), name.view(), !optional);
+          });
+        });
+      });
 
-      //auto model_field = this->make_field<ModelConstraint>(ptr->get_name().view(), ptr);
-      //this->add_field(ptr->get_name().view(), context, std::move(model_field), true);
-      //cb(std::move(ptr));
+      auto model_field = std::make_shared<FlatField>(model_ptr->get_name().view());
+      model_field->add_constraint(make_constraint<model_tag>(model_ptr));
+      this->add_field(model_ptr->get_name().view(), model_field, true);
+      cb(std::move(model_ptr));
     }
 
     template<GARLIC_VIEW Layer, typename Callable>
@@ -278,15 +376,15 @@ namespace garlic::parsing {
           });
 
       // Load the models.
-      //get_member(layer, "models", [this](const auto& value) {
-      //  for(const auto& item : value.get_object()) {
-      //    // parse properties.
-      //    this->parse_model(
-      //        decode<text>(item.key), item.value,
-      //        [this](auto&& ptr) { module_.add_model(std::move(ptr)); });
-      //  }
-      //});
-      return std::error_code();
+      get_member(layer, "models", [this](const auto& value) {
+        for(const auto& item : value.get_object()) {
+          this->parse_model(
+              decode<text>(item.key), item.value,
+              [this](auto&& ptr) { module_.add_model(std::move(ptr)); });
+        }
+      });
+
+      return (field_dependents_.size() ? GarlicError::Redefinition : std::error_code());
     }
   };
 
