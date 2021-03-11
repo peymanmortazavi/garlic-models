@@ -282,7 +282,7 @@ namespace garlic {
     }
 
     template<typename, typename... Args>
-    friend inline std::shared_ptr<FlatConstraint> make_constraint(Args&&...) noexcept;
+    friend inline FlatConstraint make_constraint(Args&&...) noexcept;
   };
 
 
@@ -802,11 +802,6 @@ namespace garlic {
   struct literal_tag {
     struct Context : public constraint_context {
 
-      template<typename V, typename... Args>
-      Context(Args&&... args,
-          typename std::enable_if<std::is_same<V, VoidType>::value, VoidType>::type value = VoidType()
-          ) : constraint_context(std::forward<Args>(args)...), value(value) {}
-
       template<typename... Args>
       Context(T value, Args&&... args) : constraint_context(std::forward<Args>(args)...), value(value) {}
 
@@ -845,9 +840,6 @@ namespace garlic {
     template<typename V>
     using enable_if_char_ptr = typename std::enable_if<std::is_same<V, const char*>::value, bool>::type;
 
-    template<typename V>
-    using enable_if_null = typename std::enable_if<std::is_same<V, VoidType>::value, bool>::type;
-
     template<typename ValueType, GARLIC_VIEW Layer>
     static inline enable_if_int<ValueType>
     validate(const Layer& layer, ValueType expectation) noexcept {
@@ -877,10 +869,22 @@ namespace garlic {
     validate(const Layer& layer, ValueType expectation) noexcept {
       return layer.is_string() && !strcmp(expectation, layer.get_cstr());
     }
+  };
 
-    template<typename ValueType, GARLIC_VIEW Layer>
-    static inline enable_if_null<ValueType>
-    validate(const Layer& layer, ValueType expectation) noexcept {
+  template<>
+  struct literal_tag<VoidType> {
+    using context_type = constraint_context;
+
+    template<GARLIC_VIEW Layer>
+    static ConstraintResult
+    test(const Layer& layer, const context_type& context) noexcept {
+      if (layer.is_null())
+        return context.ok();
+      return context.fail("invalid value.");
+    }
+
+    template<GARLIC_VIEW Layer>
+    static bool quick_test(const Layer& layer, const context_type& context) noexcept {
       return layer.is_null();
     }
   };
@@ -919,6 +923,18 @@ namespace garlic {
     void add_constraint(FlatConstraint&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
+
+    inline void inherit_constraints_from(const FlatField& another) {
+      properties_.constraints.push_front(
+          another.properties_.constraints.begin(),
+          another.properties_.constraints.end());
+    }
+
+    auto& meta() noexcept { return properties_.meta; }
+    const auto& meta() const noexcept { return properties_.meta; }
+    bool ignore_details() const { return properties_.ignore_details; }
+
+    void set_ignore_details(bool value) { properties_.ignore_details = value; }
 
     template<GARLIC_VIEW Layer>
     ValidationResult validate(const Layer& layer) const noexcept {

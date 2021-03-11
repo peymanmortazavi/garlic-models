@@ -164,7 +164,8 @@ namespace garlic {
         capacity_ += count;
         items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));
       }
-      memmove(items_ + count, items_, count * sizeof(ValueType));
+      if (size_)
+        memmove(items_ + count, items_, count * sizeof(ValueType));
       for (auto i = 0; i < count; ++i) new (items_ + i) ValueType(begin[i]);
       size_ += count;
     }
