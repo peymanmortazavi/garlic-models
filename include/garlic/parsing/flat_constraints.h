@@ -55,7 +55,7 @@ namespace garlic::parsing {
   static FlatConstraint
   parse_tuple(const Input& layer, Parser parser) noexcept {
     sequence<FlatConstraint> constraints;
-    read_constraints<Output>(layer, parser, "items", std::back_inserter(constraints));
+    read_constraints(layer, parser, "items", std::back_inserter(constraints));
     return build_constraint<false, tuple_tag>(
         layer, "tuple_constraint",
         std::move(constraints), get(layer, "strict", true), get(layer, "ignore_details", false));

@@ -5,6 +5,8 @@
 #include <string>
 #include <deque>
 #include <garlic/garlic.h>
+#include "garlic/flat_constraints.h"
+#include "garlic/flat_module.h"
 #include <garlic/constraints.h>
 #include <garlic/models.h>
 #include <garlic/providers/rapidjson.h>
@@ -14,6 +16,8 @@
 
 
 using NameQueue = std::deque<std::string>;
+using ModelStructure = std::unordered_map<garlic::text, NameQueue>;  // map of fields to their constraints.
+using ModuleStructure = std::unordered_map<garlic::text, ModelStructure>;  // map of models to their fields to their constraints.
 
 garlic::providers::libyaml::YamlDocument
 get_libyaml_document(const char * name);
@@ -38,21 +42,23 @@ void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
   }
 }
 
-template<GARLIC_VIEW LayerType>
-void assert_field_constraints(const garlic::Field<LayerType>& field, NameQueue names) {
-  for(const auto& constraint : field.get_properties().constraints) {
-    ASSERT_STREQ(constraint->get_name().data(), names.front().data());
-    names.pop_front();
-  }
-}
 
-template<typename LayerType>
-void assert_model_fields(const garlic::Model<LayerType>& model, NameQueue names) {
-  auto field_map = model.get_properties().field_map;
-  for(const auto& name : names) {
-    ASSERT_NE(field_map.find(name), field_map.end());
-  }
-}
+/*
+ * Asserts the given field has constraints by the names provided.
+ */
+void assert_field_constraints(const garlic::FlatField& field, NameQueue names);
+
+
+/*
+ * Asserts the given model has fields by the names provided.
+ */
+void assert_model_fields(const garlic::FlatModel& model, NameQueue names);
+
+
+/*
+ * Asserts the given model fields and their respective constraints are present in the module.
+ */
+void assert_module_structure(const garlic::FlatModule& module, ModuleStructure structure);
 
 template<typename LayerType>
 void assert_model_fields(const garlic::Module<LayerType>& module, const char* model_name, NameQueue names) {

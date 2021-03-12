@@ -63,3 +63,29 @@ assert_constraint_result(
   ASSERT_STREQ(results.name.data(), name);
   ASSERT_STREQ(results.reason.data(), message);
 }
+
+void assert_field_constraints(const garlic::FlatField& field, NameQueue names) {
+  std::for_each(
+      field.begin_constraints(), field.end_constraints(),
+      [&names](const garlic::FlatConstraint& constraint) {
+        ASSERT_STREQ(constraint.context().name.data(), names.front().data());
+        names.pop_front();
+      });
+}
+
+void assert_model_fields(const garlic::FlatModel& model, NameQueue names) {
+  for(const auto& name : names) {
+    ASSERT_NE(model.find_field(name), model.end_field());
+  }
+}
+
+void assert_module_structure(const garlic::FlatModule& module, ModuleStructure structure) {
+  for (const auto& model_structure : structure) {
+    auto model = module.get_model(model_structure.first);
+    ASSERT_NE(model, nullptr);
+    for (const auto& field_structure : model_structure.second) {
+      auto field = model->get_field(field_structure.first);
+      assert_field_constraints(*field, std::move(field_structure.second));
+    }
+  }
+}

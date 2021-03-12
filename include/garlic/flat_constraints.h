@@ -95,7 +95,7 @@ namespace garlic {
         text&& name = text::no_text(),
         text&& message = text::no_text(),
         bool fatal = false
-        ) : name(name), message(message), flag(fatal ? flags::fatal : flags::none) {}
+        ) : name(std::move(name)), message(std::move(message)), flag(fatal ? flags::fatal : flags::none) {}
 
     virtual ~constraint_context() = default;
 
@@ -144,18 +144,6 @@ namespace garlic {
       return ConstraintResult::ok();
     }
   };
-
-
-  //template<GARLIC_VIEW Layer>
-  //static inline text 
-  //get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
-  //  get_member(layer, key, [&default_value](const auto& result) {
-  //      auto view = result.get_string_view();
-  //      default_value = text(view.data(), view.size(), text_type::copy);
-  //      });
-  //  return std::move(default_value);
-  //}
-
 
   //template<bool Fatal = false, GARLIC_VIEW Layer>
   //static inline ConstraintProperties
@@ -898,6 +886,8 @@ namespace garlic {
   class FlatField {
   public:
 
+    using const_constraint_iterator = typename sequence<FlatConstraint>::const_iterator;
+
     struct ValidationResult {
       sequence<ConstraintResult> failures;
 
@@ -934,6 +924,9 @@ namespace garlic {
     bool ignore_details() const { return properties_.ignore_details; }
 
     void set_ignore_details(bool value) { properties_.ignore_details = value; }
+
+    const_constraint_iterator begin_constraints() const noexcept { return properties_.constraints.begin(); }
+    const_constraint_iterator end_constraints() const noexcept { return properties_.constraints.end(); }
 
     template<GARLIC_VIEW Layer>
     ValidationResult validate(const Layer& layer) const noexcept {

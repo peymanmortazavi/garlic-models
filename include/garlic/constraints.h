@@ -139,12 +139,11 @@ namespace garlic {
 
   template<GARLIC_VIEW Layer>
   static inline text 
-  get_text(Layer&& layer, const char* key, text&& default_value) noexcept {
+  get_text(Layer&& layer, const char* key, text default_value) noexcept {
     get_member(layer, key, [&default_value](const auto& result) {
-        auto view = result.get_string_view();
-        default_value = text(view.data(), view.size(), text_type::copy);
+        default_value = text(result.get_string_view(), text_type::copy);
         });
-    return std::move(default_value);
+    return default_value;
   }
 
 
