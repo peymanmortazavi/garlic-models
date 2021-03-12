@@ -5,11 +5,9 @@
 #include <string>
 #include <deque>
 #include <garlic/garlic.h>
-#include "garlic/flat_constraints.h"
-#include "garlic/flat_module.h"
+#include "garlic/constraints.h"
+#include "garlic/module.h"
 #include "garlic/parsing/module.h"
-#include <garlic/constraints.h>
-#include <garlic/models.h>
 #include <garlic/providers/rapidjson.h>
 #include <garlic/providers/yaml-cpp.h>
 #include <garlic/providers/libyaml/parser.h>
@@ -34,13 +32,16 @@ void assert_field_constraint_result(const garlic::ConstraintResult& results, con
 void assert_constraint_result(const garlic::ConstraintResult& results, const char* name, const char* message);
 
 template<GARLIC_VIEW LayerType>
-void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
+void print_constraints(const garlic::FlatField& field) {
   bool first = true;
-  for (const auto& c : props.constraints) {
-    if (first) std::cout << c->get_name();
-    else std::cout << ", " << c->get_name();
-    first = false;
-  }
+  std::for_each(
+      field.begin_constraints(), field.end_constraints(),
+      [&first](const auto& constraint) {
+        if (first)
+          std::cout << constraint.context().name;
+        else std::cout << ", " << constraint.context().name;
+        first = false;
+      });
 }
 
 

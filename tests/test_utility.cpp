@@ -1,5 +1,4 @@
 #include "test_utility.h"
-#include "garlic/flat_constraints.h"
 
 garlic::providers::libyaml::YamlDocument
 get_libyaml_document(const char * name) {

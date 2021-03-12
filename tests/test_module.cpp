@@ -1,10 +1,10 @@
-#include "garlic/flat_constraints.h"
 #include <algorithm>
 #include <iostream>
 
 #include <gtest/gtest.h>
 
-#include <garlic/flat_module.h>
+#include <garlic/module.h>
+#include <garlic/constraints.h>
 
 using namespace std;
 using namespace garlic;
