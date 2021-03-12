@@ -113,3 +113,20 @@ void assert_model_has_field_name(
   ASSERT_NE(field, nullptr);
   ASSERT_EQ(field->get_name(), field_name);
 }
+
+void assert_model_has_field_with_constraints(
+    const garlic::FlatModel& model, const garlic::text& field_name, NameQueue constraints) {
+  auto it = model.find_field(field_name);
+  ASSERT_NE(it, model.end_field());
+  assert_field_constraints(*it->second.field, std::move(constraints));
+}
+
+void assert_model_has_field_with_constraints(
+    const garlic::FlatModule& module,
+    const garlic::text& model_name,
+    const garlic::text& field_name,
+    NameQueue constraints) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  assert_model_has_field_with_constraints(*model, field_name, std::move(constraints));
+}

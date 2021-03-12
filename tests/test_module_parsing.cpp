@@ -15,71 +15,71 @@ using namespace garlic::providers::libyaml;
 using namespace std;
 
 
-//TEST(ModuleParsing, Basic) {
-//  // load a very basic module without using more sophisticated features.
+TEST(ModuleParsing, Basic) {
+  // load a very basic module without using more sophisticated features.
 
-//  auto test_module = [](const FlatModule& module) {
-//    auto date_field = module.get_field("DateTime");
-//    ASSERT_NE(date_field, nullptr);
-//    ASSERT_STREQ(date_field->get_name().data(), "DateTime");  // named field.
-//    assert_field_constraints(*date_field, {"type_constraint", "date_constraint"});
+  auto test_module = [](const FlatModule& module) {
+    auto date_field = module.get_field("DateTime");
+    ASSERT_NE(date_field, nullptr);
+    ASSERT_STREQ(date_field->get_name().data(), "DateTime");  // named field.
+    assert_field_constraints(*date_field, {"type_constraint", "date_constraint"});
 
-//    auto user_model = module.get_model("User");
-//    ASSERT_NE(user_model, nullptr);
-//    assert_model_fields(*user_model, {"first_name", "last_name", "birthdate", "registration_date"});
+    auto user_model = module.get_model("User");
+    ASSERT_NE(user_model, nullptr);
+    assert_model_fields(*user_model, {"first_name", "last_name", "birthdate", "registration_date"});
 
-//    assert_module_structure(module, {
-//          {
-//            "User",
-//            {
-//              {"first_name",        {"type_constraint"}},
-//              {"last_name",         {"type_constraint", "range_constraint"}},
-//              {"birthdate",         {"type_constraint", "date_constraint"}},
-//              {"registration_date", {"type_constraint", "date_constraint"}},
-//            }
-//          }
-//        });
+    assert_module_structure(module, {
+          {
+            "User",
+            {
+              {"first_name",        {"type_constraint"}},
+              {"last_name",         {"type_constraint", "range_constraint"}},
+              {"birthdate",         {"type_constraint", "date_constraint"}},
+              {"registration_date", {"type_constraint", "date_constraint"}},
+            }
+          }
+        });
 
-//    auto root = make_constraint<model_tag>(user_model);
+    auto root = make_constraint<model_tag>(user_model);
 
-//    CloveDocument doc;
-//    doc.set_object();
-//    doc.add_member("first_name", "Garlic");
-//    doc.add_member("last_name", "Models");
-//    doc.add_member("birthdate", "1/4/1993");
-//    doc.add_member("registration_date", "1/4/21");
+    CloveDocument doc;
+    doc.set_object();
+    doc.add_member("first_name", "Garlic");
+    doc.add_member("last_name", "Models");
+    doc.add_member("birthdate", "1/4/1993");
+    doc.add_member("registration_date", "1/4/21");
 
-//    auto results = root.test(doc.get_view());
-//    ASSERT_TRUE(results.is_valid());
+    auto results = root.test(doc.get_view());
+    ASSERT_TRUE(results.is_valid());
 
-//    doc.add_member("birthdate", "no good date");
-//    doc.add_member("registration_date", "empty");
+    doc.add_member("birthdate", "no good date");
+    doc.add_member("registration_date", "empty");
 
-//    results = root.test(doc);
-//    ASSERT_FALSE(results.is_valid());
-//    ASSERT_EQ(results.details.size(), 2);
-//    assert_field_constraint_result(results.details[0], "birthdate");
-//    assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
-//    assert_field_constraint_result(results.details[1], "registration_date");
-//    assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
-//  };
+    results = root.test(doc);
+    ASSERT_FALSE(results.is_valid());
+    ASSERT_EQ(results.details.size(), 2);
+    assert_field_constraint_result(results.details[0], "birthdate");
+    assert_constraint_result(results.details[0].details[0], "date_constraint", "bad date time.");
+    assert_field_constraint_result(results.details[1], "registration_date");
+    assert_constraint_result(results.details[1].details[0], "date_constraint", "bad date time.");
+  };
 
-//  // JSON module using rapidjson.
-//  {
-//    auto doc = get_rapidjson_document("data/basic/module.json");
-//    auto result = parsing::load_module(doc);
-//    ASSERT_TRUE(result);
-//    test_module(*result);
-//  }
+  // JSON module using rapidjson.
+  {
+    auto doc = get_rapidjson_document("data/basic/module.json");
+    auto result = parsing::load_module(doc);
+    ASSERT_TRUE(result);
+    test_module(*result);
+  }
 
-//  // YAML module using libyaml
-//  {
-//    auto doc = get_libyaml_document("data/basic/module.yaml");
-//    auto result = parsing::load_module(doc.get_view());
-//    ASSERT_TRUE(result);
-//    test_module(*result);
-//  }
-//}
+  // YAML module using libyaml
+  {
+    auto doc = get_libyaml_document("data/basic/module.yaml");
+    auto result = parsing::load_module(doc.get_view());
+    ASSERT_TRUE(result);
+    test_module(*result);
+  }
+}
 
 TEST(ModuleParsing, ForwardDeclarations) {
   // load a module full of forward dependencies to test and make sure all definitions get loaded properly.
@@ -143,21 +143,21 @@ TEST(ModuleParsing, ModelInheritance) {
   assert_model_has_field_name(module, "MobileUser", "username", "StrictUserName");
 }
 
-//TEST(ModuleParsing, ModelInheritanceLazy) {
-//  auto module = Module<JsonView>();
+TEST(ModuleParsing, ModelInheritanceLazy) {
+  garlic::FlatModule module;
+  load_libyaml_module(module, "data/model_inheritance/lazy_load.yaml");
 
-//  load_libyaml_module(module, "data/model_inheritance/lazy_load.yaml");
+  assert_model_fields(module, "Model1", {"model3", "model4"});
+  assert_model_fields(module, "Model2", {"model3", "model4"});
+  assert_model_fields(module, "Model2_with_exclude", {"model3"});
+  assert_model_fields(module, "Model2_without_forwarding", {"model3"});
 
-//  assert_model_fields(module, "Model1", {"model3", "model4"});
-//  assert_model_fields(module, "Model2", {"model3", "model4"});
-//  assert_model_fields(module, "Model2_with_exclude", {"model3"});
-//  assert_model_fields(module, "Model2_without_forwarding", {"model3"});
-//  assert_model_field_constraints(module, "Model2_without_forwarding", "model3", {"type_constraint"});
-//  assert_model_field_constraints(module, "Model2_with_exclude", "model3", {"Model3"});
+  assert_model_has_field_with_constraints(module, "Model2_without_forwarding", "model3", {"type_constraint"});
+  assert_model_has_field_with_constraints(module, "Model2_with_exclude"      , "model3", {"Model3"});
 
-//  assert_model_field_name(module, "Model2_overriding", "model3", "IntegerField");
-//  assert_model_field_name(module, "Model2_overriding", "model4", "Model4");
-//}
+  assert_model_has_field_name(module, "Model2_overriding", "model3", "IntegerField");
+  assert_model_has_field_name(module, "Model2_overriding", "model4", "Model4");
+}
 
 //TEST(ModuleParsing, OptionalFields) {
 //  auto module = Module<JsonView>();

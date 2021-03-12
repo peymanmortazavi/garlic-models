@@ -66,27 +66,19 @@ void assert_model_fields(const garlic::FlatModule& module, const garlic::text& m
  */
 void assert_module_structure(const garlic::FlatModule& module, ModuleStructure structure);
 
-template<typename LayerType>
-void assert_model_field_constraints(
-    const garlic::Model<LayerType>& model,
-    const char* field_name,
-    NameQueue constraints) {
-  const auto& field_map = model.get_properties().field_map;
-  auto it = field_map.find(field_name);
-  ASSERT_NE(it, field_map.end());
-  assert_field_constraints(*it->second.field, std::move(constraints));
-}
+/*
+ * Asserts the given model has a field by the name given and the field has the set of constraints provided.
+ */
+void assert_model_has_field_with_constraints(
+    const garlic::FlatModel& model, const garlic::text& field_name, NameQueue constraints);
 
-template<typename LayerType>
-void assert_model_field_constraints(
-    const garlic::Module<LayerType>& module,
-    const char* model_name,
-    const char* field_name,
-    NameQueue constraints) {
-  auto model = module.get_model(model_name);
-  ASSERT_NE(model, nullptr);
-  assert_model_field_constraints(*model, field_name, std::move(constraints));
-}
+/*
+ * Asserts there is a model in the provided module that has a field by the name provided and that field
+ * has the set of constraints given in the arguments.
+ */
+void assert_model_has_field_with_constraints(
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const garlic::text& field_name, NameQueue constraints);
 
 void assert_model_has_field_name(
     const garlic::FlatModule& module, const garlic::text& model_name,
