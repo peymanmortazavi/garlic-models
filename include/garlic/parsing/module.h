@@ -15,8 +15,8 @@ namespace garlic::parsing {
     template<typename Key, typename Value>
     using table         = std::unordered_map<Key, Value>;
 
-    using field_pointer = std::shared_ptr<FlatField>;
-    using model_pointer = std::shared_ptr<FlatModel>;
+    using field_pointer = std::shared_ptr<Field>;
+    using model_pointer = std::shared_ptr<Model>;
 
     struct model_field {
       text key;
@@ -28,7 +28,7 @@ namespace garlic::parsing {
       sequence<field_pointer> fields;
       sequence<model_field> models;
       sequence<text> aliases;
-      sequence<FlatConstraint> constraints;  // field constraints.
+      sequence<Constraint> constraints;  // field constraints.
     };
 
     struct deferred_field_record {
@@ -56,17 +56,17 @@ namespace garlic::parsing {
         return result;
       }
 
-      void add_field_dependency(text&& name, FlatConstraint constraint) {
+      void add_field_dependency(text&& name, Constraint constraint) {
         parser.field_dependents_[name].constraints.push_back(constraint);
       }
     };
 
     table<text, field_dependent_record> field_dependents_;  // field to its dependents.
     table<model_pointer, table<text, deferred_field_record>> model_deferred_fields_;
-    FlatModule& module_;
+    Module& module_;
 
     template<GARLIC_VIEW Input>
-    void process_field_meta(FlatField& field, Input&& layer) {
+    void process_field_meta(Field& field, Input&& layer) {
       get_member(layer, "meta", [&field](const auto& item) {
         for (const auto& member : item.get_object()) {
           field.meta().emplace(
@@ -88,7 +88,7 @@ namespace garlic::parsing {
     }
 
     template<GARLIC_VIEW Layer>
-    void process_model_meta(FlatModel& model, Layer&& layer) {
+    void process_model_meta(Model& model, Layer&& layer) {
       get_member(layer, "description", [&model](const auto& item) {
         model.meta().emplace("description", decode<text>(item).clone());
       });
@@ -109,7 +109,7 @@ namespace garlic::parsing {
         return;
       }
 
-      auto ptr = std::make_shared<FlatField>(name.clone());
+      auto ptr = std::make_shared<Field>(name.clone());
       auto complete = true;
 
       get_member(layer, "type", [this, &ptr, &complete](const auto& value) {
@@ -185,7 +185,7 @@ namespace garlic::parsing {
     void process_model_inheritance(model_pointer model, Layer&& layer) noexcept {
       enum class field_status : uint8_t { deferred, ready, excluded };
       struct field_info {
-        FlatModel::field_descriptor ready_field;
+        Model::field_descriptor ready_field;
         deferred_field_record deferred_field;
         field_status status;
       };
@@ -249,7 +249,7 @@ namespace garlic::parsing {
 
     template<GARLIC_VIEW Layer, typename Callable>
     void parse_model(text&& name, Layer&& layer, Callable&& cb) {
-      auto model_ptr = std::make_shared<FlatModel>(name.clone());
+      auto model_ptr = std::make_shared<Model>(name.clone());
 
       get_member(layer, "fields", [this, &model_ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &model_ptr](const auto& item) {
@@ -265,7 +265,7 @@ namespace garlic::parsing {
       this->process_model_meta(*model_ptr, layer);
       this->process_model_inheritance(model_ptr, layer);
 
-      auto model_field = std::make_shared<FlatField>(model_ptr->get_name().view());
+      auto model_field = std::make_shared<Field>(model_ptr->get_name().view());
       model_field->add_constraint(make_constraint<model_tag>(model_ptr));
       this->add_field(model_ptr->get_name().view(), model_field, true);
       cb(std::move(model_ptr));
@@ -273,7 +273,7 @@ namespace garlic::parsing {
 
     template<GARLIC_VIEW Layer, typename Callable>
     void parse_constraint(Layer&& layer, Callable&& cb) noexcept {
-      typedef FlatConstraint (*ConstraintInitializer)(const Layer&, parser_ambassador);
+      typedef Constraint (*ConstraintInitializer)(const Layer&, parser_ambassador);
       static const table<text, ConstraintInitializer> ctors = {
         {"regex", &parsing::parse_regex<Layer>},
         {"range", &parsing::parse_range<Layer>},
@@ -358,7 +358,7 @@ namespace garlic::parsing {
     }
 
   public:
-    ModuleParser(FlatModule& module) : module_(module) {}
+    ModuleParser(Module& module) : module_(module) {}
 
     template<GARLIC_VIEW Layer>
     std::error_code parse(Layer&& layer) {
@@ -388,12 +388,12 @@ namespace garlic::parsing {
   };
 
   template<GARLIC_VIEW Layer>
-  static tl::expected<FlatModule, std::error_code>
+  static tl::expected<Module, std::error_code>
   load_module(Layer&& layer) noexcept {
     if (!layer.is_object())
       return tl::make_unexpected(GarlicError::Redefinition);
 
-    FlatModule module;
+    Module module;
     auto parser = ModuleParser(module);
     if (auto error = parser.parse(layer); error)
       return tl::make_unexpected(error);

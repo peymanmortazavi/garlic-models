@@ -14,22 +14,22 @@
 
 namespace garlic {
 
-  class FlatModule {
+  class Module {
   public:
     template <typename Key, typename Value> using table = std::unordered_map<Key, Value>;
-    using model_type               = FlatModel;
+    using model_type               = Model;
     using model_pointer            = std::shared_ptr<model_type>;
-    using field_type               = FlatField;
+    using field_type               = Field;
     using field_pointer            = std::shared_ptr<field_type>;
     using model_table              = table<text, model_pointer>;
     using field_table              = table<text, field_pointer>;
-    using constraint_type          = FlatConstraint;
+    using constraint_type          = Constraint;
     using const_model_iterator     = typename model_table::const_iterator;
     using const_field_iterator     = typename field_table::const_iterator;
 
     constexpr static auto kDefaultFieldTableSize = 16;
 
-    FlatModule() : fields_(kDefaultFieldTableSize) {
+    Module() : fields_(kDefaultFieldTableSize) {
       static table<text, field_pointer> static_map = {
         {"string", this->make_field<type_tag>("StringField", TypeFlag::String)},
         {"integer", this->make_field<type_tag>("IntegerField", TypeFlag::Integer)},
@@ -90,9 +90,9 @@ namespace garlic {
   private:
     template<typename ConstraintTag, typename... Args>
     static inline field_pointer make_field(text&& name, Args&&... args) noexcept {
-      sequence<FlatConstraint> constraints(1);
+      sequence<Constraint> constraints(1);
       constraints.push_back(make_constraint<ConstraintTag>(std::forward<Args>(args)...));
-      return std::make_shared<field_type>(FlatField::Properties {
+      return std::make_shared<field_type>(Field::Properties {
           .meta = {},
           .constraints = std::move(constraints),
           .name = std::move(name),

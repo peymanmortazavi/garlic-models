@@ -20,7 +20,7 @@ using namespace std;
 TEST(ModuleParsing, Basic) {
   // load a very basic module without using more sophisticated features.
 
-  auto test_module = [](const FlatModule& module) {
+  auto test_module = [](const Module& module) {
     auto date_field = module.get_field("DateTime");
     ASSERT_NE(date_field, nullptr);
     ASSERT_STREQ(date_field->get_name().data(), "DateTime");  // named field.
@@ -132,7 +132,7 @@ TEST(ModuleParsing, ForwardDeclarations) {
 
 
 TEST(ModuleParsing, ModelInheritance) {
-  FlatModule module;
+  Module module;
   load_libyaml_module(module, "data/model_inheritance/module.yaml");
 
   assert_model_fields(module, "BaseUser", {"id", "username", "password"});
@@ -146,7 +146,7 @@ TEST(ModuleParsing, ModelInheritance) {
 }
 
 TEST(ModuleParsing, ModelInheritanceLazy) {
-  garlic::FlatModule module;
+  garlic::Module module;
   load_libyaml_module(module, "data/model_inheritance/lazy_load.yaml");
 
   assert_model_fields(module, "Model1", {"model3", "model4"});
@@ -162,7 +162,7 @@ TEST(ModuleParsing, ModelInheritanceLazy) {
 }
 
 TEST(ModuleParsing, OptionalFields) {
-  FlatModule module;
+  Module module;
   load_libyaml_module(module, "data/optional_fields/module.yaml");
 
   auto valid_names   = vector<string>{"good1", "good2", "good3"};

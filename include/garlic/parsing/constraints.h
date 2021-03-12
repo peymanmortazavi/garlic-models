@@ -8,7 +8,7 @@
 namespace garlic::parsing {
 
   template<bool Fatal, typename Tag, GARLIC_VIEW Layer, typename... Args>
-  static inline FlatConstraint
+  static inline Constraint
   build_constraint(
       Layer&& layer,
       text&& name = text::no_text(),
@@ -21,18 +21,18 @@ namespace garlic::parsing {
   }
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_any(const Input& layer, Parser parser) noexcept {
-    sequence<FlatConstraint> constraints;
+    sequence<Constraint> constraints;
     read_constraints(layer, parser, "of", std::back_inserter(constraints));
     return build_constraint<false, any_tag>(layer, "any_constraint", std::move(constraints));
   }
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static inline FlatConstraint
+  static inline Constraint
   parse_all(const Input& layer, Parser parser) noexcept {
-    sequence<FlatConstraint> constraints;
+    sequence<Constraint> constraints;
     read_constraints(layer, parser, "of", std::back_inserter(constraints));
     return build_constraint<false, all_tag>(
         layer, "all_constraint",
@@ -41,9 +41,9 @@ namespace garlic::parsing {
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_list(const Input& layer, Parser parser) noexcept {
-    FlatConstraint constraint = FlatConstraint::empty();
+    Constraint constraint = Constraint::empty();
     read_constraint(layer, parser, "of", constraint);
     return build_constraint<true, list_tag>(
         layer, "list_constraint",
@@ -52,9 +52,9 @@ namespace garlic::parsing {
 
 
   template<GARLIC_VIEW Output, GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_tuple(const Input& layer, Parser parser) noexcept {
-    sequence<FlatConstraint> constraints;
+    sequence<Constraint> constraints;
     read_constraints(layer, parser, "items", std::back_inserter(constraints));
     return build_constraint<false, tuple_tag>(
         layer, "tuple_constraint",
@@ -63,7 +63,7 @@ namespace garlic::parsing {
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_range(const Input& layer, Parser parser) noexcept {
     using SizeType = typename range_tag::size_type;
     SizeType min;
@@ -79,17 +79,17 @@ namespace garlic::parsing {
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_regex(const Input& layer, Parser parser) noexcept {
     return build_constraint<false, regex_tag>(layer, "regex_constraint", get<text>(layer, "pattern"));
   }
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_field(const Input& layer, Parser parser) noexcept {
-    using field_pointer = std::shared_ptr<FlatField>;
-    FlatConstraint result = FlatConstraint::empty();
+    using field_pointer = std::shared_ptr<Field>;
+    Constraint result = Constraint::empty();
 
     get_member(layer, "field", [&result, &layer, &parser](const auto& field) {
         auto ptr = parser.find_field(field.get_string_view());
@@ -107,10 +107,10 @@ namespace garlic::parsing {
 
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_map(const Input& layer, Parser parser) noexcept {
-    FlatConstraint key_constraint = FlatConstraint::empty();
-    FlatConstraint value_constraint = FlatConstraint::empty();
+    Constraint key_constraint = Constraint::empty();
+    Constraint value_constraint = Constraint::empty();
     read_constraint(layer, parser, "key", key_constraint);
     read_constraint(layer, parser, "value", value_constraint);
     return build_constraint<false, map_tag>(layer, "map_constraint",
@@ -118,9 +118,9 @@ namespace garlic::parsing {
   }
 
   template<GARLIC_VIEW Input, typename Parser>
-  static FlatConstraint
+  static Constraint
   parse_literal(const Input& layer, Parser parser) noexcept {
-    FlatConstraint result = FlatConstraint::empty();
+    Constraint result = Constraint::empty();
     get_member(layer, "value", [&layer, &result](const auto& item) {
         if (item.is_int()) {
           result = build_constraint<false, int_literal_tag>(layer, "literal_constraint", item.get_int());
@@ -152,7 +152,7 @@ namespace garlic::parsing {
   static void
   read_constraint(
       const Input& layer, ParserType& parser,
-      const char* name, FlatConstraint& ptr) {
+      const char* name, Constraint& ptr) {
     get_member(layer, name, [&parser, &ptr](const auto& key) {
         parser.parse_constraint(key, [&ptr](auto&& constraint) {
             ptr = std::move(constraint);

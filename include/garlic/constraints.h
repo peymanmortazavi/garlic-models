@@ -229,20 +229,20 @@ namespace garlic {
     }
   };
 
-  class FlatConstraint final {
+  class Constraint final {
   private:
     using context_pointer = std::shared_ptr<constraint_context>;
     context_pointer context_;
     unsigned index_;
 
-    FlatConstraint(unsigned index, context_pointer&& context) : context_(std::move(context)), index_(index) {}
+    Constraint(unsigned index, context_pointer&& context) : context_(std::move(context)), index_(index) {}
 
   public:
     template<typename Tag, typename... Args>
-    static FlatConstraint make(Args&&... args) noexcept;
+    static Constraint make(Args&&... args) noexcept;
 
-    static FlatConstraint empty() noexcept {
-      return FlatConstraint(0, nullptr);
+    static Constraint empty() noexcept {
+      return Constraint(0, nullptr);
     }
 
     inline operator bool () const noexcept {
@@ -264,7 +264,7 @@ namespace garlic {
     }
 
     template<typename, typename... Args>
-    friend inline FlatConstraint make_constraint(Args&&...) noexcept;
+    friend inline Constraint make_constraint(Args&&...) noexcept;
   };
 
 
@@ -470,10 +470,10 @@ namespace garlic {
     /* TODO:  <09-03-21, Peyman> Support initializer list to improve style. */
     struct Context : public constraint_context {
       template<typename... Args>
-      Context(sequence<FlatConstraint>&& constraints, Args&&... args
+      Context(sequence<Constraint>&& constraints, Args&&... args
           ) : constraint_context(std::forward<Args>(args)...), constraints(std::move(constraints)) {}
 
-      sequence<FlatConstraint> constraints;
+      sequence<Constraint> constraints;
     };
 
     using context_type = Context;
@@ -501,12 +501,12 @@ namespace garlic {
     struct Context : public constraint_context {
       template<typename... Args>
       Context(
-          FlatConstraint&& constraint, bool ignore_details = false,
+          Constraint&& constraint, bool ignore_details = false,
           text&& name = "list_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
               constraint(std::move(constraint)), ignore_details(ignore_details) {}
 
-      FlatConstraint constraint;
+      Constraint constraint;
       bool ignore_details;
     };
 
@@ -568,12 +568,12 @@ namespace garlic {
     struct Context : public constraint_context {
       template<typename... Args>
       Context(
-          sequence<FlatConstraint>&& constraints, bool strict = true, bool ignore_details = false,
+          sequence<Constraint>&& constraints, bool strict = true, bool ignore_details = false,
           text&& name = "tuple_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
               constraints(std::move(constraints)), strict(strict), ignore_details(ignore_details) {}
 
-      sequence<FlatConstraint> constraints;
+      sequence<Constraint> constraints;
       bool strict;
       bool ignore_details;
     };
@@ -657,13 +657,13 @@ namespace garlic {
     struct Context : public constraint_context {
       template<typename... Args>
       Context(
-          FlatConstraint&& key_constraint, FlatConstraint&& value_constraint, bool ignore_details = false,
+          Constraint&& key_constraint, Constraint&& value_constraint, bool ignore_details = false,
           text&& name = "map_constraint", Args&&... args
           ) : constraint_context(std::move(name), std::forward<Args>(args)...),
               key(std::move(key_constraint)), value(std::move(value_constraint)), ignore_details(ignore_details) {}
 
-      FlatConstraint key;
-      FlatConstraint value;
+      Constraint key;
+      Constraint value;
       bool ignore_details;
     };
 
@@ -744,12 +744,12 @@ namespace garlic {
     struct Context : public constraint_context {
       template<typename... Args>
       Context(
-          sequence<FlatConstraint>&& constraints, bool hide = true, bool ignore_details = false,
+          sequence<Constraint>&& constraints, bool hide = true, bool ignore_details = false,
           Args&&... args
           ) : constraint_context(std::forward<Args>(args)...),
               constraints(std::move(constraints)), hide(hide), ignore_details(ignore_details) {}
 
-      sequence<FlatConstraint> constraints;
+      sequence<Constraint> constraints;
       bool hide;
       bool ignore_details;
     };
@@ -877,10 +877,10 @@ namespace garlic {
   using bool_literal_tag   = literal_tag<bool>;
   using null_literal_tag   = literal_tag<VoidType>;
 
-  class FlatField {
+  class Field {
   public:
 
-    using const_constraint_iterator = typename sequence<FlatConstraint>::const_iterator;
+    using const_constraint_iterator = typename sequence<Constraint>::const_iterator;
 
     struct ValidationResult {
       sequence<ConstraintResult> failures;
@@ -890,24 +890,24 @@ namespace garlic {
 
     struct Properties {
       std::unordered_map<text, text> meta;
-      sequence<FlatConstraint> constraints;
+      sequence<Constraint> constraints;
       text name;
       bool ignore_details = false;
     };
     
-    FlatField(Properties&& properties) : properties_(std::move(properties)) {}
-    FlatField(text&& name) { properties_.name = std::move(name); }
+    Field(Properties&& properties) : properties_(std::move(properties)) {}
+    Field(text&& name) { properties_.name = std::move(name); }
 
     template<typename Tag, typename... Args>
     void add_constraint(Args&&... args) noexcept {
       this->add_constraint(make_constraint<Tag>(std::forward<Args>(args)...));
     }
 
-    void add_constraint(FlatConstraint&& constraint) {
+    void add_constraint(Constraint&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
 
-    inline void inherit_constraints_from(const FlatField& another) {
+    inline void inherit_constraints_from(const Field& another) {
       properties_.constraints.push_front(
           another.properties_.constraints.begin(),
           another.properties_.constraints.end());
@@ -949,10 +949,10 @@ namespace garlic {
   };
 
 
-  class FlatModel {
+  class Model {
   public:
 
-    using field_pointer = std::shared_ptr<FlatField>;
+    using field_pointer = std::shared_ptr<Field>;
 
     struct field_descriptor {
       field_pointer field;
@@ -968,9 +968,9 @@ namespace garlic {
 
     using const_field_iterator = typename std::unordered_map<text, field_descriptor>::const_iterator;
 
-    FlatModel() {}
-    FlatModel(Properties&& properties) : properties_(std::move(properties)) {}
-    FlatModel(text&& name) {
+    Model() {}
+    Model(Properties&& properties) : properties_(std::move(properties)) {}
+    Model(text&& name) {
       properties_.name = std::move(name);
     }
 
@@ -1096,7 +1096,7 @@ namespace garlic {
 
   struct model_tag {
     struct Context : public constraint_context {
-      using model_pointer = std::shared_ptr<FlatModel>;
+      using model_pointer = std::shared_ptr<Model>;
 
       template<typename... Args>
       Context(model_pointer model, Args&&... args
@@ -1122,18 +1122,18 @@ namespace garlic {
   };
 
   template<typename... Args>
-  std::shared_ptr<FlatField> make_field(Args&&... args) {
-    return std::make_shared<FlatField>(std::forward<Args>(args)...);
+  std::shared_ptr<Field> make_field(Args&&... args) {
+    return std::make_shared<Field>(std::forward<Args>(args)...);
   }
 
   template<typename... Args>
-  std::shared_ptr<FlatModel> make_model(Args&&...args) {
-    return std::make_shared<FlatModel>(std::forward<Args>(args)...);
+  std::shared_ptr<Model> make_model(Args&&...args) {
+    return std::make_shared<Model>(std::forward<Args>(args)...);
   }
 
   struct field_tag {
     struct Context : public constraint_context {
-      using field_pointer = std::shared_ptr<FlatField>;
+      using field_pointer = std::shared_ptr<Field>;
       using field_pointer_ref = std::shared_ptr<field_pointer>;
 
       template<typename... Args>
@@ -1198,30 +1198,30 @@ namespace garlic {
     string_literal_tag, int_literal_tag, double_literal_tag, bool_literal_tag, null_literal_tag>;
 
   template<typename Tag, typename... Args>
-   FlatConstraint FlatConstraint::make(Args&&... args) noexcept {
-    return FlatConstraint(
+   Constraint Constraint::make(Args&&... args) noexcept {
+    return Constraint(
         constraint_registry::position_of<Tag>(),
         std::make_shared<typename Tag::context_type>(std::forward<Args>(args)...));
   }
 
   template<GARLIC_VIEW Layer>
   inline ConstraintResult
-  FlatConstraint::test(const Layer& value) const noexcept {
+  Constraint::test(const Layer& value) const noexcept {
     static constexpr auto handlers = constraint_registry::test_handlers<Layer>();
     return handlers[index_](value, context_.get());
   }
 
   template<GARLIC_VIEW Layer>
   inline bool
-  FlatConstraint::quick_test(const Layer& value) const noexcept {
+  Constraint::quick_test(const Layer& value) const noexcept {
     static constexpr auto handlers = constraint_registry::quick_test_handlers<Layer>();
     return handlers[index_](value, context_.get());
   }
 
   template<typename Tag, typename... Args>
-  inline FlatConstraint
+  inline Constraint
   make_constraint(Args&&... args) noexcept {
-    return FlatConstraint::make<Tag>(std::forward<Args>(args)...);
+    return Constraint::make<Tag>(std::forward<Args>(args)...);
   }
 
 }

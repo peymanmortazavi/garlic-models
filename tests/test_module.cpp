@@ -11,14 +11,14 @@ using namespace garlic;
 
 
 TEST(Module, Basic) {
-  FlatModule module;
+  Module module;
 
-  std::shared_ptr<FlatField> fields[] = {
+  std::shared_ptr<Field> fields[] = {
     make_field("Field 1"),
     make_field("Field 2"),
   };
 
-  std::shared_ptr<FlatModel> models[] = {
+  std::shared_ptr<Model> models[] = {
     make_model("Model 1"),
     make_model("Model 2"),
   };
@@ -52,7 +52,7 @@ TEST(Module, Basic) {
 
 
 TEST(Module, AvoidDuplicates) {
-  FlatModule module;
+  Module module;
   ASSERT_TRUE(module.add_field(make_field("Field 1")));
   ASSERT_TRUE(module.add_field("Field 2", module.get_field("Field 1")));  // register an alias, it's ok!
   auto result = module.add_field(make_field("Field 1"));
