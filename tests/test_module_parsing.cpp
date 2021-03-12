@@ -159,23 +159,22 @@ TEST(ModuleParsing, ModelInheritanceLazy) {
   assert_model_has_field_name(module, "Model2_overriding", "model4", "Model4");
 }
 
-//TEST(ModuleParsing, OptionalFields) {
-//  auto module = Module<JsonView>();
+TEST(ModuleParsing, OptionalFields) {
+  FlatModule module;
+  load_libyaml_module(module, "data/optional_fields/module.yaml");
 
-//  load_libyaml_module(module, "data/optional_fields/module.yaml");
+  auto valid_names   = vector<string>{"good1", "good2", "good3"};
+  auto invalid_names = vector<string>{"bad1" , "bad2" , "bad3"};
 
-//  auto valid_names = vector<string>{"good1", "good2", "good3"};
-//  auto invalid_names = vector<string>{"bad1","bad2", "bad3"};
+  for (const auto& name : valid_names) {
+    auto path = "data/optional_fields/" + name + ".json";
+    assert_jsonfile_valid(module, "User", path.data());
+    assert_jsonfile_valid(module, "Staff", path.data());
+  }
 
-//  for (const auto& name : valid_names) {
-//    auto path = "data/optional_fields/" + name + ".json";
-//    assert_jsonfile_valid(module, "User", path.data());
-//    assert_jsonfile_valid(module, "Staff", path.data());
-//  }
-
-//  for (const auto& name : invalid_names) {
-//    auto path = "data/optional_fields/" + name + ".json";
-//    assert_jsonfile_invalid(module, "User", path.data());
-//    assert_jsonfile_invalid(module, "Staff", path.data());
-//  }
-//}
+  for (const auto& name : invalid_names) {
+    auto path = "data/optional_fields/" + name + ".json";
+    assert_jsonfile_invalid(module, "User", path.data());
+    assert_jsonfile_invalid(module, "Staff", path.data());
+  }
+}

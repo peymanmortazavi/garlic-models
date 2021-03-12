@@ -1,4 +1,5 @@
 #include "test_utility.h"
+#include "garlic/flat_constraints.h"
 
 garlic::providers::libyaml::YamlDocument
 get_libyaml_document(const char * name) {
@@ -129,4 +130,28 @@ void assert_model_has_field_with_constraints(
   auto model = module.get_model(model_name);
   ASSERT_NE(model, nullptr);
   assert_model_has_field_with_constraints(*model, field_name, std::move(constraints));
+}
+
+garlic::ConstraintResult
+validate_jsonfile(const garlic::FlatModule& module, const garlic::text& model_name, const char* filename) {
+  auto model = module.get_model(model_name);
+  auto doc = get_rapidjson_document(filename);
+  return garlic::make_constraint<garlic::model_tag>(model).test(doc);
+}
+
+void assert_jsonfile_valid(
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const char* filename, bool print) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print)
+    print_constraint_result(result);
+  ASSERT_TRUE(result.is_valid());
+}
+
+void assert_jsonfile_invalid(
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const char* filename, bool print) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print) print_constraint_result(result);
+  ASSERT_FALSE(result.is_valid());
 }

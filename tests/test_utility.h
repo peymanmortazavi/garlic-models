@@ -49,7 +49,6 @@ void print_constraints(const garlic::FieldPropertiesOf<LayerType>& props) {
  */
 void assert_field_constraints(const garlic::FlatField& field, NameQueue names);
 
-
 /*
  * Asserts the given model has fields by the names provided.
  */
@@ -59,7 +58,6 @@ void assert_model_fields(const garlic::FlatModel& model, NameQueue names);
  * Asserts the given module has a model with the specified name and that model has the given set of fields.
  */
 void assert_model_fields(const garlic::FlatModule& module, const garlic::text& model_name, NameQueue names);
-
 
 /*
  * Asserts the given model fields and their respective constraints are present in the module.
@@ -80,44 +78,36 @@ void assert_model_has_field_with_constraints(
     const garlic::FlatModule& module, const garlic::text& model_name,
     const garlic::text& field_name, NameQueue constraints);
 
+/*
+ * Asserts there is a model in the given module by the specified name and it has a field by the name given.
+ */
 void assert_model_has_field_name(
     const garlic::FlatModule& module, const garlic::text& model_name,
     const garlic::text& key, const garlic::text& field_name);
 
+/*
+ * Loads the specified module with a yaml file describing a garlic module.
+ */
 void load_libyaml_module(garlic::FlatModule& module, const char* filename);
 
-template<typename LayerType>
+/*
+ * Uses a model by the name specified in the given module to validate a JSON file.
+ */
 garlic::ConstraintResult
-validate_jsonfile(
-    const garlic::Module<LayerType>& module,
-    const char* model_name,
-    const char* filename) {
-  auto model = module.get_model(model_name);
-  auto doc = get_rapidjson_document(filename);
-  auto root = garlic::ModelConstraint<garlic::providers::rapidjson::JsonView>(model);
-  return root.test(doc.get_view());
-}
+validate_jsonfile(const garlic::FlatModule& module, const garlic::text& model_name, const char* filename);
 
-template<typename LayerType>
+/*
+ * Asserts the JSON file specified in the arguments is a valid instance of a model in the specified module.
+ */
 void assert_jsonfile_valid(
-    const garlic::Module<LayerType>& module,
-    const char* model_name,
-    const char* filename,
-    bool print=false) {
-  auto result = validate_jsonfile(module, model_name, filename);
-  if (print) print_constraint_result(result);
-  ASSERT_TRUE(result.is_valid());
-}
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const char* filename, bool print=false);
 
-template<typename LayerType>
+/*
+ * Asserts the JSON file specified in the arguments is an invalid instance of a model in the specified module.
+ */
 void assert_jsonfile_invalid(
-    const garlic::Module<LayerType>& module,
-    const char* model_name,
-    const char* filename,
-    bool print=false) {
-  auto result = validate_jsonfile(module, model_name, filename);
-  if (print) print_constraint_result(result);
-  ASSERT_FALSE(result.is_valid());
-}
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const char* filename, bool print=false);
 
 #endif /* end of include guard: GARLIC_TEST_UTILITY_H */
