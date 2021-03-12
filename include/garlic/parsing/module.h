@@ -293,7 +293,7 @@ namespace garlic::parsing {
 
       get_member(layer, "type",
           [this, &layer, &cb](const auto& item) {
-            if (auto it = ctors.find(item.get_cstr()); it != ctors.end()) {
+            if (auto it = ctors.find(decode<text>(item)); it != ctors.end()) {
               cb(it->second(layer, parser_ambassador{*this}));
             } else {
               // report parsing error.

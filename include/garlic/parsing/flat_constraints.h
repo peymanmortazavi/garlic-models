@@ -151,10 +151,8 @@ namespace garlic::parsing {
   template<GARLIC_VIEW Input, typename ParserType>
   static void
   read_constraint(
-      const Input& layer,
-      ParserType& parser,
-      const char* name,
-      FlatConstraint& ptr) {
+      const Input& layer, ParserType& parser,
+      const char* name, FlatConstraint& ptr) {
     get_member(layer, name, [&parser, &ptr](const auto& key) {
         parser.parse_constraint(key, [&ptr](auto&& constraint) {
             ptr = std::move(constraint);

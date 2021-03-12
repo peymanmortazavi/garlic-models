@@ -252,7 +252,7 @@ namespace garlic {
     }
 
     inline operator bool () const noexcept {
-      return context_ == nullptr;
+      return context_ != nullptr;
     }
 
     template<GARLIC_VIEW Layer>
@@ -715,7 +715,7 @@ namespace garlic {
       if (context.key) {
         if (context.value) return test<IgnoreDetails, true, true>(layer, context);
         return test<IgnoreDetails, true, false>(layer, context);
-      } else if (context.key) return test<IgnoreDetails, false, true>(layer, context);
+      } else if (context.value) return test<IgnoreDetails, false, true>(layer, context);
       return context.ok();  // meaning there is no key or value constraint.
     }
 
