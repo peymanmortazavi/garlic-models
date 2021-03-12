@@ -79,6 +79,12 @@ void assert_model_fields(const garlic::FlatModel& model, NameQueue names) {
   }
 }
 
+void assert_model_fields(const garlic::FlatModule& module, const garlic::text& model_name, NameQueue names) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  assert_model_fields(*model, std::move(names));
+}
+
 void assert_module_structure(const garlic::FlatModule& module, ModuleStructure structure) {
   for (const auto& model_structure : structure) {
     auto model = module.get_model(model_structure.first);
@@ -88,4 +94,22 @@ void assert_module_structure(const garlic::FlatModule& module, ModuleStructure s
       assert_field_constraints(*field, std::move(field_structure.second));
     }
   }
+}
+
+void load_libyaml_module(garlic::FlatModule& module, const char* filename) {
+  auto doc = get_libyaml_document(filename);
+  auto result = garlic::parsing::load_module(doc.get_view());
+  ASSERT_TRUE(result);
+  module = *result;
+}
+
+
+void assert_model_has_field_name(
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const garlic::text& key, const garlic::text& field_name) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  auto field = model->get_field(key);
+  ASSERT_NE(field, nullptr);
+  ASSERT_EQ(field->get_name(), field_name);
 }

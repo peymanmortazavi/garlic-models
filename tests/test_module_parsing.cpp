@@ -129,20 +129,19 @@ TEST(ModuleParsing, ForwardDeclarations) {
 };
 
 
-//TEST(ModuleParsing, ModelInheritance) {
-//  auto module = Module<JsonView>();
+TEST(ModuleParsing, ModelInheritance) {
+  FlatModule module;
+  load_libyaml_module(module, "data/model_inheritance/module.yaml");
 
-//  load_libyaml_module(module, "data/model_inheritance/module.yaml");
+  assert_model_fields(module, "BaseUser", {"id", "username", "password"});
+  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
+  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
+  assert_model_fields(module, "MobileUser", {"id", "username", "password"});
+  assert_model_fields(module, "BaseQuery", {"skip", "limit"});
+  assert_model_fields(module, "UserQuery", {"skip", "limit", "id", "username"});
 
-//  assert_model_fields(module, "BaseUser", {"id", "username", "password"});
-//  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
-//  assert_model_fields(module, "AdminUser", {"id", "username", "password", "is_super"});
-//  assert_model_fields(module, "MobileUser", {"id", "username", "password"});
-//  assert_model_fields(module, "BaseQuery", {"skip", "limit"});
-//  assert_model_fields(module, "UserQuery", {"skip", "limit", "id", "username"});
-
-//  assert_model_field_name(module, "MobileUser", "username", "StrictUserName");
-//}
+  assert_model_has_field_name(module, "MobileUser", "username", "StrictUserName");
+}
 
 //TEST(ModuleParsing, ModelInheritanceLazy) {
 //  auto module = Module<JsonView>();

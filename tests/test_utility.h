@@ -7,6 +7,7 @@
 #include <garlic/garlic.h>
 #include "garlic/flat_constraints.h"
 #include "garlic/flat_module.h"
+#include "garlic/parsing/module.h"
 #include <garlic/constraints.h>
 #include <garlic/models.h>
 #include <garlic/providers/rapidjson.h>
@@ -54,18 +55,16 @@ void assert_field_constraints(const garlic::FlatField& field, NameQueue names);
  */
 void assert_model_fields(const garlic::FlatModel& model, NameQueue names);
 
+/*
+ * Asserts the given module has a model with the specified name and that model has the given set of fields.
+ */
+void assert_model_fields(const garlic::FlatModule& module, const garlic::text& model_name, NameQueue names);
+
 
 /*
  * Asserts the given model fields and their respective constraints are present in the module.
  */
 void assert_module_structure(const garlic::FlatModule& module, ModuleStructure structure);
-
-template<typename LayerType>
-void assert_model_fields(const garlic::Module<LayerType>& module, const char* model_name, NameQueue names) {
-  auto model = module.get_model(model_name);
-  ASSERT_NE(model, nullptr);
-  assert_model_fields(*model, std::move(names));
-}
 
 template<typename LayerType>
 void assert_model_field_constraints(
@@ -89,26 +88,11 @@ void assert_model_field_constraints(
   assert_model_field_constraints(*model, field_name, std::move(constraints));
 }
 
-template<typename LayerType>
-void assert_model_field_name(
-    const garlic::Module<LayerType>& module,
-    const char* model_name,
-    const char* field_name,
-    const char* field_type
-    ) {
-  auto model = module.get_model(model_name);
-  ASSERT_NE(model, nullptr);
-  auto field = model->get_field(field_name);
-  ASSERT_NE(field, nullptr);
-  ASSERT_STREQ(field->get_name().data(), field_type);
-}
+void assert_model_has_field_name(
+    const garlic::FlatModule& module, const garlic::text& model_name,
+    const garlic::text& key, const garlic::text& field_name);
 
-template<typename LayerType>
-void load_libyaml_module(garlic::Module<LayerType>& module, const char* filename) {
-  auto module_document = get_libyaml_document(filename);
-  auto parse_results = module.parse(module_document.get_view());
-  ASSERT_TRUE(parse_results.valid);
-}
+void load_libyaml_module(garlic::FlatModule& module, const char* filename);
 
 template<typename LayerType>
 garlic::ConstraintResult

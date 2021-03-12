@@ -109,7 +109,7 @@ namespace garlic::parsing {
         return;
       }
 
-      auto ptr = std::make_shared<FlatField>(name.view());
+      auto ptr = std::make_shared<FlatField>(name.clone());
       auto complete = true;
 
       get_member(layer, "type", [this, &ptr, &complete](const auto& value) {
@@ -251,9 +251,6 @@ namespace garlic::parsing {
     void parse_model(text&& name, Layer&& layer, Callable&& cb) {
       auto model_ptr = std::make_shared<FlatModel>(name.clone());
 
-      this->process_model_meta(*model_ptr, layer);
-      this->process_model_inheritance(model_ptr, layer);
-
       get_member(layer, "fields", [this, &model_ptr](const auto& value) {
         std::for_each(value.begin_member(), value.end_member(), [this, &model_ptr](const auto& item) {
           this->parse_field(text::no_text(), item.value,
@@ -264,6 +261,9 @@ namespace garlic::parsing {
           });
         });
       });
+
+      this->process_model_meta(*model_ptr, layer);
+      this->process_model_inheritance(model_ptr, layer);
 
       auto model_field = std::make_shared<FlatField>(model_ptr->get_name().view());
       model_field->add_constraint(make_constraint<model_tag>(model_ptr));
