@@ -103,18 +103,18 @@ namespace garlic::parsing {
     }
 
     template<GARLIC_VIEW Layer, typename SuccessCallable, typename FailCallable>
-    void parse_field(text&& name, Layer&& layer, SuccessCallable&& ok, FailCallable&& fail) noexcept {
+    void parse_field(const text& name, Layer&& layer, SuccessCallable&& ok, FailCallable&& fail) noexcept {
       if (layer.is_string()) {  // it is an alias, just process the referenced field.
-        parse_field_reference(std::move(name), layer, ok, fail);
+        parse_field_reference(name, layer, ok, fail);
         return;
       }
 
-      auto ptr = std::make_shared<FlatField>(std::move(name));
+      auto ptr = std::make_shared<FlatField>(name.view());
       auto complete = true;
 
       get_member(layer, "type", [this, &ptr, &complete](const auto& value) {
         auto reference_name = decode<text>(value);
-        auto complete = this->find_field(reference_name, [&ptr](const auto& field) {
+        complete = this->find_field(reference_name, [&ptr](const auto& field) {
             ptr->inherit_constraints_from(*field);
         });
         if (!complete)
@@ -141,7 +141,7 @@ namespace garlic::parsing {
     }
 
     template<GARLIC_VIEW Layer, typename SuccessCallable, typename FailCallable>
-    void parse_field_reference(text&& name, Layer&& layer, SuccessCallable&& ok, FailCallable&& fail) noexcept {
+    void parse_field_reference(const text& name, Layer&& layer, SuccessCallable&& ok, FailCallable&& fail) noexcept {
       auto field_name = decode<text>(layer);
       auto optional = false;
       if (field_name.back() == '?') {
@@ -365,11 +365,10 @@ namespace garlic::parsing {
       // Load the fields first.
       get_member(layer, "fields", [this](const auto& value) {
           for (const auto& item : value.get_object()) {
-            auto key = decode<text>(item.key).clone();
             this->parse_field(
-                key.view(), item.value,
-                [this, &item, &key](auto ptr, auto complete, auto) {
-                  this->add_field(std::move(key), std::move(ptr), complete);
+                decode<text>(item.key), item.value,
+                [this, &item](auto ptr, auto complete, auto) {
+                  this->add_field(decode<text>(item.key).clone(), std::move(ptr), complete);
                 },
                 [](...){});
           }
