@@ -141,6 +141,10 @@ namespace garlic {
         items_ = reinterpret_cast<pointer>(std::malloc(capacity_ * sizeof(ValueType)));
     }
 
+    sequence(std::initializer_list<value_type> list) : sequence(list.size()) {
+      push_front(list.begin(), list.end());
+    }
+
     sequence(const sequence&) = delete;
     sequence(sequence&& old) : items_(old.items_), capacity_(old.capacity_), size_(old.size_) {
       old.capacity_ = 0;

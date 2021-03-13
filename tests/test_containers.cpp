@@ -160,3 +160,14 @@ TEST(GarlicSequence, PushFront) {
     ASSERT_TRUE(std::equal(one.begin(), one.end(), expectation, expectation + 8));
   }
 }
+
+TEST(GarlicSequence, ListInitializer) {
+  sequence<int> ints{1, 2, 3, 5, 8};
+  ASSERT_EQ(ints.size(), 5);
+  ASSERT_EQ(ints.capacity(), 5);
+  ASSERT_EQ(ints[0], 1);
+  ASSERT_EQ(ints[1], 2);
+  ASSERT_EQ(ints[2], 3);
+  ASSERT_EQ(ints[3], 5);
+  ASSERT_EQ(ints[4], 8);
+}
