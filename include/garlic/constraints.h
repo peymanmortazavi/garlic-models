@@ -111,7 +111,7 @@ namespace garlic {
     }
 
     template<bool Field = false, bool Leaf = true>
-    auto fail(const char* message) const noexcept -> ConstraintResult {
+    auto fail(const text& message) const noexcept -> ConstraintResult {
       if (this->message.empty())
         return ConstraintResult {
           .details = (Leaf ? sequence<ConstraintResult>::no_sequence() : sequence<ConstraintResult>()),
@@ -123,7 +123,7 @@ namespace garlic {
     }
 
     template<bool Field = false>
-    auto fail(const char* message, sequence<ConstraintResult>&& details) const noexcept {
+    auto fail(const text& message, sequence<ConstraintResult>&& details) const noexcept {
       return ConstraintResult {
         .details = std::move(details),
         .name = name,
@@ -133,7 +133,7 @@ namespace garlic {
     }
 
     template<bool Field = false>
-    auto fail(const char* message, ConstraintResult&& inner_detail) const noexcept {
+    auto fail(const text& message, ConstraintResult&& inner_detail) const noexcept {
       sequence<ConstraintResult> details(1);
       details.push_back(std::move(inner_detail));
       return this->fail<Field>(message, std::move(details));
@@ -934,12 +934,12 @@ namespace garlic {
 
     void set_ignore_details(bool value) { properties_.ignore_details = value; }
 
-    const char* message() const noexcept {
+    text message() const noexcept {
       const auto& meta = properties_.meta;
       if (auto it = meta.find("message"); it != meta.end()) {
-        return it->second.data();
+        return it->second;
       }
-      return nullptr;
+      return text::no_text();
     }
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const noexcept { return properties_; }
@@ -1083,24 +1083,20 @@ namespace garlic {
         const field_pointer& field) const {
       if (field->properties().ignore_details) {
         if (!field->quick_test(value)) {
-          const char* reason = field->message();
-          auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = sequence<ConstraintResult>::no_sequence(),
-              .name = text::copy(name),
-              .reason = (reason == nullptr ? text::no_text() : text::copy(reason)),
+              .name = decode<text>(key),
+              .reason = field->message(),
               .flag = ConstraintResult::flags::field
               });
         }
       } else {
         auto test = field->validate(value);
         if (!test.is_valid()) {
-          const char* reason = field->message();
-          auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = std::move(test.failures),
-              .name = text::copy(name),
-              .reason = (reason == nullptr ? text::no_text() : text::copy(reason)),
+              .name = decode<text>(key),
+              .reason = field->message(),
               .flag = ConstraintResult::flags::field
               });
         }
@@ -1169,9 +1165,7 @@ namespace garlic {
       template<typename... Args>
       inline ConstraintResult
       custom_message_fail(Args&&... args) const noexcept {
-        if (auto message = (*ref)->message(); message != nullptr)
-          return this->fail(message, std::forward<Args>(args)...);
-        return this->fail("", std::forward<Args>(args)...);
+        return this->fail((*ref)->message(), std::forward<Args>(args)...);
       }
 
       void update_name() {
