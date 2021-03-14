@@ -148,7 +148,7 @@ namespace garlic {
   static inline text 
   get_text(Layer&& layer, const char* key, text default_value) noexcept {
     get_member(layer, key, [&default_value](const auto& result) {
-        default_value = text(result.get_string_view(), text_type::copy);
+        default_value = text::copy(result.get_string_view());
         });
     return default_value;
   }
@@ -541,7 +541,7 @@ namespace garlic {
             return context.fail(
                 "Invalid value found in the list.",
                 ConstraintResult::leaf_field_failure(
-                  text(std::to_string(index), text_type::copy),
+                  text::copy(std::to_string(index)),
                   "invalid value."));
           }
         } else {
@@ -552,7 +552,7 @@ namespace garlic {
             return context.fail(
                 "Invalid value found in the list.",
                 ConstraintResult::field_failure(
-                  text(std::to_string(index), text_type::copy),
+                  text::copy(std::to_string(index)),
                   std::move(result),
                   "invalid value."
                   ));
@@ -621,7 +621,7 @@ namespace garlic {
             return context.fail(
                 "Invalid value found in the tuple.",
                 ConstraintResult::leaf_field_failure(
-                  text(std::to_string(index), text_type::copy),
+                  text::copy(std::to_string(index)),
                   "invalid value."
                   ));
           }
@@ -633,7 +633,7 @@ namespace garlic {
             return context.fail(
                 "Invalid value found in the tuple.",
                 ConstraintResult::field_failure(
-                  text(std::to_string(index), text_type::copy),
+                  text::copy(std::to_string(index)),
                   std::move(result),
                   "invalid value."
                   ));
@@ -1074,8 +1074,8 @@ namespace garlic {
           auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = sequence<ConstraintResult>::no_sequence(),
-              .name = text(name.data(), name.size(), text_type::copy),
-              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
+              .name = text::copy(name),
+              .reason = (reason == nullptr ? text::no_text() : text::copy(reason)),
               .flag = ConstraintResult::flags::field
               });
         }
@@ -1086,8 +1086,8 @@ namespace garlic {
           auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = std::move(test.failures),
-              .name = text(name.data(), name.size(), text_type::copy),
-              .reason = (reason == nullptr ? text::no_text() : text(reason, text_type::copy)),
+              .name = text::copy(name),
+              .reason = (reason == nullptr ? text::no_text() : text::copy(reason)),
               .flag = ConstraintResult::flags::field
               });
         }
