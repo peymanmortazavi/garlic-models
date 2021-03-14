@@ -115,6 +115,11 @@ namespace garlic {
       return basic_text("");
     }
 
+    friend inline std::ostream& operator << (std::ostream& output, const basic_text& text) {
+      output.write(text.data(), text.size());
+      return output;
+    }
+
   private:
     const Ch* data_;
     SizeType size_;
@@ -125,12 +130,6 @@ namespace garlic {
         std::free((void*)data_);
     }
   };
-
-  template<typename Ch, typename SizeType>
-  static inline std::ostream& operator << (std::ostream& output, const basic_text<Ch, SizeType>& text) {
-    output.write(text.data(), text.size());
-    return output;
-  }
 
   using text = basic_text<char>;
 
