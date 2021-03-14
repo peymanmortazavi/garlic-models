@@ -159,76 +159,82 @@ namespace garlic {
   template<typename T>
   using constraint_quick_test_handler = bool (*)(const T&, const constraint_context*);
 
-  template<typename InnerTag>
-  struct tag_wrapper {
-    template<GARLIC_VIEW Layer>
-    static inline ConstraintResult
-    test(const Layer& layer, const constraint_context* context) noexcept {
-      return InnerTag::test(layer, *reinterpret_cast<const typename InnerTag::context_type*>(context));
-    }
+  namespace internal {
+    template<typename InnerTag>
+    struct tag_wrapper {
+      template<GARLIC_VIEW Layer>
+      static inline ConstraintResult
+      test(const Layer& layer, const constraint_context* context) noexcept {
+        return InnerTag::test(layer, *reinterpret_cast<const typename InnerTag::context_type*>(context));
+      }
 
-    template<GARLIC_VIEW Layer>
-    static inline bool
-    quick_test(const Layer& layer, const constraint_context* context) noexcept {
-      return InnerTag::quick_test(layer, *reinterpret_cast<const typename InnerTag::context_type*>(context));
-    }
-  };
+      template<GARLIC_VIEW Layer>
+      static inline bool
+      quick_test(const Layer& layer, const constraint_context* context) noexcept {
+        return InnerTag::quick_test(layer, *reinterpret_cast<const typename InnerTag::context_type*>(context));
+      }
+    };
 
-  template<typename Tag, typename... Rest>
-  struct registry {
-    using tag = tag_wrapper<Tag>;
-    using rest = registry<Rest...>;
-    static constexpr unsigned id = sizeof...(Rest);
-    static constexpr unsigned not_found = UINT32_MAX;
+    template<typename Tag, typename... Rest>
+    struct registry {
+      using tag = tag_wrapper<Tag>;
+      using rest = registry<Rest...>;
+      static constexpr unsigned id = sizeof...(Rest);
+      static constexpr unsigned not_found = UINT32_MAX;
 
-    template<typename Query>
-    static unsigned constexpr position_of() {
-      if (std::is_same<Tag, Query>::value)
-        return 0;
-      return rest::template position_of<Query>() + 1;
-    }
+      template<typename Query>
+      static unsigned constexpr position_of() {
+        if (std::is_same<Tag, Query>::value)
+          return 0;
+        constexpr auto result = rest::template position_of<Query>();
+        if (result == not_found)
+          return result;
+        return result + 1;
+      }
 
-    template<typename Query, GARLIC_VIEW Layer>
-    static constexpr auto test_handler() {
-      if (std::is_same<Tag, Query>::value)
-        return &tag::template test<Layer>;
-      return rest::template test_handler<Query, Layer>();
-    }
+      template<typename Query, GARLIC_VIEW Layer>
+      static constexpr auto test_handler() {
+        if (std::is_same<Tag, Query>::value)
+          return &tag::template test<Layer>;
+        return rest::template test_handler<Query, Layer>();
+      }
 
-    template<GARLIC_VIEW Layer>
-    static constexpr std::array<constraint_test_handler<Layer>, sizeof...(Rest) + 1>
-    test_handlers() {
-      return {&tag::template test<Layer>, &tag_wrapper<Rest>::template test<Layer>...};
-    }
+      template<GARLIC_VIEW Layer>
+      static constexpr std::array<constraint_test_handler<Layer>, sizeof...(Rest) + 1>
+      test_handlers() {
+        return {&tag::template test<Layer>, &tag_wrapper<Rest>::template test<Layer>...};
+      }
 
-    template<GARLIC_VIEW Layer>
-    static constexpr std::array<constraint_quick_test_handler<Layer>, sizeof...(Rest) + 1>
-    quick_test_handlers() {
-      return {&tag::template quick_test<Layer>, &tag_wrapper<Rest>::template quick_test<Layer>...};
-    }
-  };
+      template<GARLIC_VIEW Layer>
+      static constexpr std::array<constraint_quick_test_handler<Layer>, sizeof...(Rest) + 1>
+      quick_test_handlers() {
+        return {&tag::template quick_test<Layer>, &tag_wrapper<Rest>::template quick_test<Layer>...};
+      }
+    };
 
-  template<typename Tag>
-  struct registry<Tag> {
-    using tag = tag_wrapper<Tag>;
-    static constexpr unsigned id = 0;
-    static constexpr unsigned not_found = UINT32_MAX;
+    template<typename Tag>
+    struct registry<Tag> {
+      using tag = tag_wrapper<Tag>;
+      static constexpr unsigned id = 0;
+      static constexpr unsigned not_found = UINT32_MAX;
 
-    template<typename Query>
-    static unsigned constexpr position_of() {
-      return (std::is_same<Tag, Query>::value ? 0 : not_found);
-    }
+      template<typename Query>
+      static unsigned constexpr position_of() {
+        return (std::is_same<Tag, Query>::value ? 0 : not_found);
+      }
 
-    template<typename Query, GARLIC_VIEW Layer>
-    static constexpr auto test_handler() {
-      return (std::is_same<Tag, Query>::value ? &tag::template test<Layer> : nullptr);
-    }
+      template<typename Query, GARLIC_VIEW Layer>
+      static constexpr auto test_handler() {
+        return (std::is_same<Tag, Query>::value ? &tag::template test<Layer> : nullptr);
+      }
 
-    template<typename Query, GARLIC_VIEW Layer>
-    static constexpr auto quick_test_handler() {
-      return (std::is_same<Tag, Query>::value ? &tag::template quick_test<Layer> : nullptr);
-    }
-  };
+      template<typename Query, GARLIC_VIEW Layer>
+      static constexpr auto quick_test_handler() {
+        return (std::is_same<Tag, Query>::value ? &tag::template quick_test<Layer> : nullptr);
+      }
+    };
+
+  }
 
   class Constraint final {
   private:
@@ -1204,14 +1210,16 @@ namespace garlic {
     }
   };
 
-  using constraint_registry = registry<
+  using constraint_registry = internal::registry<
     type_tag, range_tag, regex_tag, any_tag, list_tag, tuple_tag, map_tag, all_tag, model_tag, field_tag,
     string_literal_tag, int_literal_tag, double_literal_tag, bool_literal_tag, null_literal_tag>;
 
   template<typename Tag, typename... Args>
    Constraint Constraint::make(Args&&... args) noexcept {
+     constexpr auto position = constraint_registry::position_of<Tag>();
+     static_assert(position != constraint_registry::not_found, "Unregistered tag used to make a flat constraint.");
     return Constraint(
-        constraint_registry::position_of<Tag>(),
+        position,
         std::make_shared<typename Tag::context_type>(std::forward<Args>(args)...));
   }
 
