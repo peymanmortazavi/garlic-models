@@ -1,59 +1,30 @@
 #include <algorithm>
-#include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
-#include <garlic/providers/yaml-cpp.h>
-#include <garlic/providers/libyaml/parser.h>
-#include <gtest/gtest.h>
 #include <iostream>
+
+#include <gtest/gtest.h>
+
+#include <garlic/garlic.h>
 #include "test_utility.h"
 
 using namespace garlic;
 using namespace std;
 
 
-TEST(FieldValidation, Basic) {
-  auto field = make_field<CloveView>("HTTPHeader");
-  field->add_constraint<TypeConstraint>(TypeFlag::String);
-  field->add_constraint<RegexConstraint>("[a-zA-Z0-9-_]+:\\s?[a-zA-Z0-9-_\\/]+");
+TEST(Model, Basic) {
+  auto model = make_model("User");
+  model->add_field("name", make_field({make_constraint<regex_tag>("\\w{3,12}")}));
+  model->add_field("score", make_field({make_constraint<type_tag>(TypeFlag::Integer)}), false);
 
-  CloveDocument v;
-  v.get_reference().set_string("Content-Type: application/garlic");
-
-  {
-    auto result = field->validate(v.get_view());
-    ASSERT_TRUE(result.is_valid());
-  }
-
-  {
-    v.get_reference().set_string("10.0.0.1");
-    auto result = field->validate(v.get_view());
-    ASSERT_FALSE(result.is_valid());
-    ASSERT_EQ(result.failures.size(), 1);
-  }
+  ASSERT_EQ(model->get_field("non_existing"), nullptr);
+  auto name_field = model->get_field("name");
+  auto score_field = model->get_field("score");
+  ASSERT_NE(name_field, nullptr);
+  ASSERT_NE(score_field, nullptr);
+  ASSERT_NE(name_field, score_field);
 }
 
-TEST(FieldValidation, ConstraintSkipping) {
-  auto field = make_field<CloveView>("HTTPHeader");
-  field->add_constraint<TypeConstraint>(TypeFlag::String);
-  field->add_constraint<RegexConstraint>("\\d{1,3}");
-  field->add_constraint<RegexConstraint>("\\w");
-
-  CloveDocument v;
-  v.set_bool(true);
-
-  {
-    auto result = field->validate(v.get_view());
-    ASSERT_FALSE(result.is_valid());
-    ASSERT_EQ(result.failures.size(), 1);  // since the first constraint is fatal, only one is expected.
-    ASSERT_STREQ(result.failures[0].name.data(), "type_constraint");
-  }
-
-  {
-    v.get_reference().set_string("");
-    auto result = field->validate(v.get_view());
-    ASSERT_FALSE(result.is_valid());
-    ASSERT_EQ(result.failures.size(), 2);  // we should get two failures because they are not fatal.
-    assert_constraint_result(result.failures[0], "regex_constraint", "invalid value.");
-    assert_constraint_result(result.failures[1], "regex_constraint", "invalid value.");
-  }
+TEST(Field, Basic) {
+  auto field1 = make_field("Field 1", {});  // empty initializer.
+  field1->add_constraint<regex_tag>("\\d{1,3}", "c1");
+  ASSERT_EQ(field1->begin_constraints()->context().name, text("c1"));
 }

@@ -162,7 +162,7 @@ namespace garlic::parsing {
 
     template<typename Callback>
     bool find_field(const text& name, Callback&& cb) noexcept {
-      if (auto it = module_.find_field(name); it != module_.end_field()) {
+      if (auto it = module_.find_field(name); it != module_.end_fields()) {
         if (field_dependents_.find(name) == field_dependents_.end()) {
           cb(it->second);
           return true;
@@ -192,9 +192,9 @@ namespace garlic::parsing {
       table<text, field_info> fields;
       auto apply_inheritance = [this, &fields, &model](text&& model_name) {
           auto it = module_.find_model(model_name);
-          if (it == module_.end_model()) {}  // report parsing error here.
+          if (it == module_.end_models()) {}  // report parsing error here.
           std::for_each(
-              it->second->begin_field(), it->second->end_field(),
+              it->second->begin_fields(), it->second->end_fields(),
               [&fields](const auto& item) {
                 auto& info = fields[item.first];
                 if (info.status == field_status::excluded)

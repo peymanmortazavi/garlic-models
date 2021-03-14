@@ -69,8 +69,8 @@ namespace garlic {
       if (auto it = models_.find(name); it != models_.end()) cb(it->second);
     }
 
-    inline const_model_iterator begin_model() const { return models_.begin(); }
-    inline const_model_iterator end_model() const { return models_.end(); }
+    inline const_model_iterator begin_models() const { return models_.begin(); }
+    inline const_model_iterator end_models() const { return models_.end(); }
     inline const_model_iterator find_model(const text& name) const { return models_.find(name); }
 
     field_pointer get_field(const text& name) const noexcept {
@@ -83,8 +83,8 @@ namespace garlic {
       if (auto it = fields_.find(name); it != fields_.end()) cb(it->second);
     }
 
-    inline const_field_iterator begin_field() const { return fields_.begin(); }
-    inline const_field_iterator end_field() const { return fields_.end(); }
+    inline const_field_iterator begin_fields() const { return fields_.begin(); }
+    inline const_field_iterator end_fields() const { return fields_.end(); }
     inline const_field_iterator find_field(const text& name) const { return fields_.find(name); }
 
   private:

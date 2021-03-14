@@ -924,8 +924,8 @@ namespace garlic {
 
     inline void inherit_constraints_from(const Field& another) {
       properties_.constraints.push_front(
-          another.properties_.constraints.begin(),
-          another.properties_.constraints.end());
+          another.begin_constraints(),
+          another.end_constraints());
     }
 
     auto& meta() noexcept { return properties_.meta; }
@@ -1010,8 +1010,8 @@ namespace garlic {
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const { return properties_; }
 
-    const_field_iterator begin_field() const noexcept { return properties_.field_map.begin(); }
-    const_field_iterator end_field() const noexcept { return properties_.field_map.end(); }
+    const_field_iterator begin_fields() const noexcept { return properties_.field_map.begin(); }
+    const_field_iterator end_fields() const noexcept { return properties_.field_map.end(); }
     const_field_iterator find_field(const text& name) const noexcept { return properties_.field_map.find(name); }
 
     template<GARLIC_VIEW Layer>
@@ -1141,6 +1141,10 @@ namespace garlic {
 
   static inline std::shared_ptr<Field> make_field(text&& name, sequence<Constraint>&& constraints) {
     return std::make_shared<Field>(std::move(name), std::move(constraints));
+  }
+
+  static inline std::shared_ptr<Field> make_field(sequence<Constraint>&& constraints) {
+    return std::make_shared<Field>(text::no_text(), std::move(constraints));
   }
 
   template<typename... Args>

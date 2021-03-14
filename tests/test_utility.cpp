@@ -75,7 +75,7 @@ void assert_field_constraints(const garlic::Field& field, NameQueue names) {
 
 void assert_model_fields(const garlic::Model& model, NameQueue names) {
   for(const auto& name : names) {
-    ASSERT_NE(model.find_field(name), model.end_field());
+    ASSERT_NE(model.find_field(name), model.end_fields());
   }
 }
 
@@ -117,7 +117,7 @@ void assert_model_has_field_name(
 void assert_model_has_field_with_constraints(
     const garlic::Model& model, const garlic::text& field_name, NameQueue constraints) {
   auto it = model.find_field(field_name);
-  ASSERT_NE(it, model.end_field());
+  ASSERT_NE(it, model.end_fields());
   assert_field_constraints(*it->second.field, std::move(constraints));
 }
 
