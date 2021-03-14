@@ -214,6 +214,11 @@ namespace garlic {
 
   private:
     inline void reserve_item() noexcept {
+      if (capacity_ == 0) {
+        capacity_ = 8;
+        items_ = reinterpret_cast<pointer>(std::malloc(capacity_ * sizeof(ValueType)));
+        return;
+      }
       if (size_ == capacity_) {
         capacity_ += (capacity_ + 1) / 2;
         items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));
