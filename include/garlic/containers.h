@@ -51,6 +51,14 @@ namespace garlic {
       old.size_ = 0;
     }
 
+    static inline basic_text copy(const Ch* data) { return basic_text(data, text_type::copy); }
+    static inline basic_text copy(const Ch* data, SizeType size) { return basic_text(data, size, text_type::copy); }
+    static inline basic_text copy(const std::basic_string<Ch>& value) { return basic_text(value, text_type::copy); }
+    static inline basic_text copy(const std::basic_string_view<Ch>& value) { return basic_text(value, text_type::copy); }
+    static inline basic_text copy(const basic_text& another) {
+      return basic_text(another.data(), another.size(), text_type::copy);
+    }
+
     inline constexpr basic_text& operator =(const basic_text& other) {
       destroy();
       data_ = other.data_;
