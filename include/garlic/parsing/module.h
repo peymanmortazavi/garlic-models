@@ -339,8 +339,7 @@ namespace garlic::parsing {
         }
 
         for(auto& constraint : it->second.constraints) {
-          auto context = reinterpret_cast<typename field_tag::context_type*>(&constraint.context());
-          context->set_field(ptr);
+          constraint.context_for<field_tag>().set_field(ptr);
         }
 
         // remove it from the context.

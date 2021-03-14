@@ -264,6 +264,16 @@ namespace garlic {
       return *context_;
     }
 
+    template<typename Tag>
+    inline const auto& context_for() const noexcept {
+      return *reinterpret_cast<typename Tag::context_type*>(context_.get());
+    }
+
+    template<typename Tag>
+    inline auto& context_for() noexcept {
+      return *reinterpret_cast<typename Tag::context_type*>(context_.get());
+    }
+
     template<typename, typename... Args>
     friend inline Constraint make_constraint(Args&&...) noexcept;
   };
