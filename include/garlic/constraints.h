@@ -484,7 +484,6 @@ namespace garlic {
 
 
   struct any_tag {
-    /* TODO:  <09-03-21, Peyman> Support initializer list to improve style. */
     struct Context : public constraint_context {
       template<typename... Args>
       Context(sequence<Constraint>&& constraints, Args&&... args
