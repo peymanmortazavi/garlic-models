@@ -23,7 +23,7 @@ TEST(ModuleParsing, Basic) {
   auto test_module = [](const Module& module) {
     auto date_field = module.get_field("DateTime");
     ASSERT_NE(date_field, nullptr);
-    ASSERT_STREQ(date_field->get_name().data(), "DateTime");  // named field.
+    ASSERT_STREQ(date_field->name().data(), "DateTime");  // named field.
     assert_field_constraints(*date_field, {"type_constraint", "date_constraint"});
 
     auto user_model = module.get_model("User");
@@ -121,8 +121,8 @@ TEST(ModuleParsing, ForwardDeclarations) {
     {"future_field",                   {"FieldContainerModel", "c4"}},
     {"anonymous_field",                {"FieldContainerModel", "c4", "c5"}},
   };
-  for(const auto& item : model_ptr->get_properties().field_map) {
-    if (auto it = expectations.find(item.first); it != expectations.end()) {
+  for(const auto& item : model_ptr->properties().field_map) {
+    if (const auto& it = expectations.find(item.first); it != expectations.end()) {
       assert_field_constraints(*item.second.field, it->second);
       expectations.erase(it);
     }

@@ -42,9 +42,9 @@ namespace garlic {
     }
 
     tl::expected<void, std::error_code> add_model(model_pointer model) noexcept {
-      if (auto it = models_.find(model->get_name()); it != models_.end())
+      if (auto it = models_.find(model->name()); it != models_.end())
         return tl::make_unexpected(GarlicError::Redefinition);
-      models_.emplace(model->get_name().view(), std::move(model));
+      models_.emplace(model->name().view(), std::move(model));
       return tl::expected<void, std::error_code>();
     }
 
@@ -56,7 +56,7 @@ namespace garlic {
     }
 
     inline tl::expected<void, std::error_code> add_field(field_pointer field) noexcept {
-      return add_field(field->get_name().view(), field);
+      return add_field(field->name().view(), field);
     }
 
     model_pointer get_model(const text& name) const noexcept {

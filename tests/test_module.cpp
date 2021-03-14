@@ -35,17 +35,17 @@ TEST(Module, Basic) {
 
   // test find field methods.
   for (const auto& item : fields) {
-    auto it = module.find_field(item->get_name());
+    auto it = module.find_field(item->name());
     ASSERT_EQ(it->second, item);
-    ASSERT_EQ(module.get_field(item->get_name()), item);
+    ASSERT_EQ(module.get_field(item->name()), item);
   }
   ASSERT_EQ(module.get_field("Random Field"), nullptr);
 
   // test find model methods.
   for (const auto& item : models) {
-    auto it = module.find_model(item->get_name());
+    auto it = module.find_model(item->name());
     ASSERT_EQ(it->second, item);
-    ASSERT_EQ(module.get_model(item->get_name()), item);
+    ASSERT_EQ(module.get_model(item->name()), item);
   }
   ASSERT_EQ(module.get_model("Random Model"), nullptr);
 }

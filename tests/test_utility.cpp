@@ -111,7 +111,7 @@ void assert_model_has_field_name(
   ASSERT_NE(model, nullptr);
   auto field = model->get_field(key);
   ASSERT_NE(field, nullptr);
-  ASSERT_EQ(field->get_name(), field_name);
+  ASSERT_EQ(field->name(), field_name);
 }
 
 void assert_model_has_field_with_constraints(

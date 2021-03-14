@@ -265,9 +265,9 @@ namespace garlic::parsing {
       this->process_model_meta(*model_ptr, layer);
       this->process_model_inheritance(model_ptr, layer);
 
-      auto model_field = std::make_shared<Field>(model_ptr->get_name().view());
+      auto model_field = std::make_shared<Field>(model_ptr->name().view());
       model_field->add_constraint(make_constraint<model_tag>(model_ptr));
-      this->add_field(model_ptr->get_name().view(), model_field, true);
+      this->add_field(model_ptr->name().view(), model_field, true);
       cb(std::move(model_ptr));
     }
 
@@ -323,8 +323,8 @@ namespace garlic::parsing {
           field->inherit_constraints_from(*ptr);
           // if the field is a named one, it can be resolved as it is complete now.
           // anonymous fields can be skipped.
-          if (!field->get_name().empty()) {
-            this->resolve_field(field->get_name(), field);
+          if (!field->name().empty()) {
+            this->resolve_field(field->name(), field);
           }
         }
 

@@ -920,6 +920,16 @@ namespace garlic {
 
     void set_ignore_details(bool value) { properties_.ignore_details = value; }
 
+    const char* message() const noexcept {
+      const auto& meta = properties_.meta;
+      if (auto it = meta.find("message"); it != meta.end()) {
+        return it->second.data();
+      }
+      return nullptr;
+    }
+    const text& name() const noexcept { return properties_.name; }
+    const Properties& properties() const noexcept { return properties_; }
+
     const_constraint_iterator begin_constraints() const noexcept { return properties_.constraints.begin(); }
     const_constraint_iterator end_constraints() const noexcept { return properties_.constraints.end(); }
 
@@ -934,16 +944,6 @@ namespace garlic {
     bool quick_test(const Layer& layer) const noexcept {
       return test_flat_constraints_quick(layer, properties_.constraints);
     }
-
-    const char* get_message() const noexcept {
-      const auto& meta = properties_.meta;
-      if (auto it = meta.find("message"); it != meta.end()) {
-        return it->second.data();
-      }
-      return nullptr;
-    }
-    const text& get_name() const noexcept { return properties_.name; }
-    const Properties& get_properties() const noexcept { return properties_; }
 
   protected:
     Properties properties_;
@@ -993,6 +993,8 @@ namespace garlic {
 
     auto& meta() noexcept { return properties_.meta; }
     const auto& meta() const noexcept { return properties_.meta; }
+    const text& name() const noexcept { return properties_.name; }
+    const Properties& properties() const { return properties_; }
 
     const_field_iterator begin_field() const noexcept { return properties_.field_map.begin(); }
     const_field_iterator end_field() const noexcept { return properties_.field_map.end(); }
@@ -1054,9 +1056,6 @@ namespace garlic {
       return ConstraintResult::ok();
     }
 
-    const text& get_name() const noexcept { return properties_.name; }
-    const Properties& get_properties() const { return properties_; }
-
   protected:
     Properties properties_;
 
@@ -1068,9 +1067,9 @@ namespace garlic {
         const Layer& key,
         const Layer& value,
         const field_pointer& field) const {
-      if (field->get_properties().ignore_details) {
+      if (field->properties().ignore_details) {
         if (!field->quick_test(value)) {
-          const char* reason = field->get_message();
+          const char* reason = field->message();
           auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = sequence<ConstraintResult>::no_sequence(),
@@ -1082,7 +1081,7 @@ namespace garlic {
       } else {
         auto test = field->validate(value);
         if (!test.is_valid()) {
-          const char* reason = field->get_message();
+          const char* reason = field->message();
           auto name = key.get_string_view();
           details.push_back(ConstraintResult {
               .details = std::move(test.failures),
@@ -1104,7 +1103,7 @@ namespace garlic {
           ) : constraint_context(std::forward<Args>(args)...), model(std::move(model)) {}
 
       Context(model_pointer model
-          ) : constraint_context(model->get_name().view(), text::no_text(), true), model(std::move(model)) {}
+          ) : constraint_context(model->name().view(), text::no_text(), true), model(std::move(model)) {}
 
       model_pointer model;
     };
@@ -1149,14 +1148,14 @@ namespace garlic {
       template<typename... Args>
       inline ConstraintResult
       custom_message_fail(Args&&... args) const noexcept {
-        if (auto message = (*ref)->get_message(); message != nullptr)
+        if (auto message = (*ref)->message(); message != nullptr)
           return this->fail(message, std::forward<Args>(args)...);
         return this->fail("", std::forward<Args>(args)...);
       }
 
       void update_name() {
         if (*ref && this->name.empty()) {
-          this->name = (*ref)->get_name();
+          this->name = (*ref)->name();
         }
       }
 
@@ -1176,10 +1175,10 @@ namespace garlic {
     static inline ConstraintResult
     test(const Layer& layer, const Context& context) noexcept {
       if (context.hide) {
-        return test_flat_constraints_first_failure(layer, (*context.ref)->get_properties().constraints);
+        return test_flat_constraints_first_failure(layer, (*context.ref)->properties().constraints);
       }
       const auto& field = *context.ref;
-      if (context.ignore_details || field->get_properties().ignore_details) {
+      if (context.ignore_details || field->properties().ignore_details) {
         if (field->quick_test(layer)) return context.ok();
         return context.custom_message_fail();
       }
