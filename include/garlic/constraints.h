@@ -908,6 +908,10 @@ namespace garlic {
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
     Field(text&& name) { properties_.name = std::move(name); }
+    Field(text&& name, sequence<Constraint>&& constraints) {
+      properties_.name = std::move(name);
+      properties_.constraints = std::move(constraints);
+    }
 
     template<typename Tag, typename... Args>
     void add_constraint(Args&&... args) noexcept {
@@ -1131,13 +1135,16 @@ namespace garlic {
     }
   };
 
-  template<typename... Args>
-  std::shared_ptr<Field> make_field(Args&&... args) {
-    return std::make_shared<Field>(std::forward<Args>(args)...);
+  static inline std::shared_ptr<Field> make_field(text&& name) {
+    return std::make_shared<Field>(std::move(name));
+  }
+
+  static inline std::shared_ptr<Field> make_field(text&& name, sequence<Constraint>&& constraints) {
+    return std::make_shared<Field>(std::move(name), std::move(constraints));
   }
 
   template<typename... Args>
-  std::shared_ptr<Model> make_model(Args&&...args) {
+  static inline std::shared_ptr<Model> make_model(Args&&...args) {
     return std::make_shared<Model>(std::forward<Args>(args)...);
   }
 
