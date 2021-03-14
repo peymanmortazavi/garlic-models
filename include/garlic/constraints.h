@@ -557,8 +557,6 @@ namespace garlic {
         } else {
           auto result = context.constraint.test(item);
           if (!result.is_valid()) {
-            sequence<ConstraintResult> inner_details(1);
-            inner_details.push_back(std::move(result));
             return context.fail(
                 "Invalid value found in the list.",
                 ConstraintResult::field_failure(
@@ -638,8 +636,6 @@ namespace garlic {
         } else {
           auto result = constraint_it->test(*tuple_it);
           if (!result.is_valid()) {
-            sequence<ConstraintResult> inner_details(1);
-            inner_details.push_back(std::move(result));
             return context.fail(
                 "Invalid value found in the tuple.",
                 ConstraintResult::field_failure(
