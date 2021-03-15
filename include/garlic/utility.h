@@ -1,13 +1,14 @@
+/*!
+ * \file utility.h
+ * \brief This file contains various functions and classes to work with layers like getting or
+ *        resolving using a path.
+ */
+
 #ifndef GARLIC_UTILITY_H
 #define GARLIC_UTILITY_H
 
-#include <cstring>
 #include <charconv>
-#include <algorithm>
-#include <streambuf>
 #include <string_view>
-#include <system_error>
-#include <memory>
 
 #include "meta.h"
 #include "encoding.h"
@@ -50,6 +51,10 @@ namespace garlic {
   }
 
 
+  //! Lazy string splitter for getting tokens one by one.
+  /*! A more details
+   * \note This is a note.
+  */
   class lazy_string_splitter {
   public:
     using const_iterator = std::string_view::const_iterator;
