@@ -16,6 +16,19 @@
 
 namespace garlic {
 
+  /*!
+   * \brief Checks the equality of two layers.
+   *
+   * If the equality operator is defined or simply if **layer1 == layer2** is valid,
+   *    this function just returns the result of that comparison. This is done for
+   *    performance reasons.
+   * 
+   * \note Depending on the size of these two types, this method could be quite expensive
+   *       as it performs a linear scan on both layers for members and lists.
+   *
+   * \param layer1 The first layer, any type that conforms to the *ViewLayer* concept.
+   * \param layer2 The second layer, any type that conforms to the *ViewLayer* concept.
+   */
   template<GARLIC_VIEW L1, GARLIC_VIEW L2>
   static inline std::enable_if_t<!is_comparable<L1, L2>::value, bool>
   cmp_layers(const L1& layer1, const L2& layer2) {
@@ -52,14 +65,43 @@ namespace garlic {
 
 
   //! Lazy string splitter for getting tokens one by one.
-  /*! A more details
-   * \note This is a note.
+  /*!
+   * \brief A very small and limited splitter that parses tokens in between "." characters.
+   *
+   * \attention This method does not copy the text so it must remain available in the memory
+   *            while this splitter operates on the text.
+   *
+   * \code
+   * auto text = "a.b.c";
+   * lazy_string_splitter s{text};
+   * auto token = s.next();  // a
+   * token = s.next();  // b
+   * token = s.next();  // c
+   * \endcode
   */
   class lazy_string_splitter {
   public:
     using const_iterator = std::string_view::const_iterator;
+
+    /*!
+     * \brief Takes a **std::string_view** object for reference while processing the text.
+     *
+     * \param text The text in which tokens are to be extracted.
+     */
     lazy_string_splitter(std::string_view text) : text_(text), cursor_(text.begin()) {}
 
+    /*!
+     * A helper method that takes a callback lambda and calls it with every parsed token.
+     *
+     * \brief If one needs to parse every single token, this is a good option as it will
+     *        exhaust the splitter and keeps the code easy to read.
+     *
+     * \param cb Any callable object that takes a std::string_view as its parameter. **void (std::string_view)**
+     *
+     * \code
+     * lazy_string_splitter("a.b.c").for_each([](std::string_view token){ std::cout << token; });
+     * \endcode
+     */
     template<typename Callable>
     void for_each(Callable&& cb) {
       std::string_view part = this->next();
@@ -69,6 +111,9 @@ namespace garlic {
       }
     }
 
+    /*! \return The next token or if exhausted, it will return an empty token.
+     *  \note Empty token only gets returned when the splitter is exhausted.
+     */
     std::string_view next() {
       bool found_word = false;
       auto it = cursor_;
