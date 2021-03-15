@@ -71,7 +71,7 @@ namespace garlic {
    * \attention This method does not copy the text so it must remain available in the memory
    *            while this splitter operates on the text.
    *
-   * \code
+   * \code{.cpp}
    * auto text = "a.b.c";
    * lazy_string_splitter s{text};
    * auto token = s.next();  // a
@@ -98,7 +98,7 @@ namespace garlic {
      *
      * \param cb Any callable object that takes a std::string_view as its parameter. **void (std::string_view)**
      *
-     * \code
+     * \code{.cpp}
      * lazy_string_splitter("a.b.c").for_each([](std::string_view token){ std::cout << token; });
      * \endcode
      */
@@ -142,6 +142,12 @@ namespace garlic {
   };
 
 
+  /*! Navigates the layer using the given path and if found,
+   *  calls the callback function with the found layer.
+   *
+   * \param path An object path (e.g. users.2.first_name).
+   * \param cb Any callable object/lambda with signature **void(LayerType)**
+   */
   template<GARLIC_VIEW LayerType, typename Callable>
   static inline void
   resolve_layer_cb(const LayerType& value, std::string_view path, Callable&& cb) {
@@ -175,9 +181,17 @@ namespace garlic {
   }
 
 
+  /*! Navigates the layer using the given path and if found returns the **decoded** value.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   *
+   * \param path An object path (e.g. users.2.first_name).
+   * \param default_value A default value in case the path does not exist or it cannot be
+   *        decoded to the **OutputType**.
+   */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  safe_resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
+  safe_resolve(const Layer& value, std::string_view key, OutputType default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
         safe_decode<OutputType, Layer>(result, [&default_value](auto&& result){
             default_value = result;
@@ -187,6 +201,14 @@ namespace garlic {
   }
 
 
+  /*! Navigates the layer using the given path and if found calls
+   *  the callback function with the **decoded** value.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   *
+   * \param path An object path (e.g. users.2.first_name).
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   safe_resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
@@ -196,9 +218,16 @@ namespace garlic {
   }
 
 
+  /*! Navigates the layer using the given path and if found returns the **decoded** value.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   *
+   * \param path An object path (e.g. users.2.first_name).
+   * \param default_value A default value in case the path does not exist.
+   */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  resolve(const Layer& value, std::string_view key, OutputType&& default_value) {
+  resolve(const Layer& value, std::string_view key, OutputType default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
         default_value = decode<OutputType, Layer>(result);
         });
@@ -206,6 +235,14 @@ namespace garlic {
   }
 
 
+  /*! Navigates the layer using the given path and if found,
+   *  calls the callback function with the **decoded** value.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   *
+   * \param path An object path (e.g. users.2.first_name).
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
@@ -215,13 +252,19 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the value associated with the given key in the layer, if found.
+   *
+   * \attention This method **DOES NOT** check if the layer is an object.
+   *
+   * \param cb Any callable object/lambda with signature **void(LayerType)**
+   */
   template<GARLIC_VIEW Layer, typename Callable>
   static inline void
   get_member(const Layer& value, const char* key, Callable&& cb) noexcept {
     if(auto it = value.find_member(key); it != value.end_member()) cb((*it).value);
   }
 
-
+  //! \copydoc get_member()
   template<GARLIC_VIEW Layer, typename Callable>
   static inline void
   get_member(const Layer& value, std::string_view key, Callable&& cb) noexcept {
@@ -229,6 +272,13 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the *i* th element in the layer.
+   *
+   * \note If the view layer supports random access iterators, this is an O(1) function
+   *       otherwise it's an O(n) function.
+   *
+   * \param cb Any callable object/lambda with signature **void(LayerType)**
+   */
   template<GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
   get_item(Layer layer, IndexType index, Callable&& cb) noexcept {
@@ -259,6 +309,11 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** value associated with the given key in the layer.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is an object nor that it has the key.
+   */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   get(Layer layer, const char* key) {
@@ -266,6 +321,13 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** *i* th element in the layer.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is a list nor that it has *i* elements in it.
+   * \note If the view layer supports random access iterators, this is an O(1) function
+   *       otherwise it's an O(n) function.
+   */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value, OutputType>
   get(Layer layer, IndexType index) {
@@ -285,6 +347,11 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** value associated with the given key in the layer, if found.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is an object.
+   */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
   get(Layer layer, const char* key, OutputType default_value) {
@@ -295,6 +362,11 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** *i* th element in the layer, if found.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is a list.
+   */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
   get(Layer layer, IndexType index, OutputType default_value) {
@@ -305,6 +377,13 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the **decoded** value associated with the
+   *  given key in the layer, if found.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is an object.
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, typename Callable, GARLIC_VIEW Layer>
   static inline void
   get_cb(Layer layer, const char* key, Callable&& cb) {
@@ -314,6 +393,12 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the **decoded** *i* th element in the layer, if found.
+   *
+   * This method **DOES NOT** check if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is a list.
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
   get_cb(Layer layer, IndexType index, Callable&& cb) {
@@ -323,9 +408,14 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** value associated with the given key in the layer, if found.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is an object.
+   */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  safe_get(Layer layer, const char* key, OutputType&& default_value) {
+  safe_get(Layer layer, const char* key, OutputType default_value) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
       safe_decode<OutputType, Layer>(
           (*it).value,
@@ -335,9 +425,14 @@ namespace garlic {
   }
 
 
+  /*! Get the **decoded** *i* th element in the layer, if found.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is a list.
+   */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
-  safe_get(Layer layer, IndexType index, OutputType&& default_value) {
+  safe_get(Layer layer, IndexType index, OutputType default_value) {
     get_item(layer, index, [&default_value](const auto& result) {
         safe_decode<OutputType, Layer>(result, [&default_value](auto&& value){
             default_value = value;
@@ -347,6 +442,13 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the **decoded** value associated with the
+   *  given key in the layer, if found.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is an object.
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
   safe_get_cb(Layer layer, const char* key, Callable&& cb) {
@@ -356,6 +458,12 @@ namespace garlic {
   }
 
 
+  /*! Calls the callback function with the **decoded** *i* th element in the layer, if found.
+   *
+   * This method safely checks if the found layer is possible to decode to the **OutputType**.
+   * \attention This method **DOES NOT** check if the layer is a list.
+   * \param cb Any callable object/lambda with signature **void(OutputType)**
+   */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
   safe_get_cb(Layer layer, IndexType index, Callable&& cb) {
@@ -365,6 +473,11 @@ namespace garlic {
   }
 
 
+  /*! Deep copies the content of one layer to another.
+   *
+   * \param layer The source view layer to copy values from.
+   * \param output The destination ref layer to copy values to.
+   */
   template<GARLIC_VIEW Layer, GARLIC_REF Output>
   static inline void
   copy_layer(Layer layer, Output output) {
