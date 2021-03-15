@@ -295,8 +295,6 @@ namespace garlic::parsing {
           [this, &layer, &cb](const auto& item) {
             if (auto it = ctors.find(decode<text>(item)); it != ctors.end()) {
               cb(it->second(layer, parser_ambassador{*this}));
-            } else {
-              // report parsing error.
             }
           });
     }
@@ -382,7 +380,7 @@ namespace garlic::parsing {
         }
       });
 
-      return (field_dependents_.size() ? GarlicError::Redefinition : std::error_code());
+      return (field_dependents_.size() ? GarlicError::UndefinedObject : std::error_code());
     }
   };
 

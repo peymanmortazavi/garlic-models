@@ -7,7 +7,8 @@
 namespace garlic {
 
   enum class GarlicError {
-    Redefinition = 1
+    Redefinition = 1,
+    UndefinedObject = 2,
   };
 
   namespace error {
@@ -19,6 +20,8 @@ namespace garlic {
           switch (static_cast<GarlicError>(code)) {
             case GarlicError::Redefinition:
               return "An element with the same identification is already defined. Redifinition is not allowed.";
+            case GarlicError::UndefinedObject:
+              return "Use of an undefined/unresolved object.";
             default:
               return "unknown";
           }
