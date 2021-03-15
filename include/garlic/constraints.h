@@ -1,18 +1,12 @@
 #ifndef GARLIC_CONSTRAINTS_H
 #define GARLIC_CONSTRAINTS_H
 
-#include <cstdlib>
-#include <cstring>
 #include <algorithm>
 #include <unordered_set>
-#include <memory>
 #include <regex>
-#include <string>
-#include <type_traits>
 
 #include "layer.h"
 #include "utility.h"
-#include "meta.h"
 #include "containers.h"
 
 

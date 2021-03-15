@@ -1,9 +1,10 @@
 #ifndef GARLIC_ENCODING_H
 #define GARLIC_ENCODING_H
 
+#include <type_traits>
+
 #include "layer.h"
 #include "containers.h"
-#include <type_traits>
 
 namespace garlic {
 

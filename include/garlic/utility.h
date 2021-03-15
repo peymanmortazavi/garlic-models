@@ -1,18 +1,16 @@
 #ifndef GARLIC_UTILITY_H
 #define GARLIC_UTILITY_H
 
-#include "layer.h"
-#include "meta.h"
-#include "encoding.h"
-#include <algorithm>
 #include <cstring>
-#include <iterator>
+#include <charconv>
+#include <algorithm>
 #include <streambuf>
 #include <string_view>
-#include <charconv>
 #include <system_error>
 #include <memory>
-#include <type_traits>
+
+#include "meta.h"
+#include "encoding.h"
 
 
 namespace garlic {

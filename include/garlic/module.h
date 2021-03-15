@@ -1,12 +1,10 @@
 #ifndef GARLIC_MODULE_H
 #define GARLIC_MODULE_H
 
-#include <iterator>
 #include <unordered_map>
 
 #include "lib/expected.h"
 
-#include "layer.h"
 #include "constraints.h"
 #include "error.h"
 #include "utility.h"

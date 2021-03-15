@@ -2,11 +2,10 @@
 #define GARLIC_PARSING_MODULE
 
 #include <memory>
+
 #include "constraints.h"
 #include "../module.h"
-#include "garlic/constraints.h"
-#include "garlic/lib/expected.h"
-#include "garlic/utility.h"
+#include "../utility.h"
 
 namespace garlic::parsing {
 
