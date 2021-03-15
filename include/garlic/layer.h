@@ -1,6 +1,11 @@
 #ifndef GARLIC_LAYER_H
 #define GARLIC_LAYER_H
 
+/*! \file layer.h
+ *  \brief This file contains concepts for C++ 20 along with some helper types to
+ *         make it easier to produce iterators for the container wrappers (providers).
+ */
+
 #if __cpp_concepts >= 201907L
 #include <concepts>
 #define GARLIC_USE_CONCEPTS
@@ -154,6 +159,13 @@ namespace garlic {
   };
 #endif
 
+  /*! A trivial and basic iterator wrapper that conforms to the **IteratorWrapper** concept.
+   *
+   * The result of the *wrap()* method will be **ValueType { *iterator };**
+   *
+   * \param ValueType must be a garlic Layer.
+   * \param Iterator is the underlying iterator type whose value will be wrapped by the **ValueType**
+   */
   template<typename ValueType, typename Iterator>
   struct BasicIteratorWrapper {
     using output_type = ValueType;
@@ -166,6 +178,7 @@ namespace garlic {
     }
   };
 
+  //! A forward iterator that takes an *IteratorWrapper* as a guide to produce a complete iterator.
   template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class ForwardIterator {
   public:
@@ -198,14 +211,20 @@ namespace garlic {
 
     bool operator != (const self& other) const { return !(other == *this); }
 
+    //! \return a reference to the underlying iterator.
     iterator_type& get_inner_iterator() { return container_.iterator; }
+
+    //! \return a const reference to the underlying iterator.
     const iterator_type& get_inner_iterator() const { return container_.iterator; }
+
+    //! \return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const { return container_.wrap(); }
 
   private:
     Container container_;
   };
 
+  //! A random access iterator that takes an *IteratorWrapper* as a guide to produce a complete iterator.
   template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class RandomAccessIterator {
   public:
@@ -293,42 +312,56 @@ namespace garlic {
       return *(*this + index);
     }
 
+    //! \return a reference to the underlying iterator.
     iterator_type& get_inner_iterator() { return container_.iterator; }
+
+    //! \return a const reference to the underlying iterator.
     const iterator_type& get_inner_iterator() const {
       return container_.iterator;
     }
+
+    //! \return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const {
       return container_.wrap();
+    }
+
+    friend inline RandomAccessIterator<Container, DifferenceType>
+    operator + (
+        int left,
+        RandomAccessIterator<Container, DifferenceType> right) {
+      return right += left;
+    }
+
+    friend inline RandomAccessIterator<Container, DifferenceType>
+    operator - (
+        int left,
+        RandomAccessIterator<Container, DifferenceType> right) {
+      return right -= left;
+    }
+
+    friend inline DifferenceType
+    operator - (
+        const RandomAccessIterator<Container, DifferenceType>& left,
+        const RandomAccessIterator<Container, DifferenceType>& right) {
+      return left.get_inner_iterator() - right.get_inner_iterator();
     }
 
   private:
     Container container_;
   };
 
-  template<typename Container, typename DifferenceType>
-  static inline RandomAccessIterator<Container, DifferenceType>
-  operator + (
-      int left,
-      RandomAccessIterator<Container, DifferenceType> right) {
-    return right += left;
-  }
-
-  template<typename Container, typename DifferenceType>
-  static inline RandomAccessIterator<Container, DifferenceType>
-  operator - (
-      int left,
-      RandomAccessIterator<Container, DifferenceType> right) {
-    return right -= left;
-  }
-
-  template<typename Container, typename DifferenceType>
-  static inline DifferenceType
-  operator - (
-      const RandomAccessIterator<Container, DifferenceType>& left,
-      const RandomAccessIterator<Container, DifferenceType>& right) {
-    return left.get_inner_iterator() - right.get_inner_iterator();
-  }
-
+  /*! A generic bask inserter iterator for all garlic Layer types.
+   *
+   * This is similar to std::back_inserter_iterator but it works on garlic Layer types.
+   * Usage is the same exact way as the STL counterpart.
+   *
+   * \code{.cpp}
+   * CloveDocument doc;
+   * doc.set_list();
+   * int values[] = {1, 2, 3};
+   * std::copy(std::begin(values), std::end(values), garlic::back_inserter(doc));
+   * \endcode
+   */
   template<GARLIC_REF LayerType>
   class back_inserter_iterator {
   public:
@@ -354,28 +387,49 @@ namespace garlic {
     LayerType layer_;
   };
 
+  //! Helper method to produce garlic back inserter iterators.
   template<GARLIC_REF LayerType>
   static inline back_inserter_iterator<LayerType>
   back_inserter(LayerType&& layer) {
     return back_inserter_iterator<LayerType>(std::forward<LayerType>(layer));
   }
 
+  /*! Very basic forward iterator useful for making wrapper iterators for new providers.
+   *
+   * \param ValueType is the output garlic Layer type.
+   * \param Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
+   */
   template<typename ValueType, typename Iterator>
   using BasicForwardIterator = ForwardIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 
+  /*! Very basic random access iterator useful for making wrapper iterators for new providers.
+   *
+   * \param ValueType is the output garlic Layer type.
+   * \param Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
+   */
   template<typename ValueType, typename Iterator>
   using BasicRandomAccessIterator = RandomAccessIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 
+  /*! Generic struct to hold a pair to be used to store key-value associations in an object.
+   */
   template<typename ValueType, typename KeyType = ValueType>
   struct MemberPair {
     KeyType key;
     ValueType value;
   };
 
+  /*! Wrapper struct to return an object that can be used in a for-loop range for iterating over lists.
+   *
+   * Since a Layer must contain **begin_list()** and **end_list()** methods, it can't be used in for-loops.
+   *
+   * \code{.cpp}
+   * ConstListRange get_list() const { return ConstListRange<LayerType>(layer); }
+   * \endcode
+   */
   template <typename LayerType>
   struct ConstListRange {
     const LayerType& layer;
@@ -384,6 +438,14 @@ namespace garlic {
     ConstValueIteratorOf<LayerType> end() const { return layer.end_list(); }
   };
 
+  /*! Wrapper struct to return an object that can be used in a for-loop range for iterating over lists.
+   *
+   * Since a Layer must contain **begin_list()** and **end_list()** methods, it can't be used in for-loops.
+   *
+   * \code{.cpp}
+   * ListRange get_list() { return ListRange<LayerType>(layer); }
+   * \endcode
+   */
   template <typename LayerType>
   struct ListRange {
     LayerType& layer;
@@ -392,6 +454,14 @@ namespace garlic {
     ValueIteratorOf<LayerType> end() { return layer.end_list(); }
   };
 
+  /*! Wrapper struct to return an object that can be used in a for-loop range for iterating over an object's members.
+   *
+   * Since a Layer must contain **begin_member()** and **end_member()** methods, it can't be used in for-loops.
+   *
+   * \code{.cpp}
+   * ConstMemberRange get_member() const { return ConstMemberRange<LayerType>(layer); }
+   * \endcode
+   */
   template <typename LayerType>
   struct ConstMemberRange {
     const LayerType& layer;
@@ -400,6 +470,14 @@ namespace garlic {
     ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
   };
 
+  /*! Wrapper struct to return an object that can be used in a for-loop range for iterating over an object's members.
+   *
+   * Since a Layer must contain **begin_member()** and **end_member()** methods, it can't be used in for-loops.
+   *
+   * \code{.cpp}
+   * MemberRange get_member() { return MemberRange<LayerType>(layer); }
+   * \endcode
+   */
   template <typename LayerType>
   struct MemberRange {
     LayerType& layer;
