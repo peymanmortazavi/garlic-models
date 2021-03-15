@@ -1,29 +1,8 @@
-* Explore making both Field and Model return a single ConstraintResult.
-* Start polishing the test methods across the board so they actually return the errors.
 * Make a parsing model and test against it before parsing.
-* Move all parse methods from the constraints to the module header.
-* Make a yaml parser that uses libyaml to create clove value and parse clove to yaml.
-* Create an issue to explore using a different container other than vector to enable constexpr
-  models.
 
   When making the Python module, take a look at this:
   https://github.com/python-rapidjson/python-rapidjson
 
-  Update the libyaml module to allow using an existing initialized emitter.
-
-  1. Make sure using string_view is actually speeding up stuff compared to strlen getting called.
   2. Add optional get_string_length and get_list_length methods.
-  3. Attempt to decouple Model and Module from parsing as much as possible.
-  4. Work on CI and previous compilers before addressing new constraints.
   5. Attempt to add support for JSON Schema so we can produce some metrics.
   6. Python module test run.
-
-
--- Make sure we have a clean and nice way to produce the constriants
--- No performance cost to this.
--- Make sure to setup a proper destructor on a unique_ptr to the void* context.
--- Make sure to fix the UINT32_MAX error.
-
-figured out the context issue by using the context destructor I Guess, not sure if it's worth it honestly
-but in any case, we sould make the ConstriantContext easy to use and inherit from to make the constraint tags
-easy to make.
