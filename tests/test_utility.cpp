@@ -16,14 +16,6 @@ get_rapidjson_document(const char* name) {
   return doc;
 }
 
-garlic::providers::yamlcpp::YamlNode
-get_yamlcpp_node(const char* name) {
-  auto file = fopen(name, "r");
-  auto node = garlic::providers::yamlcpp::Yaml::load(file);
-  fclose(file);
-  return node;
-}
-
 void
 print_constraint_result(
     const garlic::ConstraintResult& result,
@@ -62,4 +54,95 @@ assert_constraint_result(
   ASSERT_FALSE(results.is_valid());
   ASSERT_STREQ(results.name.data(), name);
   ASSERT_STREQ(results.reason.data(), message);
+}
+
+void assert_field_constraints(const garlic::Field& field, NameQueue names) {
+  std::for_each(
+      field.begin_constraints(), field.end_constraints(),
+      [&names](const garlic::Constraint& constraint) {
+        ASSERT_STREQ(constraint.context().name.data(), names.front().data());
+        names.pop_front();
+      });
+}
+
+void assert_model_fields(const garlic::Model& model, NameQueue names) {
+  for(const auto& name : names) {
+    ASSERT_NE(model.find_field(name), model.end_fields());
+  }
+}
+
+void assert_model_fields(const garlic::Module& module, const garlic::text& model_name, NameQueue names) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  assert_model_fields(*model, std::move(names));
+}
+
+void assert_module_structure(const garlic::Module& module, ModuleStructure structure) {
+  for (const auto& model_structure : structure) {
+    auto model = module.get_model(model_structure.first);
+    ASSERT_NE(model, nullptr);
+    for (const auto& field_structure : model_structure.second) {
+      auto field = model->get_field(field_structure.first);
+      assert_field_constraints(*field, std::move(field_structure.second));
+    }
+  }
+}
+
+void load_libyaml_module(garlic::Module& module, const char* filename) {
+  auto doc = get_libyaml_document(filename);
+  auto result = garlic::parsing::load_module(doc.get_view());
+  ASSERT_TRUE(result);
+  module = *result;
+}
+
+
+void assert_model_has_field_name(
+    const garlic::Module& module, const garlic::text& model_name,
+    const garlic::text& key, const garlic::text& field_name) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  auto field = model->get_field(key);
+  ASSERT_NE(field, nullptr);
+  ASSERT_EQ(field->name(), field_name);
+}
+
+void assert_model_has_field_with_constraints(
+    const garlic::Model& model, const garlic::text& field_name, NameQueue constraints) {
+  auto it = model.find_field(field_name);
+  ASSERT_NE(it, model.end_fields());
+  assert_field_constraints(*it->second.field, std::move(constraints));
+}
+
+void assert_model_has_field_with_constraints(
+    const garlic::Module& module,
+    const garlic::text& model_name,
+    const garlic::text& field_name,
+    NameQueue constraints) {
+  auto model = module.get_model(model_name);
+  ASSERT_NE(model, nullptr);
+  assert_model_has_field_with_constraints(*model, field_name, std::move(constraints));
+}
+
+garlic::ConstraintResult
+validate_jsonfile(const garlic::Module& module, const garlic::text& model_name, const char* filename) {
+  auto model = module.get_model(model_name);
+  auto doc = get_rapidjson_document(filename);
+  return garlic::make_constraint<garlic::model_tag>(model).test(doc);
+}
+
+void assert_jsonfile_valid(
+    const garlic::Module& module, const garlic::text& model_name,
+    const char* filename, bool print) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print)
+    print_constraint_result(result);
+  ASSERT_TRUE(result.is_valid());
+}
+
+void assert_jsonfile_invalid(
+    const garlic::Module& module, const garlic::text& model_name,
+    const char* filename, bool print) {
+  auto result = validate_jsonfile(module, model_name, filename);
+  if (print) print_constraint_result(result);
+  ASSERT_FALSE(result.is_valid());
 }

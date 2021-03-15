@@ -51,6 +51,14 @@ namespace garlic {
       old.size_ = 0;
     }
 
+    static inline basic_text copy(const Ch* data) { return basic_text(data, text_type::copy); }
+    static inline basic_text copy(const Ch* data, SizeType size) { return basic_text(data, size, text_type::copy); }
+    static inline basic_text copy(const std::basic_string<Ch>& value) { return basic_text(value, text_type::copy); }
+    static inline basic_text copy(const std::basic_string_view<Ch>& value) { return basic_text(value, text_type::copy); }
+    static inline basic_text copy(const basic_text& another) {
+      return basic_text(another.data(), another.size(), text_type::copy);
+    }
+
     inline constexpr basic_text& operator =(const basic_text& other) {
       destroy();
       data_ = other.data_;
@@ -107,6 +115,11 @@ namespace garlic {
       return basic_text("");
     }
 
+    friend inline std::ostream& operator << (std::ostream& output, const basic_text& text) {
+      output.write(text.data(), text.size());
+      return output;
+    }
+
   private:
     const Ch* data_;
     SizeType size_;
@@ -117,12 +130,6 @@ namespace garlic {
         std::free((void*)data_);
     }
   };
-
-  template<typename Ch, typename SizeType>
-  static inline std::ostream& operator << (std::ostream& output, const basic_text<Ch, SizeType>& text) {
-    output.write(text.data(), text.size());
-    return output;
-  }
 
   using text = basic_text<char>;
 
@@ -139,6 +146,10 @@ namespace garlic {
     sequence(SizeType initial_capacity = 8) : capacity_(initial_capacity), size_(0) {
       if (capacity_)
         items_ = reinterpret_cast<pointer>(std::malloc(capacity_ * sizeof(ValueType)));
+    }
+
+    sequence(std::initializer_list<value_type> list) : sequence(list.size()) {
+      push_front(list.begin(), list.end());
     }
 
     sequence(const sequence&) = delete;
@@ -164,7 +175,8 @@ namespace garlic {
         capacity_ += count;
         items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));
       }
-      memmove(items_ + count, items_, count * sizeof(ValueType));
+      if (size_)
+        memmove(items_ + count, items_, count * sizeof(ValueType));
       for (auto i = 0; i < count; ++i) new (items_ + i) ValueType(begin[i]);
       size_ += count;
     }
@@ -202,6 +214,11 @@ namespace garlic {
 
   private:
     inline void reserve_item() noexcept {
+      if (capacity_ == 0) {
+        capacity_ = 8;
+        items_ = reinterpret_cast<pointer>(std::malloc(capacity_ * sizeof(ValueType)));
+        return;
+      }
       if (size_ == capacity_) {
         capacity_ += (capacity_ + 1) / 2;
         items_ = reinterpret_cast<pointer>(std::realloc(items_, capacity_ * sizeof(ValueType)));

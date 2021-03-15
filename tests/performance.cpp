@@ -1,5 +1,8 @@
 #include <benchmark/benchmark.h>
 #include <garlic/garlic.h>
+#include <string>
+#include <tuple>
+#include "garlic/constraints.h"
 #include "garlic/providers/libyaml/parser.h"
 #include "garlic/providers/rapidjson.h"
 #include "garlic/containers.h"
@@ -33,12 +36,13 @@ static rapidjson::Document& CreateLargeRapidJsonDocument() {
     d->SetArray();
     for (size_t i = 0; i < iterations; i++) {
       auto object = rapidjson::Value();
-      object.SetObject();
-      object.AddMember(
-          "text",
-          "This is a long text just for the purpose of testing.",
-          d->GetAllocator());
-      object.AddMember("value", 18231, d->GetAllocator());
+      object.SetString(("A" + std::to_string(i)).c_str(), d->GetAllocator());
+      //object.SetObject();
+      //object.AddMember(
+      //    "text",
+      //    "This is a long text just for the purpose of testing.",
+      //    d->GetAllocator());
+      //object.AddMember("value", 18231, d->GetAllocator());
       d->PushBack(std::move(object), d->GetAllocator());
     }
   }
@@ -98,8 +102,8 @@ static void BM_Sequence_LongDouble(benchmark::State& state) {
     for (auto i = 0; i < iterations; ++i) x.push_back(i);
   }
 }
-BENCHMARK(BM_Vector_LongDouble);
-BENCHMARK(BM_Sequence_LongDouble);
+//BENCHMARK(BM_Vector_LongDouble);
+//BENCHMARK(BM_Sequence_LongDouble);
 
 static void BM_Vector_LargeConstraintResult(benchmark::State& state) {
   int iterations = (rand() % 1) + 128;
@@ -120,8 +124,8 @@ static void BM_Sequence_LargeConstraintResult(benchmark::State& state) {
     }
   }
 }
-BENCHMARK(BM_Vector_LargeConstraintResult);
-BENCHMARK(BM_Sequence_LargeConstraintResult);
+//BENCHMARK(BM_Vector_LargeConstraintResult);
+//BENCHMARK(BM_Sequence_LargeConstraintResult);
 
 static void BM_Vector_ConstraintResult(benchmark::State& state) {
   int iterations = (rand() % 1) + 7;
@@ -142,8 +146,8 @@ static void BM_Sequence_ConstraintResult(benchmark::State& state) {
     }
   }
 }
-BENCHMARK(BM_Vector_ConstraintResult);
-BENCHMARK(BM_Sequence_ConstraintResult);
+//BENCHMARK(BM_Vector_ConstraintResult);
+//BENCHMARK(BM_Sequence_ConstraintResult);
 
 static void BM_std_string(benchmark::State& state) {
   for (auto _ : state) {
@@ -156,8 +160,89 @@ static void BM_garlic_text(benchmark::State& state) {
     garlic::text x("This is something quite long and we need to overlook this.", garlic::text_type::copy);
   }
 }
-BENCHMARK(BM_std_string);
-BENCHMARK(BM_garlic_text);
+//BENCHMARK(BM_std_string);
+//BENCHMARK(BM_garlic_text);
+//
+
+template<typename T>
+using test_handler = int (*)(const T&);
+
+template<typename T>
+using quick_test_handler = bool (*)(const T&);
+
+template<typename T>
+struct regex_executioner {
+  static int test_handler(const T&) { return 0; }
+  static bool quick_test_handler(const T&) { return false; }
+};
+
+
+template<typename T, typename... Constraints>
+struct registry {
+
+  struct element {
+    int value;
+  };
+
+  template<typename Tag>
+  constexpr element& get_info() const noexcept {
+    //constexpr element x;
+  }
+
+  constexpr registry() {
+    create_table<0, Constraints...>();
+  }
+
+  template<size_t I = 0, typename... Cs>
+  constexpr void create_table() {
+
+  }
+
+  //template<int Value, typename Tag, typename... Tags>
+  //struct position {
+  //};
+
+  static constexpr unsigned size = sizeof...(Constraints);
+  std::tuple<Constraints...> executioners;
+};
+
+
+static void BM_Modern(benchmark::State& state) {
+  auto r1 = garlic::make_constraint<garlic::regex_tag>("\\d{1,5}", "r1");
+  auto r2 = garlic::make_constraint<garlic::regex_tag>("\\w{1,5}", "r2");
+  garlic::sequence<std::shared_ptr<garlic::FlatConstraint>> seq(2);
+  seq.push_back(r1);
+  seq.push_back(r2);
+  auto constraint = garlic::make_constraint<garlic::any_tag>(std::move(seq));
+  auto& doc = CreateLargeRapidJsonDocument();
+  auto view = garlic::providers::rapidjson::JsonView(doc);
+  state.counters["valid"] = 0;
+  for (auto _ : state) {
+    for (const auto& v : view.get_list()) {
+      state.counters["valid"] += (constraint->test(v).is_valid() ? 1 : 0);
+    }
+  }
+}
+
+static void BM_Old(benchmark::State& state) {
+  using T = garlic::providers::rapidjson::JsonView;
+  auto r1 = std::make_shared<garlic::RegexConstraint<T>>("\\d{1,5}", "r1");
+  auto r2 = std::make_shared<garlic::RegexConstraint<T>>("\\w{1,5}", "r2");
+  garlic::sequence<std::shared_ptr<garlic::Constraint<T>>> seq(2);
+  seq.push_back(r1);
+  seq.push_back(r2);
+  auto constraint = std::make_shared<garlic::AnyConstraint<T>>(std::move(seq), garlic::ConstraintProperties::create_default());
+  auto& doc = CreateLargeRapidJsonDocument();
+  auto view = T(doc);
+  state.counters["valid"] = 0;
+  for (auto _ : state) {
+    for (const auto& v : view.get_list()) {
+      state.counters["valid"] += (constraint->test(v).is_valid() ? 1 : 0);
+    }
+  }
+}
+BENCHMARK(BM_Old);
+BENCHMARK(BM_Modern);
 
 //BENCHMARK(BM_LoadRapidJsonDocument_Native);
 //BENCHMARK(BM_LoadRapidJsonDocument_Garlic);

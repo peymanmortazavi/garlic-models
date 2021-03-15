@@ -10,6 +10,7 @@ option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." OFF)
 option(GARLIC_TEST_PROVIDERS "Build tests for the built-in providers." ON)
 
 option(GARLIC_BUILD_LAB "Build lab tests." OFF)
+set(GARLIC_BUILD_LAB OFF)
 
 enable_testing()
 
@@ -18,6 +19,7 @@ set(TEST_SOURCES
     test_clove.cpp
     test_models.cpp
     test_module.cpp
+    test_module_parsing.cpp
     test_encoding.cpp
     test_constraints.cpp
     test_containers.cpp
@@ -27,9 +29,9 @@ set(TEST_SOURCES
 add_executable(GarlicModelTests ${TEST_SOURCES})
 target_link_libraries(GarlicModelTests GarlicModel yaml-cpp yaml Threads::Threads ${GTEST_BOTH_LIBRARIES})
 
-IF(GARLIC_TEST_PROVIDERS)
-    add_subdirectory(providers)
-ENDIF()
+#IF(GARLIC_TEST_PROVIDERS)
+#    add_subdirectory(providers)
+#ENDIF()
 
 IF(GARLIC_BUILD_PERFORMANCE_TESTS)
     add_executable(PerformanceTests performance.cpp test_utility.cpp)

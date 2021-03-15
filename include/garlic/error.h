@@ -6,8 +6,9 @@
 
 namespace garlic {
 
-  enum GarlicError {
-    FieldNotFound = 1
+  enum class GarlicError {
+    Redefinition = 1,
+    UndefinedObject = 2,
   };
 
   namespace error {
@@ -17,8 +18,10 @@ namespace garlic {
         const char* name() const noexcept override { return "garlic"; }
         std::string message(int code) const override {
           switch (static_cast<GarlicError>(code)) {
-            case GarlicError::FieldNotFound:
-              return "The requested field does not exist.";
+            case GarlicError::Redefinition:
+              return "An element with the same identification is already defined. Redifinition is not allowed.";
+            case GarlicError::UndefinedObject:
+              return "Use of an undefined/unresolved object.";
             default:
               return "unknown";
           }
@@ -27,17 +30,18 @@ namespace garlic {
 
   }
 
+  inline std::error_code
+  make_error_code(garlic::GarlicError error) {
+    static const garlic::error::GarlicErrorCategory category{};
+    return {static_cast<int>(error), category};
+  }
+
+
 }
 
 namespace std {
   template<>
   struct is_error_code_enum<garlic::GarlicError> : true_type {};
-}
-
-inline std::error_code
-make_error_code(garlic::GarlicError error) {
-  static garlic::error::GarlicErrorCategory category;
-  return {static_cast<int>(error), category};
 }
 
 #endif /* end of include guard: GARLIC_ERROR_H */

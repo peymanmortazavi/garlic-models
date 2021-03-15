@@ -1,9 +1,8 @@
 #include <algorithm>
-#include <cstring>
+#include <iterator>
+
 #include <gtest/gtest.h>
 #include <garlic/containers.h>
-#include <iterator>
-#include <string>
 
 using namespace std;
 using namespace garlic;
@@ -66,6 +65,42 @@ TEST(GarlicText, Copy) {
   ASSERT_EQ(d.data(), b.data());  // same pointers.
   ASSERT_NE(copy1.data(), a.data());  // different pointers.
   ASSERT_NE(copy2.data(), b.data());  // different pointers.
+}
+
+TEST(GarlicText, StaticCopyConstructors) {
+  // const char*
+  const char* str1 = "Text 1";
+  auto txt1 = text::copy(str1);
+  ASSERT_NE(txt1.data(), str1);
+  ASSERT_STREQ(txt1.data(), str1);
+  ASSERT_EQ(txt1.size(), 6);
+  ASSERT_FALSE(txt1.is_view());
+
+  // char* with size
+  auto txt2 = text::copy(str1, 4);
+  ASSERT_NE(txt2.data(), str1);
+  ASSERT_NE(txt2.data(), txt1.data());
+  ASSERT_STREQ(txt1.data(), str1);
+  ASSERT_NE(txt1, txt2);
+  ASSERT_EQ(txt2.size(), 4);
+  ASSERT_FALSE(txt2.is_view());
+
+  // std::string
+  std::string str3 = "Text 3";
+  auto txt3 = text::copy(str3);
+  ASSERT_FALSE(txt3.is_view());
+  ASSERT_EQ(str3, txt3);
+
+  // std::string_view
+  std::string_view str4 = str3;
+  auto txt4 = text::copy(str4);
+  ASSERT_FALSE(txt4.is_view());
+  ASSERT_EQ(str4, txt4);
+
+  // another text
+  auto txt5 = "Text 5";
+  auto txt6 = text::copy(txt5);
+  ASSERT_FALSE(txt6.is_view());
 }
 
 TEST(GarlicText, StaticNoText) {
@@ -159,4 +194,15 @@ TEST(GarlicSequence, PushFront) {
     double expectation[8] = {0, 1, 2, 3, 1, 2, 3, 4};
     ASSERT_TRUE(std::equal(one.begin(), one.end(), expectation, expectation + 8));
   }
+}
+
+TEST(GarlicSequence, ListInitializer) {
+  sequence<int> ints{1, 2, 3, 5, 8};
+  ASSERT_EQ(ints.size(), 5);
+  ASSERT_EQ(ints.capacity(), 5);
+  ASSERT_EQ(ints[0], 1);
+  ASSERT_EQ(ints[1], 2);
+  ASSERT_EQ(ints[2], 3);
+  ASSERT_EQ(ints[3], 5);
+  ASSERT_EQ(ints[4], 8);
 }

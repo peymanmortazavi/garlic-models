@@ -1,11 +1,10 @@
-#include <gtest/gtest.h>
-#include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
-#include <garlic/encoding.h>
-#include <garlic/clove.h>
 #include <memory>
 
-#include "garlic/utility.h"
+#include <gtest/gtest.h>
+
+#include <garlic/clove.h>
+#include <garlic/utility.h>
+
 #include "test_utility.h"
 
 using namespace garlic;

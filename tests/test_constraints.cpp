@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <iostream>
-#include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
+
 #include <gtest/gtest.h>
+#include <garlic/providers/rapidjson.h>
+
 #include "test_utility.h"
 
 using namespace garlic;
@@ -10,8 +11,7 @@ using namespace garlic::providers::rapidjson;
 
 
 TEST(Constraints, FieldConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/field_constraint/module.yaml");
 
   assert_jsonfile_valid(module, "Account", "data/field_constraint/good.json");
@@ -35,12 +35,11 @@ TEST(Constraints, FieldConstraint) {
     ASSERT_STREQ(results.details[0].details[0].reason.data(), "Invalid email!");
   }
 
-  assert_model_field_constraints(module, "Account", "user", {"User"});
+  assert_model_has_field_with_constraints(module, "Account", "user", {"User"});
 }
 
 TEST(Constraints, AnyConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "AnyTest", "data/special_constraints/any_good1.json");
@@ -49,8 +48,7 @@ TEST(Constraints, AnyConstraint) {
 }
 
 TEST(Constraints, ListConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "ListTest", "data/special_constraints/list_good1.json");
@@ -59,8 +57,7 @@ TEST(Constraints, ListConstraint) {
 }
 
 TEST(Constraints, TupleConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "TupleTest", "data/special_constraints/tuple_good1.json");
@@ -74,8 +71,7 @@ TEST(Constraints, TupleConstraint) {
 }
 
 TEST(Constraints, MapConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "MapTest", "data/special_constraints/map_good1.json");
@@ -85,8 +81,7 @@ TEST(Constraints, MapConstraint) {
 }
 
 TEST(Constraints, AllConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "AllTest", "data/special_constraints/all_good1.json");
@@ -95,8 +90,7 @@ TEST(Constraints, AllConstraint) {
 }
 
 TEST(Constraints, StopFeature) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/constraint/module.yaml");
 
   auto result = validate_jsonfile(module, "User", "data/constraint/bad1.json");
@@ -111,8 +105,7 @@ TEST(Constraints, StopFeature) {
 }
 
 TEST(Constraints, LiteralConstraint) {
-  auto module = Module<JsonView>();
-
+  Module module;
   load_libyaml_module(module, "data/special_constraints/module.yaml");
 
   assert_jsonfile_valid(module, "LiteralTest", "data/special_constraints/literal_good1.json");
