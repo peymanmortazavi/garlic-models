@@ -1,18 +1,13 @@
 #include <algorithm>
 #include <iostream>
 
-#include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
-#include <garlic/providers/yaml-cpp.h>
-#include <garlic/providers/libyaml/parser.h>
 #include <gtest/gtest.h>
-#include <garlic/parsing/module.h>
+#include <garlic/clove.h>
 
 #include "test_utility.h"
 
 using namespace garlic;
 using namespace garlic::providers::rapidjson;
-using namespace garlic::providers::yamlcpp;
 using namespace garlic::providers::libyaml;
 using namespace std;
 

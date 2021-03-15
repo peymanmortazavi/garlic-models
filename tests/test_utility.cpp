@@ -16,14 +16,6 @@ get_rapidjson_document(const char* name) {
   return doc;
 }
 
-garlic::providers::yamlcpp::YamlNode
-get_yamlcpp_node(const char* name) {
-  auto file = fopen(name, "r");
-  auto node = garlic::providers::yamlcpp::Yaml::load(file);
-  fclose(file);
-  return node;
-}
-
 void
 print_constraint_result(
     const garlic::ConstraintResult& result,

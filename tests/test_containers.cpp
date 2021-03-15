@@ -1,9 +1,8 @@
 #include <algorithm>
-#include <cstring>
+#include <iterator>
+
 #include <gtest/gtest.h>
 #include <garlic/containers.h>
-#include <iterator>
-#include <string>
 
 using namespace std;
 using namespace garlic;

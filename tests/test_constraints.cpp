@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <iostream>
-#include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
+
 #include <gtest/gtest.h>
+#include <garlic/providers/rapidjson.h>
+
 #include "test_utility.h"
 
 using namespace garlic;

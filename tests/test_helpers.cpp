@@ -1,9 +1,11 @@
 #include <deque>
 #include <string>
+
 #include <gtest/gtest.h>
+
 #include <garlic/utility.h>
-#include "garlic/clove.h"
-#include "garlic/encoding.h"
+#include <garlic/clove.h>
+
 #include "test_utility.h"
 #include "test_protocol.h"
 
@@ -57,10 +59,6 @@ TEST(Utility, Resolve) {
   }
   {
     auto value = get_libyaml_document("data/resolve/file.yaml");
-    assert_view(value.get_view());
-  }
-  {
-    auto value = get_yamlcpp_node("data/resolve/file.yaml");
     assert_view(value.get_view());
   }
 }

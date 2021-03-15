@@ -4,14 +4,11 @@
 #include <cstdio>
 #include <string>
 #include <deque>
-#include <garlic/garlic.h>
-#include "garlic/constraints.h"
-#include "garlic/module.h"
-#include "garlic/parsing/module.h"
+
+#include <gtest/gtest.h>
+#include <garlic/parsing/module.h>
 #include <garlic/providers/rapidjson.h>
-#include <garlic/providers/yaml-cpp.h>
 #include <garlic/providers/libyaml/parser.h>
-#include "gtest/gtest.h"
 
 
 using NameQueue = std::deque<std::string>;
@@ -23,9 +20,6 @@ get_libyaml_document(const char * name);
 
 garlic::providers::rapidjson::JsonDocument
 get_rapidjson_document(const char* name);
-
-garlic::providers::yamlcpp::YamlNode
-get_yamlcpp_node(const char* name);
 
 void print_constraint_result(const garlic::ConstraintResult& result, int level=0);
 void assert_field_constraint_result(const garlic::ConstraintResult& results, const char* name);

@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <garlic/garlic.h>
 #include "test_utility.h"
 
 using namespace garlic;
