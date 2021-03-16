@@ -475,6 +475,8 @@ namespace garlic {
 
   /*! Deep copies the content of one layer to another.
    *
+   * \tparam Layer any type that conforms to garlic::ViewLayer concept.
+   * \tparam Output any type that conforms to garlic::RefLayer concept.
    * \param layer The source view layer to copy values from.
    * \param output The destination ref layer to copy values to.
    */

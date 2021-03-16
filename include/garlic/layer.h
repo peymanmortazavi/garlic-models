@@ -83,15 +83,15 @@ namespace garlic {
 
   /*! \class garlic::RefLayer
    *  \brief Concept for reading from and writing to containers.
-   *  \note garlic::RefLayer concept requires conforming to garlic::ViewLayer
+   *  \note RefLayer concept requires conforming to garlic::ViewLayer
    *
    *  \code
    *  concept RefLayer {
    *
-   *    // Value iterator. This iterator can yield any type that conforms to garlic::RefLayer concept.
+   *    // Value iterator. This iterator can yield any type that conforms to RefLayer concept.
    *    typename ValueIterator;
    *
-   *    // Member iterator. This iterator can yield any type that conforms to garlic::RefLayer concept.
+   *    // Member iterator. This iterator can yield any type that conforms to RefLayer concept.
    *    typename MemberIterator;
    *
    *    void set_string(const char*);
@@ -122,7 +122,7 @@ namespace garlic {
    *    void push_back(double);
    *
    *    // must prepare a value, pass to the callback function to get setup, then push that value back.
-   *    // the argument is a callback method that can take any type that conforms to garlic::RefLayer
+   *    // the argument is a callback method that can take any type that conforms to RefLayer
    *    void push_back_builder(void(*)(T));
    *    void pop_back();
    *    void erase(ValueIterator);
@@ -135,20 +135,21 @@ namespace garlic {
    *    void add_member(const char*, double);
    *
    *    // must prepare a value, pass to the callback function to get setup, then add that value.
-   *    // the last argument is a callback method that can take any type that conforms to garlic::RefLayer
+   *    // the last argument is a callback method that can take any type that conforms to RefLayer
    *    void add_member_builder(const char*, void(*)(T));
    *    void remove_member(const char*);
    *    void erase_member(MemberIterator);
    *
-   *    T get_reference();  // must return a garlic::RefLayer of the current layer without copying its content.
+   *    T get_reference();  // must return a RefLayer of the current layer without copying its content.
    *  }
    *  \endcode
    */
 
   /*! \class garlic::IteratorWrapper
    *  \brief Concept for iterator wrapping guidelines.
-   *  There are base iterator instances like ForwardIterator and RandomAcessIterator 
-   *  that take a garlic::IteratorWrapper to provide the code to wrap an iterator's value
+   *
+   *  There are base iterator instances like ForwardIterator and RandomAccessIterator 
+   *  that take a IteratorWrapper to provide the code to wrap an iterator's value
    *  with another type to produce a full and complete iterator. This is mostly to avoid
    *  repeated iterator code.
    *
@@ -164,7 +165,7 @@ namespace garlic {
    *    iterator_type iterator;  // iterator member.
    *
    *    output_type wrap() const;
-   *
+   *  }
    *  \endcode
    */
 
@@ -288,7 +289,7 @@ namespace garlic {
   };
 #endif
 
-  /*! \brief A trivial and basic iterator wrapper that conforms to the **garlic::IteratorWrapper** concept.
+  /*! \brief A trivial and basic iterator wrapper that conforms to the **IteratorWrapper** concept.
    *
    * The result of the *wrap()* method will be **ValueType { *iterator };**
    *
@@ -307,7 +308,7 @@ namespace garlic {
     }
   };
 
-  //! A forward iterator that takes an *garlic::IteratorWrapper* as a guide to produce a complete iterator.
+  //! A forward iterator that takes an *IteratorWrapper* as a guide to produce a complete iterator.
   template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class ForwardIterator {
   public:
@@ -346,14 +347,14 @@ namespace garlic {
     //! \return a const reference to the underlying iterator.
     const iterator_type& get_inner_iterator() const { return container_.iterator; }
 
-    //! \return a Layer value returned by the supplied *garlic::IteratorWrapper*
+    //! \return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const { return container_.wrap(); }
 
   private:
     Container container_;
   };
 
-  //! A random access iterator that takes an *garlic::IteratorWrapper* as a guide to produce a complete iterator.
+  //! A random access iterator that takes an *IteratorWrapper* as a guide to produce a complete iterator.
   template<GARLIC_ITERATOR_WRAPPER Container, typename DifferenceType = std::ptrdiff_t>
   class RandomAccessIterator {
   public:
@@ -449,7 +450,7 @@ namespace garlic {
       return container_.iterator;
     }
 
-    //! \return a Layer value returned by the supplied *garlic::IteratorWrapper*
+    //! \return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const {
       return container_.wrap();
     }
@@ -484,7 +485,7 @@ namespace garlic {
    * This is similar to std::back_inserter_iterator but it works on garlic Layer types.
    * Usage is the same exact way as the STL counterpart.
    *
-   * \tparam LayerType any type that conforms to the garlic::RefLayer concept.
+   * \tparam LayerType any type that conforms to the RefLayer concept.
    *
    * \code{.cpp}
    * CloveDocument doc;

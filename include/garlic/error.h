@@ -6,6 +6,9 @@
 
 namespace garlic {
 
+  /*! \class GarlicError
+   *  \brief Garlic Model global error code enum.
+   */
   enum class GarlicError {
     Redefinition = 1,
     UndefinedObject = 2,
