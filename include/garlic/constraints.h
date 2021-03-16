@@ -1,6 +1,8 @@
 #ifndef GARLIC_CONSTRAINTS_H
 #define GARLIC_CONSTRAINTS_H
 
+//! \file constraints.h \brief Contains constraints, built-in constraint tags, fields and models.
+
 #include <algorithm>
 #include <unordered_set>
 #include <regex>
@@ -12,24 +14,39 @@
 
 namespace garlic {
 
+  //! Result of a constriant test.
   struct ConstraintResult {
+
+    using constraint_sequence = sequence<ConstraintResult>;
+
     enum flags : uint8_t {
       none      = 0x1 << 0,
       valid     = 0x1 << 1,
       field     = 0x1 << 2,
     };
 
-    sequence<ConstraintResult> details;
-    text name;
-    text reason;
+    constraint_sequence details;  //!< extra details/inner constraint list.
+
+    text name;  //!< name of the constraint. empty if successful.
+
+    text reason;  //!< reason for the failure, if any. empty if successful. 
+
     flags flag;
 
+    //! \return whether or not the constraint is a leaf meaning it does not have any extra details.
     inline bool is_leaf()  const noexcept { return !details.size();  }
+
+    //! \return whether or not the constraint test has passed, meaning no failure.
     inline bool is_valid() const noexcept { return flag & flags::valid; }
+
+    //! \return whether or not the constraint corresponds to a field/key, if so, **name** will be the field name.
     inline bool is_field() const noexcept { return flag & flags::field; }
 
     inline void set_valid() noexcept { flag = static_cast<flags>(flag & flags::valid); }
     inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
+
+    //! \copydoc is_valid()
+    inline operator bool() const { return is_valid(); }
 
     template<flags Flag = flags::none>
     static ConstraintResult leaf_failure(
@@ -230,6 +247,31 @@ namespace garlic {
 
   }
 
+  //! Smallest unit of data validation.
+  /*!
+   * A Constraint is a generic type that can be used to validate
+   * any type that conforms to garlic::ViewLayer.
+   *
+   * This type cannot be inherited and it does not have public constructors.
+   * The proper way to create a Constraint is to use Constraint::make() or its
+   * shorthand make_constraint().
+   *
+   * If needed, one can define an uninitialized Constraint using Constraint::empty()
+   * but this Constraint should not be passed to any other object as it is uninitialized
+   * and can lead to crashes or at least undefined behaviors.
+   *
+   * \note You should think of Constraint as a shared pointer to a context data that
+   *       can be used to instantiate **test** and **quick_test** methods when needed.
+   *       Thus, copying a Constraint does not really deep copy its inside, it creates
+   *       a new pointer that holds onto the inner context, much like a shared pointer.
+   *       In fact it does use a shared pointer inside.
+   *
+   * \code
+   * auto regex_constriant = garlic::make_constraint<garlic::regex_tag>("\\d");
+   * auto copy = regex_constraint;  // uses the same context as regex_constraint.
+   * &copy.context() == &regex_constraint.context();  // true
+   * \endcode
+   */
   class Constraint final {
   private:
     using context_pointer = std::shared_ptr<constraint_context>;
@@ -239,20 +281,33 @@ namespace garlic {
     Constraint(unsigned index, context_pointer&& context) : context_(std::move(context)), index_(index) {}
 
   public:
+    //! Create a generic Constraint based on a constraint tag.
+    /*! \tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
+     *  \tparam Args appropriate set of arguments for the constraint tag used.
+     *  \note You will get a compile-time error if you use a tag that is not registered.
+     */
     template<typename Tag, typename... Args>
     static Constraint make(Args&&... args) noexcept;
 
+    //! Make a Constraint without any context.
     static Constraint empty() noexcept {
       return Constraint(0, nullptr);
     }
 
+    //! \return whether or not the constraint is initialized.
     inline operator bool () const noexcept {
       return context_ != nullptr;
     }
 
+    //! Perform the constraint test on the layer and return the result.
+    /*! \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+     */
     template<GARLIC_VIEW Layer>
     inline ConstraintResult test(const Layer& value) const noexcept;
 
+    //! Very similar to Constraint::test() but it only returns a boolean.
+    /*! \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+     */
     template<GARLIC_VIEW Layer>
     inline bool quick_test(const Layer& value) const noexcept;
 
@@ -279,8 +334,13 @@ namespace garlic {
   };
 
 
+  //! Run a number of constraints on a layer.
+  /*! \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+   *  \param it a back inserter iterator to store ConstraintResult items.
+   */
   template<GARLIC_VIEW Layer, typename Container, typename BackInserterIterator>
-  inline void test_flat_constraints(
+  inline void test_constraints(
       Layer&& value,
       Container&& constraints,
       BackInserterIterator it) {
@@ -294,9 +354,13 @@ namespace garlic {
   }
 
 
+  /*! \return whether or not a readable layer passes all constraint tests.
+   *  \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+   */
   template<GARLIC_VIEW Layer, typename Container>
   static inline bool
-  test_flat_constraints_quick(Layer&& value, Container&& constraints) {
+  test_constraints_quick(Layer&& value, Container&& constraints) {
     return std::all_of(
         std::begin(constraints), std::end(constraints),
         [&value](const auto& constraint) { return constraint.quick_test(value); }
@@ -304,9 +368,13 @@ namespace garlic {
   }
 
 
+  /*! \return the first failed Constraint or return an ok Constraint if all Constraint checks pass.
+   *  \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+   */
   template<GARLIC_VIEW Layer, typename Container>
   static inline ConstraintResult
-  test_flat_constraints_first_failure(Layer&& value, Container&& constraints) {
+  test_constraints_first_failure(Layer&& value, Container&& constraints) {
     for (const auto& constraint : constraints) {
       if (auto result = constraint.test(value); !result.is_valid()) {
         return result;
@@ -766,15 +834,15 @@ namespace garlic {
     static ConstraintResult
     test(const Layer& layer, const Context& context) noexcept {
       if (context.hide)
-        return test_flat_constraints_first_failure(layer, context.constraints);
+        return test_constraints_first_failure(layer, context.constraints);
       if (context.ignore_details) {
-        if (test_flat_constraints_quick(layer, context.constraints))
+        if (test_constraints_quick(layer, context.constraints))
           return context.ok();
         else
           return context.fail("Some of the constraints fail on this value.");
       }
       sequence<ConstraintResult> results;
-      test_flat_constraints(layer, context.constraints, std::back_inserter(results));
+      test_constraints(layer, context.constraints, std::back_inserter(results));
       if (results.empty())
         return context.ok();
       return context.fail("Some of the constraints fail on this value.", std::move(results));
@@ -782,7 +850,7 @@ namespace garlic {
 
     template<GARLIC_VIEW Layer>
     static bool quick_test(const Layer& layer, const Context& context) noexcept {
-      return test_flat_constraints_quick(layer, context.constraints);
+      return test_constraints_quick(layer, context.constraints);
     }
   };
 
@@ -945,13 +1013,13 @@ namespace garlic {
     template<GARLIC_VIEW Layer>
     ValidationResult validate(const Layer& layer) const noexcept {
       ValidationResult result;
-      test_flat_constraints(layer, properties_.constraints, std::back_inserter(result.failures));
+      test_constraints(layer, properties_.constraints, std::back_inserter(result.failures));
       return result;
     }
 
     template<GARLIC_VIEW Layer>
     bool quick_test(const Layer& layer) const noexcept {
-      return test_flat_constraints_quick(layer, properties_.constraints);
+      return test_constraints_quick(layer, properties_.constraints);
     }
 
   protected:
@@ -1185,7 +1253,7 @@ namespace garlic {
     static inline ConstraintResult
     test(const Layer& layer, const Context& context) noexcept {
       if (context.hide) {
-        return test_flat_constraints_first_failure(layer, (*context.ref)->properties().constraints);
+        return test_constraints_first_failure(layer, (*context.ref)->properties().constraints);
       }
       const auto& field = *context.ref;
       if (context.ignore_details || field->properties().ignore_details) {
@@ -1230,6 +1298,11 @@ namespace garlic {
     return handlers[index_](value, context_.get());
   }
 
+  //! Create a generic Constraint based on a constraint tag.
+  /*! \tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
+   *  \tparam Args appropriate set of arguments for the constraint tag used.
+   *  \note You will get a compile-time error if you use a tag that is not registered.
+   */
   template<typename Tag, typename... Args>
   inline Constraint
   make_constraint(Args&&... args) noexcept {
