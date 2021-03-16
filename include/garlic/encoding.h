@@ -2,6 +2,7 @@
 #define GARLIC_ENCODING_H
 
 /*! \file encoding.h
+ *  \brief Contains classes and methods for defining and using encoders/decoders for various types.
  */
 
 #include <type_traits>
