@@ -17,7 +17,7 @@
 
 namespace garlic {
 
-  /*! A Module is a repository of models, fields and constraints.
+  /*! \brief A Module is a repository of models, fields and constraints.
    *
    *  This allows to package lots of relevant fields and models in one object.
    *  This can be parsed and dumped which makes it easy to save in a file or send it over the wire.

@@ -26,8 +26,8 @@ namespace garlic {
    * \note Depending on the size of these two types, this method could be quite expensive
    *       as it performs a linear scan on both layers for members and lists.
    *
-   * \param layer1 The first layer, any type that conforms to the *ViewLayer* concept.
-   * \param layer2 The second layer, any type that conforms to the *ViewLayer* concept.
+   * \param layer1 The first layer, any type that conforms to the garlic::ViewLayer concept.
+   * \param layer2 The second layer, any type that conforms to the garlic::ViewLayer concept.
    */
   template<GARLIC_VIEW L1, GARLIC_VIEW L2>
   static inline std::enable_if_t<!is_comparable<L1, L2>::value, bool>
