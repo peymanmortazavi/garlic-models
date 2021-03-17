@@ -1,6 +1,20 @@
 #ifndef GARLIC_CONTAINERS_H
 #define GARLIC_CONTAINERS_H
 
+/*! \file containers.h
+ *  \brief Supporting containers for the garlic model.
+ *
+ *  \attention The containers defined in this file behave differently than the common containers
+ *             in the STL. In order to support the specific needs of the constraitns and modules
+ *             they use very specific behavior to increase performance and reduce memory consumption.
+ *             It is highly recommended **NOT** to use these containers in your own application unless
+ *             you read the code and understand the specific ways they behave.
+ *
+ *  The code here is documented because they appear in certain types that are public but due to their
+ *  limited features and different behavior that other STL containers, it's best to stay away from these
+ *  containers.
+ */
+
 #include <cstring>
 #include <cstdlib>
 #include <memory>
@@ -12,6 +26,17 @@ namespace garlic {
     copy,
   };
 
+  //! A container for storing small strings that can manage both act as a view and as an owner.
+  /*!
+   * \code
+   * text view = "Some Text";  // only a view.
+   * text owner = text::copy("Some Text");  // copies the string.
+   * view.is_view();  // true
+   * owners.is_view();  // false
+   * text clone = view.clone();  // copies the string.
+   * clone.is_view();  // false
+   * \endcode
+   */
   template<typename Ch, typename SizeType = unsigned>
   class basic_text {
   public:
@@ -133,6 +158,10 @@ namespace garlic {
 
   using text = basic_text<char>;
 
+  //! A container to store a list of items, similar to std::vector but far more limited.
+  /*! This container is mostly used in constrains and modules where only a small number
+   *  of elements are stored so it is designed to work with small counts.
+   */
   template<typename ValueType, typename SizeType = unsigned>
   class sequence {
   public:
@@ -193,14 +222,25 @@ namespace garlic {
     reference operator [](SizeType index) { return items_[index]; }
     const_reference operator [](SizeType index) const { return items_[index]; }
 
+    //! \return a const iterator that points to the first item in the sequence.
     inline iterator begin() { return items_; }
+
+    //! \return a const iterator that points to the one past the last item in the sequence. 
     inline iterator end() { return items_ + size_; }
 
+    //! \return a iterator that points to the first item in the sequence.
     inline const_iterator begin() const { return items_; }
+
+    //! \return a iterator that points to the one past the last item in the sequence. 
     inline const_iterator end() const { return items_ + size_; }
 
+    //! \return the number of the elements stored in the sequence.
     inline SizeType size() const noexcept { return size_; }
+
+    //! \return the current capacity of the sequence.
     inline SizeType capacity() const noexcept { return capacity_; }
+
+    //! \return whether or not the sequence is empty.
     inline bool empty() const noexcept { return !size_; }
 
     constexpr static inline sequence no_sequence() noexcept {
