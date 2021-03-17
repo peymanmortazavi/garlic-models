@@ -184,7 +184,7 @@ namespace garlic::parsing {
     void process_model_inheritance(model_pointer model, Layer&& layer) noexcept {
       enum class field_status : uint8_t { deferred, ready, excluded };
       struct field_info {
-        Model::field_descriptor ready_field;
+        Model::FieldDescriptor ready_field;
         deferred_field_record deferred_field;
         field_status status;
       };

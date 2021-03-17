@@ -893,8 +893,8 @@ namespace garlic {
    *  \endcode
    *
    *  \param hide if true, ConstraintResult from the first failing constraint will be
-                  returned. This practically hides this constraint and leaves no trace
-                  of it in the resulting ConstraintResult.
+   *              returned. This practically hides this constraint and leaves no trace
+   *              of it in the resulting ConstraintResult.
    *  \param ignore_details if true, failing constraints will not be added to the resulting
    *                        ConstraintResult as details.
    */
@@ -1153,38 +1153,52 @@ namespace garlic {
   };
 
 
+  //! An object to describe a Model.
+  /*! A model will contain a table basic_text -> {field: Field, required: bool}
+   */
   class Model {
   public:
 
     using field_pointer = std::shared_ptr<Field>;
+    using const_field_iterator = typename std::unordered_map<text, FieldDescriptor>::const_iterator;
 
-    struct field_descriptor {
-      field_pointer field;
-      bool required;
+    //! Field Record.
+    struct FieldDescriptor {
+      field_pointer field;  //!< Field instance.
+      bool required;  //!< whether or not this Field is required.
     };
 
     struct Properties {
-      std::unordered_map<text, field_descriptor> field_map;
+      std::unordered_map<text, FieldDescriptor> field_map;
       std::unordered_map<text, text> meta;
       text name;
       bool strict = false;
     };
 
-    using const_field_iterator = typename std::unordered_map<text, field_descriptor>::const_iterator;
-
+    //! Create an empty Model.
     Model() {}
+
     Model(Properties&& properties) : properties_(std::move(properties)) {}
+
+    //! Create an empty Model by name.
     Model(text&& name) {
       properties_.name = std::move(name);
     }
 
+    //! Add a new field.
+    /*! \param name the name/key of the member.
+     *  \param field std::shared_ptr<Field>
+     *  \param required whether or not this field is required.
+     *  \note If a member by such name already exists, this function will not do anything.
+     */
     void add_field(text&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
           std::move(name),
-          field_descriptor { .field = std::move(field), .required = required }
+          FieldDescriptor { .field = std::move(field), .required = required }
           );
     }
 
+    //! \return a shared pointer to the Field instance or nullptr if such key is not defined yet.
     template<typename KeyType>
     field_pointer get_field(KeyType&& name) const {
       auto it = properties_.field_map.find(name);
@@ -1194,15 +1208,26 @@ namespace garlic {
       return nullptr;
     }
 
+    //! \return the model's meta map.
     auto& meta() noexcept { return properties_.meta; }
+
+    //! \copydoc meta()
     const auto& meta() const noexcept { return properties_.meta; }
+
+    //! \return name of the Model.
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const { return properties_; }
 
+    //! \return an iterator (const) pointing to the first (basic_text, FieldDescriptor) pair.
     const_field_iterator begin_fields() const noexcept { return properties_.field_map.begin(); }
+
+    //! \return an iterator (const) pointing to one past the last (basic_text, FieldDescriptor) pair.
     const_field_iterator end_fields() const noexcept { return properties_.field_map.end(); }
+
+    //! \return an iterator (const) pointing to found (basic_text, FieldDescriptor) pair or end_fields()
     const_field_iterator find_field(const text& name) const noexcept { return properties_.field_map.find(name); }
 
+    //! Run a quick test on a layer.
     template<GARLIC_VIEW Layer>
     bool quick_test(const Layer& layer) const noexcept {
       if (!layer.is_object()) return false;
@@ -1223,6 +1248,7 @@ namespace garlic {
       return true;
     }
 
+    //! Validate a layer and return a detailed ConstraintResult.
     template<GARLIC_VIEW Layer>
     ConstraintResult validate(const Layer& layer) const noexcept {
       sequence<ConstraintResult> details;
@@ -1293,6 +1319,12 @@ namespace garlic {
     }
   };
 
+  /*! \brief Constraint Tag that passes if the specified Model passes the layer.
+   *
+   *  \code{.cpp}
+   *  make_constraint<model_tag>(std::shared_ptr<Model>&& model);
+   *  \endcode
+   */
   struct model_tag {
     struct Context : public constraint_context {
       using model_pointer = std::shared_ptr<Model>;
@@ -1337,6 +1369,20 @@ namespace garlic {
     return std::make_shared<Model>(std::forward<Args>(args)...);
   }
 
+  /*! \brief Constraint Tag that passes if the specified Field passes the layer.
+   *
+   *  \code{.cpp}
+   *  make_constraint<field_tag>(std::shared_ptr<std::shared_ptr<Field>>&& field_pointer_ref,
+   *                             bool hide = false,
+   *                             bool ignore_details = false);
+   *  \endcode
+   *  \param field_pointer_ref a double pointer to the Field instance.
+   *  \param hide if true, ConstraintResult from the first failing constraint will be
+   *              returned. This practically hides this constraint and leaves no trace
+   *              of it in the resulting ConstraintResult.
+   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *                        ConstraintResult as details.
+   */
   struct field_tag {
     struct Context : public constraint_context {
       using field_pointer = std::shared_ptr<Field>;
@@ -1397,6 +1443,7 @@ namespace garlic {
     }
   };
 
+  //! Built-in constraint tags.
   using constraint_registry = internal::registry<
     type_tag, range_tag, regex_tag, any_tag, list_tag, tuple_tag, map_tag, all_tag, model_tag, field_tag,
     string_literal_tag, int_literal_tag, double_literal_tag, bool_literal_tag, null_literal_tag>;
