@@ -383,6 +383,11 @@ namespace garlic {
     return ConstraintResult::ok();
   }
 
+  //! Constraint Tag that passes if the layer has matching data type.
+  /*! \code{.cpp}
+   *  make_constraint<type_tag>(TypeTag);
+   *  \endcode
+   */
   struct type_tag {
     
     struct Context : public constraint_context {
@@ -449,6 +454,18 @@ namespace garlic {
   };
 
 
+  //! Constraint Tag that passes if the layer is within a certain boundary.
+  /*! If layer is a *string*, its length will be checked.
+   *
+   *  If layer is a *number*, its value will be checked.
+   *
+   *  If layer is a *list*, its element count will be checked.
+   *
+   *  It passes the test for all other types including *null*.
+   * \code{.cpp}
+   *  make_constraint<range_tag>(size_t min, size_t max);
+   *  \endcode
+   */
   struct range_tag {
     using size_type = size_t;
 
@@ -514,6 +531,13 @@ namespace garlic {
   };
 
 
+  //! Constraint Tag that passes if a specified regex pattern passes the test.
+  /*! \note It passes the test if the layer is not a string type.
+   *
+   *  \code{.cpp}
+   *  make_constraint<regex_tag>(text&& pattern);
+   *  \endcode
+   */
   struct regex_tag {
 
     struct Context : public constraint_context {
@@ -545,6 +569,11 @@ namespace garlic {
   };
 
 
+  //! Constraint Tag that passes if any of the inner constraints pass.
+   /*! \code{.cpp}
+   *   make_constraint<any_tag>(sequence<Constraint>&& constraints);
+   *   \endcode
+   */
   struct any_tag {
     struct Context : public constraint_context {
       template<typename... Args>
@@ -575,6 +604,14 @@ namespace garlic {
   };
 
 
+  /*! \brief Constraint Tag that passes if the layer is a list and all its
+   *         elements pass the inner constraints.
+   *  \note If the layer is not a *list*, the test will fail.
+   *
+   *  \code{.cpp}
+   *  make_constraint<list_tag>(Constraint&& constraint);
+   *  \endcode
+   */
   struct list_tag {
     struct Context : public constraint_context {
       template<typename... Args>
@@ -639,6 +676,24 @@ namespace garlic {
     }
   };
 
+  /*! \brief Constraint Tag that passes if the layer is a list and its first n
+   *         elements pass the first n constraints.
+   *
+   *  Basically when constraint[N] passes layer.begin_list()[N]
+   *
+   *  \code{.cpp}
+   *  make_constraint<tuple_tag>(sequence<Constraint>&& constraints,
+                                 bool strict = true,
+                                 bool ignore_details = false);
+   *  \endcode
+   *
+   *  \param constraints ordered list of constraints to match the elements in the layer.
+   *  \param strict if true, layer can only have as many elements as there are constraints.
+   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *                        ConstraintResult as details.
+   *  \return The resulting ConstraintResult will have one extra detail and it's name is the index of element
+   *          in the tuple.
+   */
   class tuple_tag {
   public:
     struct Context : public constraint_context {
@@ -726,6 +781,21 @@ namespace garlic {
     }
   };
 
+  /*! \brief Constraint Tag that passes if the layer's members pass key and value constraints.
+   *
+   *  \code{.cpp}
+   *  make_constraint<map_tag>(Constraint&& key_constraint,
+                               Constraint&& value_constraint,
+                               bool ignore_details);
+   *  \endcode
+   *
+   *  \note In this tag, it is **valid** to pass empty (uninitialized) constraints, they will be ignored in that case.
+   *
+   *  \param key_constraint member keys must pass this constraint if constraint is not empty.
+   *  \param value_constraint member values must pass this constraint if constraint is not empty.
+   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *                        ConstraintResult as details.
+   */
   class map_tag {
   public:
     struct Context : public constraint_context {
@@ -814,6 +884,20 @@ namespace garlic {
     }
   };
 
+  /*! \brief Constraint Tag that passes if all inner constraints pass the layer.
+   *
+   *  \code{.cpp}
+   *  make_constraint<all_tag>(sequence<Constraint>&& constraints,
+                               bool hide = true,
+                               bool ignore_details = false);
+   *  \endcode
+   *
+   *  \param hide if true, ConstraintResult from the first failing constraint will be
+                  returned. This practically hides this constraint and leaves no trace
+                  of it in the resulting ConstraintResult.
+   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *                        ConstraintResult as details.
+   */
   struct all_tag {
     struct Context : public constraint_context {
       template<typename... Args>
@@ -854,6 +938,16 @@ namespace garlic {
     }
   };
 
+  /*! \brief Constraint Tag that passes if layer is equal to a specified value.
+   *
+   *  \code{.cpp}
+   *  make_constraint<string_literal_tag>("text");
+   *  make_constraint<int_literal_tag>(12);
+   *  make_constraint<double_literal_tag>(10.5);
+   *  make_constraint<bool_literal_tag>(false);
+   *  make_constraint<null_literal_tag>();
+   *  \endcode
+   */
   template<typename T>
   struct literal_tag {
     struct Context : public constraint_context {
