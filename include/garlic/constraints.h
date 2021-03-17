@@ -1045,15 +1045,23 @@ namespace garlic {
   using bool_literal_tag   = literal_tag<bool>;
   using null_literal_tag   = literal_tag<VoidType>;
 
+  //! A named group of Constraint elements.
   class Field {
   public:
 
     using const_constraint_iterator = typename sequence<Constraint>::const_iterator;
 
+    //! List of all failed constraints.
     struct ValidationResult {
-      sequence<ConstraintResult> failures;
+      using constraint_sequence = sequence<ConstraintResult>;
 
+      constraint_sequence failures; //!< all failed constraints.
+
+      //! \return whether or not the layer is valid.
       inline bool is_valid() const noexcept { return failures.empty(); }
+
+      //! \copydoc is_valid()
+      inline operator bool() const { return is_valid(); }
     };
 
     struct Properties {
@@ -1064,33 +1072,51 @@ namespace garlic {
     };
     
     Field(Properties&& properties) : properties_(std::move(properties)) {}
+
+    //! Create an empty Field by a name.
     Field(text&& name) { properties_.name = std::move(name); }
+
+    //! Create a Field by a name and a defined set of constraints.
     Field(text&& name, sequence<Constraint>&& constraints) {
       properties_.name = std::move(name);
       properties_.constraints = std::move(constraints);
     }
 
+    //! Helper method to create and add a constriant to the Field.
+    /*! Uses make_constraint() and adds the resulting Constraint to the Filed.
+     */
     template<typename Tag, typename... Args>
     void add_constraint(Args&&... args) noexcept {
       this->add_constraint(make_constraint<Tag>(std::forward<Args>(args)...));
     }
 
+    //! Add a constraint to the Field.
     void add_constraint(Constraint&& constraint) {
       properties_.constraints.push_back(std::move(constraint));
     }
 
+    //! Adds all the constraints from the specified field to the front.
     inline void inherit_constraints_from(const Field& another) {
       properties_.constraints.push_front(
           another.begin_constraints(),
           another.end_constraints());
     }
 
+    //! \return meta object.
     auto& meta() noexcept { return properties_.meta; }
+
+    //! \return meta object.
     const auto& meta() const noexcept { return properties_.meta; }
+
+    /*! \return whether or not the field should ignore details and return
+     *          a leaf ConstraintResult when testing/validating.
+     */
     bool ignore_details() const { return properties_.ignore_details; }
 
+    //! Set whether or not the field should ignore details.
     void set_ignore_details(bool value) { properties_.ignore_details = value; }
 
+    //! \return the message to display when making failed ConstraintResult instances.
     text message() const noexcept {
       const auto& meta = properties_.meta;
       if (auto it = meta.find("message"); it != meta.end()) {
@@ -1098,12 +1124,17 @@ namespace garlic {
       }
       return text::no_text();
     }
+    //! \return name of the field.
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const noexcept { return properties_; }
 
+    //! \return an iterator (const) pointing to the first constraint in the field.
     const_constraint_iterator begin_constraints() const noexcept { return properties_.constraints.begin(); }
+
+    //! \return an iterator (const) pointing to one past the last constraint in the field.
     const_constraint_iterator end_constraints() const noexcept { return properties_.constraints.end(); }
 
+    //! test the layer with all the constraints in the field.
     template<GARLIC_VIEW Layer>
     ValidationResult validate(const Layer& layer) const noexcept {
       ValidationResult result;
@@ -1111,6 +1142,7 @@ namespace garlic {
       return result;
     }
 
+    //! perform a quick and efficient test of all constraints in the field.
     template<GARLIC_VIEW Layer>
     bool quick_test(const Layer& layer) const noexcept {
       return test_constraints_quick(layer, properties_.constraints);
