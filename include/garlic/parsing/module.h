@@ -1,6 +1,10 @@
 #ifndef GARLIC_PARSING_MODULE
 #define GARLIC_PARSING_MODULE
 
+/*! \file parsing/module.h
+ *  \brief Resources for parsing/loading and dumping Module instances.
+ */
+
 #include <memory>
 
 #include "constraints.h"
@@ -384,11 +388,19 @@ namespace garlic::parsing {
     }
   };
 
+  //! Loads a Module from any layer.
+  /*! \tparam Layer any readable layer type conforming to garlic::ViewLayer.
+   *  \return an expected object containing the parsed Module or an
+              error code describing the failure.
+   *  \sa https://tl.tartanllama.xyz/en/latest/api/expected.html
+   *
+   *  Also see GarlicError
+   */
   template<GARLIC_VIEW Layer>
   static tl::expected<Module, std::error_code>
   load_module(Layer&& layer) noexcept {
     if (!layer.is_object())
-      return tl::make_unexpected(GarlicError::Redefinition);
+      return tl::make_unexpected(GarlicError::InvalidModule);
 
     Module module;
     auto parser = ModuleParser(module);

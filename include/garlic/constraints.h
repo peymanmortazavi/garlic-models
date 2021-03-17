@@ -1160,13 +1160,14 @@ namespace garlic {
   public:
 
     using field_pointer = std::shared_ptr<Field>;
-    using const_field_iterator = typename std::unordered_map<text, FieldDescriptor>::const_iterator;
 
     //! Field Record.
     struct FieldDescriptor {
       field_pointer field;  //!< Field instance.
       bool required;  //!< whether or not this Field is required.
     };
+
+    using const_field_iterator = typename std::unordered_map<text, FieldDescriptor>::const_iterator;
 
     struct Properties {
       std::unordered_map<text, FieldDescriptor> field_map;
