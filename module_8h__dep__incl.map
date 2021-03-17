@@ -1,0 +1,5 @@
+<map id="garlic/module.h" name="garlic/module.h">
+<area shape="rect" id="node1" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="82,5,205,32"/>
+<area shape="rect" id="node2" href="$garlic_8h_source.html" title=" " alt="" coords="5,80,116,107"/>
+<area shape="rect" id="node3" href="$parsing_2module_8h.html" title="Resources for parsing/loading and dumping Module instances." alt="" coords="140,80,315,107"/>
+</map>

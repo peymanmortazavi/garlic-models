@@ -1,0 +1,21 @@
+<map id="garlic/constraints.h" name="garlic/constraints.h">
+<area shape="rect" id="node1" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="243,5,389,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,80,91,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="115,80,229,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="253,80,312,107"/>
+<area shape="rect" id="node5" href="$layer_8h.html" title="This file contains concepts for C++ 20 along with some helper types to make it easier to produce iter..." alt="" coords="449,229,516,256"/>
+<area shape="rect" id="node9" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="506,80,577,107"/>
+<area shape="rect" id="node16" href="$containers_8h.html" title="Supporting containers for the garlic model." alt="" coords="798,229,901,256"/>
+<area shape="rect" id="node6" title=" " alt="" coords="466,304,537,331"/>
+<area shape="rect" id="node7" title=" " alt="" coords="597,304,656,331"/>
+<area shape="rect" id="node8" title=" " alt="" coords="371,304,442,331"/>
+<area shape="rect" id="node10" title=" " alt="" coords="387,155,469,181"/>
+<area shape="rect" id="node11" title=" " alt="" coords="493,155,590,181"/>
+<area shape="rect" id="node12" href="$meta_8h_source.html" title=" " alt="" coords="614,155,682,181"/>
+<area shape="rect" id="node15" href="$encoding_8h.html" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="707,155,800,181"/>
+<area shape="rect" id="node13" title=" " alt="" coords="540,229,607,256"/>
+<area shape="rect" id="node14" title=" " alt="" coords="682,229,774,256"/>
+<area shape="rect" id="node17" title=" " alt="" coords="725,304,792,331"/>
+<area shape="rect" id="node18" title=" " alt="" coords="817,304,882,331"/>
+<area shape="rect" id="node19" title=" " alt="" coords="907,304,984,331"/>
+</map>
