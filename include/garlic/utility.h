@@ -193,7 +193,7 @@ namespace garlic {
   static inline OutputType
   safe_resolve(const Layer& value, std::string_view key, OutputType default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
-        safe_decode<OutputType, Layer>(result, [&default_value](auto&& result){
+        safe_decode<OutputType>(result, [&default_value](auto&& result){
             default_value = result;
             });
         });
@@ -213,7 +213,7 @@ namespace garlic {
   static inline void
   safe_resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
     resolve_layer_cb(value, key, [&cb](const auto& result) {
-        safe_decode<OutputType, Layer>(result, cb);
+        safe_decode<OutputType>(result, cb);
         });
   }
 
@@ -229,7 +229,7 @@ namespace garlic {
   static inline OutputType
   resolve(const Layer& value, std::string_view key, OutputType default_value) {
     resolve_layer_cb(value, key, [&default_value](const auto& result) {
-        default_value = decode<OutputType, Layer>(result);
+        default_value = decode<OutputType>(result);
         });
     return default_value;
   }
@@ -247,7 +247,7 @@ namespace garlic {
   static inline void
   resolve_cb(const Layer& value, std::string_view key, Callable&& cb) {
     resolve_layer_cb(value, key, [&cb](const auto& result) {
-        cb(decode<OutputType, Layer>(result, cb));
+        cb(decode<OutputType>(result, cb));
         });
   }
 
@@ -281,14 +281,14 @@ namespace garlic {
    */
   template<GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
-  get_item(Layer layer, IndexType index, Callable&& cb) noexcept {
+  get_item(Layer&& layer, IndexType index, Callable&& cb) noexcept {
     if (auto it = layer.begin_list() += index; it < layer.end_list()) cb(*it);
   }
 
 
   template<GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline std::enable_if_t<!std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value>
-  get_item(Layer layer, IndexType index, Callable&& cb) noexcept {
+  get_item(Layer&& layer, IndexType index, Callable&& cb) noexcept {
     auto it = layer.begin_list();
     IndexType counter = 0;
     while (it != layer.end_list()) {
@@ -316,8 +316,8 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  get(Layer layer, const char* key) {
-    return decode<OutputType, Layer>((*layer.find_member(key)).value);
+  get(Layer&& layer, const char* key) {
+    return decode<OutputType>((*layer.find_member(key)).value);
   }
 
 
@@ -330,20 +330,20 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline std::enable_if_t<std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value, OutputType>
-  get(Layer layer, IndexType index) {
-    return decode<OutputType, Layer>(layer.begin_list()[index]);
+  get(Layer&& layer, IndexType index) {
+    return decode<OutputType>(layer.begin_list()[index]);
   }
 
 
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline std::enable_if_t<!std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value, OutputType>
-  get(Layer layer, IndexType index) {
+  get(Layer&& layer, IndexType index) {
     auto it = layer.begin_list();
     while (index > 0) {
       --index;
       ++it;
     }
-    return decode<OutputType, Layer>(*it);
+    return decode<OutputType>(*it);
   }
 
 
@@ -354,9 +354,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  get(Layer layer, const char* key, OutputType default_value) {
+  get(Layer&& layer, const char* key, OutputType default_value) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
-      return decode<OutputType, Layer>((*it).value);
+      return decode<OutputType>((*it).value);
     }
     return default_value;
   }
@@ -369,9 +369,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
-  get(Layer layer, IndexType index, OutputType default_value) {
+  get(Layer&& layer, IndexType index, OutputType default_value) {
     get_item(layer, index, [&default_value](const auto& result) {
-        default_value = decode<OutputType, Layer>(result);
+        default_value = decode<OutputType>(result);
         });
     return default_value;
   }
@@ -386,9 +386,9 @@ namespace garlic {
    */
   template<typename OutputType, typename Callable, GARLIC_VIEW Layer>
   static inline void
-  get_cb(Layer layer, const char* key, Callable&& cb) {
+  get_cb(Layer&& layer, const char* key, Callable&& cb) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
-      cb(decode<OutputType, Layer>((*it).value));
+      cb(decode<OutputType>((*it).value));
     }
   }
 
@@ -401,9 +401,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
-  get_cb(Layer layer, IndexType index, Callable&& cb) {
+  get_cb(Layer&& layer, IndexType index, Callable&& cb) {
     get_item(layer, index, [&cb](const auto& result){
-        cb(decode<OutputType, Layer>(result));
+        cb(decode<OutputType>(result));
         });
   }
 
@@ -415,9 +415,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer>
   static inline OutputType
-  safe_get(Layer layer, const char* key, OutputType default_value) {
+  safe_get(Layer&& layer, const char* key, OutputType default_value) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
-      safe_decode<OutputType, Layer>(
+      safe_decode<OutputType>(
           (*it).value,
           [&default_value](auto&& result) { default_value = result; });
     }
@@ -432,9 +432,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType>
   static inline OutputType
-  safe_get(Layer layer, IndexType index, OutputType default_value) {
+  safe_get(Layer&& layer, IndexType index, OutputType default_value) {
     get_item(layer, index, [&default_value](const auto& result) {
-        safe_decode<OutputType, Layer>(result, [&default_value](auto&& value){
+        safe_decode<OutputType>(result, [&default_value](auto&& value){
             default_value = value;
             });
         });
@@ -451,9 +451,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, typename Callable>
   static inline void
-  safe_get_cb(Layer layer, const char* key, Callable&& cb) {
+  safe_get_cb(Layer&& layer, const char* key, Callable&& cb) {
     if (auto it = layer.find_member(key); it != layer.end_member()) {
-      safe_decode<OutputType, Layer>((*it).value, cb);
+      safe_decode<OutputType>((*it).value, cb);
     }
   }
 
@@ -466,9 +466,9 @@ namespace garlic {
    */
   template<typename OutputType, GARLIC_VIEW Layer, std::integral IndexType, typename Callable>
   static inline void
-  safe_get_cb(Layer layer, IndexType index, Callable&& cb) {
+  safe_get_cb(Layer&& layer, IndexType index, Callable&& cb) {
     get_item(layer, index, [&cb](const auto& result) {
-        safe_decode<OutputType, Layer>(result, cb);
+        safe_decode<OutputType>(result, cb);
         });
   }
 
@@ -482,7 +482,7 @@ namespace garlic {
    */
   template<GARLIC_VIEW Layer, GARLIC_REF Output>
   static inline void
-  copy_layer(Layer layer, Output output) {
+  copy_layer(Layer&& layer, Output output) {
     if (layer.is_double()) {
       output.set_double(layer.get_double());
     } else if (layer.is_int()) {
