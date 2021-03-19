@@ -64,6 +64,7 @@ namespace garlic {
         {"list", this->make_field<type_tag>("ListField", TypeFlag::List)},
         {"object", this->make_field<type_tag>("ObjectField", TypeFlag::Object)},
         {"bool", this->make_field<type_tag>("BooleanField", TypeFlag::Boolean)},
+        {"null", this->make_field<type_tag>("BooleanField", TypeFlag::Null)},
       };
       fields_ = static_map;
     }

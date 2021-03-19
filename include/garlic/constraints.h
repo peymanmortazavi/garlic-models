@@ -1373,11 +1373,11 @@ namespace garlic {
   /*! \brief Constraint Tag that passes if the specified Field passes the layer.
    *
    *  \code{.cpp}
-   *  make_constraint<field_tag>(std::shared_ptr<std::shared_ptr<Field>>&& field_pointer_ref,
+   *  make_constraint<field_tag>(std::shared_ptr<Field> pointer,
    *                             bool hide = false,
    *                             bool ignore_details = false);
    *  \endcode
-   *  \param field_pointer_ref a double pointer to the Field instance.
+   *  \param field_pointer a pointer to the Field instance.
    *  \param hide if true, ConstraintResult from the first failing constraint will be
    *              returned. This practically hides this constraint and leaves no trace
    *              of it in the resulting ConstraintResult.
@@ -1397,6 +1397,12 @@ namespace garlic {
               ref(std::move(ref)), hide(hide), ignore_details(ignore_details) {
                 this->update_name();
               }
+
+      template<typename... Args>
+      Context(
+          field_pointer pointer, bool hide = false, bool ignore_details = false,
+          Args&&... args
+          ) : Context(std::make_shared<field_pointer>(pointer), hide, ignore_details, std::forward<Args>(args)...) {}
 
       template<typename... Args>
       inline ConstraintResult
