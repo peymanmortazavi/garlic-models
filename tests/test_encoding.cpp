@@ -65,23 +65,26 @@ struct Data3 {
   int prop2;
 };
 
-template<typename Layer>
-struct coder<Data3, Layer> {
-  static inline Data3 decode(Layer layer) {
+template<>
+struct garlic::coder<Data3> {
+
+  template<typename Layer>
+  static inline Data3 decode(Layer&& layer) {
     return {
       get<std::string>(layer, "prop1"),
       get<int>(layer, "prop2")
     };
   }
 
-  static inline void encode(Layer layer, const Data3& value) {
+  template<typename Layer>
+  static inline void encode(Layer&& layer, const Data3& value) {
     layer.set_object();
     layer.add_member("prop1", value.prop1.c_str());
     layer.add_member("prop2", value.prop2);
   }
 
-  template<typename Callable>
-  static inline void safe_decode(Layer layer, Callable&& cb) {
+  template<GARLIC_VIEW Layer, typename Callable>
+  static inline void safe_decode(Layer&& layer, Callable&& cb) {
     cb(Data3{
         get<std::string>(layer, "prop1", "default"),
         safe_get<int>(layer, "prop2", 0)
