@@ -123,3 +123,45 @@ auto result = user_model->validate(doc);
 ```
 
 ### Model and Field Tags
+
+You can make constraints that validate a model or a field. See garlic::field_tag and garlic::model_tag.
+
+```cpp
+// ignore details regardless of what 'user_name' field's ignore detail settings.
+auto field_constraint = garlic::make_constraint<garlic::field_tag>(user_name, false, true);
+
+auto model_constraint = garlic::make_constraint<garlic::model_tag>(user_model);
+```
+
+### Module
+
+Now a garlic::Module is simply a repository that contains a bunch of models and fields.
+
+```cpp
+garlic::Module module;
+module->add_field(garlic::make_field("UserName"));
+module->add_field("SomeAliasName", module->get_field("UserName"));
+module->add_model(garlic::make_model("User"));
+```
+
+The idea is that you can make a module from a layer. Meaning you could load a module from a
+JSON, Yaml, MessagePack or whatever layer you have.
+
+```cpp
+FILE* module_file = fopen("module.json", "r");
+auto json_doc = garlic::providers::rapidjson::Json::load(module_file);
+
+auto result = garlic::parsing::load_module(json_doc);
+if (!result) {
+  std::cout << result.error().message() << std::endl;
+  // handle error here.
+} 
+auto user_model = result->get_model("User");
+```
+
+See garlic/parsing/module.h
+
+There is a plan to build module parsers that read JSON schema and other means like maybe defining
+a set of python files that describe these models.
+
+Curious about the format of this module? [See Module Definitions](docs/pages/ModuleParsing.md)
