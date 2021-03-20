@@ -166,42 +166,42 @@ Functions</h2></td></tr>
 <tr class="memitem:aa7e63946aa4dd4d5ffc03569fd538f32"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, typename Callable &gt; </td></tr>
 <tr class="memitem:aa7e63946aa4dd4d5ffc03569fd538f32"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#aa7e63946aa4dd4d5ffc03569fd538f32">garlic::get_member</a> (const Layer &amp;value, std::string_view key, Callable &amp;&amp;cb) noexcept</td></tr>
 <tr class="separator:aa7e63946aa4dd4d5ffc03569fd538f32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af71a5b0136b0f2c014095021080d11e7"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
-<tr class="memitem:af71a5b0136b0f2c014095021080d11e7"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; std::__is_random_access_iter&lt; ConstValueIteratorOf&lt; Layer &gt; &gt;::value &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#af71a5b0136b0f2c014095021080d11e7">garlic::get_item</a> (Layer layer, IndexType index, Callable &amp;&amp;cb) noexcept</td></tr>
-<tr class="separator:af71a5b0136b0f2c014095021080d11e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e04d7f171715f396306444de5058035"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
-<tr class="memitem:a1e04d7f171715f396306444de5058035"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a1e04d7f171715f396306444de5058035">garlic::get</a> (Layer layer, const char *key)</td></tr>
-<tr class="separator:a1e04d7f171715f396306444de5058035"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa416c6786035fceba980f1deeea40cf9"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
-<tr class="memitem:aa416c6786035fceba980f1deeea40cf9"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; std::__is_random_access_iter&lt; ConstValueIteratorOf&lt; Layer &gt; &gt;::value, OutputType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#aa416c6786035fceba980f1deeea40cf9">garlic::get</a> (Layer layer, IndexType index)</td></tr>
-<tr class="separator:aa416c6786035fceba980f1deeea40cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa453f1685182dc684fbeaf59050e7418"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
-<tr class="memitem:aa453f1685182dc684fbeaf59050e7418"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#aa453f1685182dc684fbeaf59050e7418">garlic::get</a> (Layer layer, const char *key, OutputType default_value)</td></tr>
-<tr class="separator:aa453f1685182dc684fbeaf59050e7418"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eddd2c76d2c5d929e771724f87b6e1b"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
-<tr class="memitem:a6eddd2c76d2c5d929e771724f87b6e1b"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a6eddd2c76d2c5d929e771724f87b6e1b">garlic::get</a> (Layer layer, IndexType index, OutputType default_value)</td></tr>
-<tr class="separator:a6eddd2c76d2c5d929e771724f87b6e1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a851579c67081a68330b20aac2e78cfc6"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , typename Callable , GARLIC_VIEW Layer&gt; </td></tr>
-<tr class="memitem:a851579c67081a68330b20aac2e78cfc6"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a851579c67081a68330b20aac2e78cfc6">garlic::get_cb</a> (Layer layer, const char *key, Callable &amp;&amp;cb)</td></tr>
-<tr class="separator:a851579c67081a68330b20aac2e78cfc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad3cc00522caa084571244ae5e22b6e9"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
-<tr class="memitem:aad3cc00522caa084571244ae5e22b6e9"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#aad3cc00522caa084571244ae5e22b6e9">garlic::get_cb</a> (Layer layer, IndexType index, Callable &amp;&amp;cb)</td></tr>
-<tr class="separator:aad3cc00522caa084571244ae5e22b6e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23734d0ef8173cec6790241c1e9e070e"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
-<tr class="memitem:a23734d0ef8173cec6790241c1e9e070e"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a23734d0ef8173cec6790241c1e9e070e">garlic::safe_get</a> (Layer layer, const char *key, OutputType default_value)</td></tr>
-<tr class="separator:a23734d0ef8173cec6790241c1e9e070e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28faf46399a4b2e1dcb1715640976087"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
-<tr class="memitem:a28faf46399a4b2e1dcb1715640976087"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a28faf46399a4b2e1dcb1715640976087">garlic::safe_get</a> (Layer layer, IndexType index, OutputType default_value)</td></tr>
-<tr class="separator:a28faf46399a4b2e1dcb1715640976087"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad64523fb7013ed99b238a7ac993729bb"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </td></tr>
-<tr class="memitem:ad64523fb7013ed99b238a7ac993729bb"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#ad64523fb7013ed99b238a7ac993729bb">garlic::safe_get_cb</a> (Layer layer, const char *key, Callable &amp;&amp;cb)</td></tr>
-<tr class="separator:ad64523fb7013ed99b238a7ac993729bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b275b5e4a34c2e1dade40acebdbeb21"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
-<tr class="memitem:a9b275b5e4a34c2e1dade40acebdbeb21"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a9b275b5e4a34c2e1dade40acebdbeb21">garlic::safe_get_cb</a> (Layer layer, IndexType index, Callable &amp;&amp;cb)</td></tr>
-<tr class="separator:a9b275b5e4a34c2e1dade40acebdbeb21"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7ec2c4ba983eadfef80ce26cc738c55"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, GARLIC_REF Output&gt; </td></tr>
-<tr class="memitem:ad7ec2c4ba983eadfef80ce26cc738c55"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#ad7ec2c4ba983eadfef80ce26cc738c55">garlic::copy_layer</a> (Layer layer, Output output)</td></tr>
-<tr class="separator:ad7ec2c4ba983eadfef80ce26cc738c55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ffa04219f3b883ba9175597d901f85f"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
+<tr class="memitem:a1ffa04219f3b883ba9175597d901f85f"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; std::__is_random_access_iter&lt; ConstValueIteratorOf&lt; Layer &gt; &gt;::value &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a1ffa04219f3b883ba9175597d901f85f">garlic::get_item</a> (Layer &amp;&amp;layer, IndexType index, Callable &amp;&amp;cb) noexcept</td></tr>
+<tr class="separator:a1ffa04219f3b883ba9175597d901f85f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d862d6858398925095a5aeeb6f363c0"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a8d862d6858398925095a5aeeb6f363c0"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a8d862d6858398925095a5aeeb6f363c0">garlic::get</a> (Layer &amp;&amp;layer, const char *key)</td></tr>
+<tr class="separator:a8d862d6858398925095a5aeeb6f363c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a0aa73b3ac23e8220b1515747b24abb"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
+<tr class="memitem:a9a0aa73b3ac23e8220b1515747b24abb"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; std::__is_random_access_iter&lt; ConstValueIteratorOf&lt; Layer &gt; &gt;::value, OutputType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a9a0aa73b3ac23e8220b1515747b24abb">garlic::get</a> (Layer &amp;&amp;layer, IndexType index)</td></tr>
+<tr class="separator:a9a0aa73b3ac23e8220b1515747b24abb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a199cda8a3460f5978a559eec1ca0f287"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a199cda8a3460f5978a559eec1ca0f287"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a199cda8a3460f5978a559eec1ca0f287">garlic::get</a> (Layer &amp;&amp;layer, const char *key, OutputType default_value)</td></tr>
+<tr class="separator:a199cda8a3460f5978a559eec1ca0f287"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4bed02fbe5380778b5295cdca1b89f2"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
+<tr class="memitem:ac4bed02fbe5380778b5295cdca1b89f2"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#ac4bed02fbe5380778b5295cdca1b89f2">garlic::get</a> (Layer &amp;&amp;layer, IndexType index, OutputType default_value)</td></tr>
+<tr class="separator:ac4bed02fbe5380778b5295cdca1b89f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af740ed7ffa5b0d30cb79215b5e2d126a"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , typename Callable , GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:af740ed7ffa5b0d30cb79215b5e2d126a"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#af740ed7ffa5b0d30cb79215b5e2d126a">garlic::get_cb</a> (Layer &amp;&amp;layer, const char *key, Callable &amp;&amp;cb)</td></tr>
+<tr class="separator:af740ed7ffa5b0d30cb79215b5e2d126a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb726b09f0ae1fa9c7b7623d9b904b1c"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
+<tr class="memitem:acb726b09f0ae1fa9c7b7623d9b904b1c"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#acb726b09f0ae1fa9c7b7623d9b904b1c">garlic::get_cb</a> (Layer &amp;&amp;layer, IndexType index, Callable &amp;&amp;cb)</td></tr>
+<tr class="separator:acb726b09f0ae1fa9c7b7623d9b904b1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55262a00ca6aecc256d12e69f27b2259"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a55262a00ca6aecc256d12e69f27b2259"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a55262a00ca6aecc256d12e69f27b2259">garlic::safe_get</a> (Layer &amp;&amp;layer, const char *key, OutputType default_value)</td></tr>
+<tr class="separator:a55262a00ca6aecc256d12e69f27b2259"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a710e8770da4b2e2a03dbc068b2eae601"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt; </td></tr>
+<tr class="memitem:a710e8770da4b2e2a03dbc068b2eae601"><td class="memTemplItemLeft" align="right" valign="top">static OutputType&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a710e8770da4b2e2a03dbc068b2eae601">garlic::safe_get</a> (Layer &amp;&amp;layer, IndexType index, OutputType default_value)</td></tr>
+<tr class="separator:a710e8770da4b2e2a03dbc068b2eae601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef5dacf093e1e38cde74c9c13ed774b7"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </td></tr>
+<tr class="memitem:aef5dacf093e1e38cde74c9c13ed774b7"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#aef5dacf093e1e38cde74c9c13ed774b7">garlic::safe_get_cb</a> (Layer &amp;&amp;layer, const char *key, Callable &amp;&amp;cb)</td></tr>
+<tr class="separator:aef5dacf093e1e38cde74c9c13ed774b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0889f1349f9272adf6e6ccaa29ce2af"><td class="memTemplParams" colspan="2">template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; </td></tr>
+<tr class="memitem:ad0889f1349f9272adf6e6ccaa29ce2af"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#ad0889f1349f9272adf6e6ccaa29ce2af">garlic::safe_get_cb</a> (Layer &amp;&amp;layer, IndexType index, Callable &amp;&amp;cb)</td></tr>
+<tr class="separator:ad0889f1349f9272adf6e6ccaa29ce2af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4098cb2598656db969e6e6d856696c37"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, GARLIC_REF Output&gt; </td></tr>
+<tr class="memitem:a4098cb2598656db969e6e6d856696c37"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a4098cb2598656db969e6e6d856696c37">garlic::copy_layer</a> (Layer &amp;&amp;layer, Output output)</td></tr>
+<tr class="separator:a4098cb2598656db969e6e6d856696c37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file contains various functions and classes to work with layers like getting or resolving using a path. </p>
@@ -255,8 +255,8 @@ template&lt;GARLIC_VIEW L1, GARLIC_VIEW L2&gt; </div>
 
 </div>
 </div>
-<a id="ad7ec2c4ba983eadfef80ce26cc738c55"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad7ec2c4ba983eadfef80ce26cc738c55">&#9670;&nbsp;</a></span>copy_layer()</h2>
+<a id="a4098cb2598656db969e6e6d856696c37"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4098cb2598656db969e6e6d856696c37">&#9670;&nbsp;</a></span>copy_layer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -269,7 +269,7 @@ template&lt;GARLIC_VIEW Layer, GARLIC_REF Output&gt; </div>
         <tr>
           <td class="memname">static void garlic::copy_layer </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -308,8 +308,8 @@ template&lt;GARLIC_VIEW Layer, GARLIC_REF Output&gt; </div>
 
 </div>
 </div>
-<a id="a1e04d7f171715f396306444de5058035"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1e04d7f171715f396306444de5058035">&#9670;&nbsp;</a></span>get() <span class="overload">[1/4]</span></h2>
+<a id="a8d862d6858398925095a5aeeb6f363c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d862d6858398925095a5aeeb6f363c0">&#9670;&nbsp;</a></span>get() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -322,7 +322,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
         <tr>
           <td class="memname">static OutputType garlic::get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -348,8 +348,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
 
 </div>
 </div>
-<a id="aa453f1685182dc684fbeaf59050e7418"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa453f1685182dc684fbeaf59050e7418">&#9670;&nbsp;</a></span>get() <span class="overload">[2/4]</span></h2>
+<a id="a199cda8a3460f5978a559eec1ca0f287"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a199cda8a3460f5978a559eec1ca0f287">&#9670;&nbsp;</a></span>get() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -362,7 +362,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
         <tr>
           <td class="memname">static OutputType garlic::get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -394,8 +394,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
 
 </div>
 </div>
-<a id="aa416c6786035fceba980f1deeea40cf9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa416c6786035fceba980f1deeea40cf9">&#9670;&nbsp;</a></span>get() <span class="overload">[3/4]</span></h2>
+<a id="a9a0aa73b3ac23e8220b1515747b24abb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a0aa73b3ac23e8220b1515747b24abb">&#9670;&nbsp;</a></span>get() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -408,7 +408,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
         <tr>
           <td class="memname">static std::enable_if_t&lt;std::__is_random_access_iter&lt;ConstValueIteratorOf&lt;Layer&gt; &gt;::value, OutputType&gt; garlic::get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -435,8 +435,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
 
 </div>
 </div>
-<a id="a6eddd2c76d2c5d929e771724f87b6e1b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6eddd2c76d2c5d929e771724f87b6e1b">&#9670;&nbsp;</a></span>get() <span class="overload">[4/4]</span></h2>
+<a id="ac4bed02fbe5380778b5295cdca1b89f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4bed02fbe5380778b5295cdca1b89f2">&#9670;&nbsp;</a></span>get() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -449,7 +449,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
         <tr>
           <td class="memname">static OutputType garlic::get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -481,8 +481,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
 
 </div>
 </div>
-<a id="a851579c67081a68330b20aac2e78cfc6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a851579c67081a68330b20aac2e78cfc6">&#9670;&nbsp;</a></span>get_cb() <span class="overload">[1/2]</span></h2>
+<a id="af740ed7ffa5b0d30cb79215b5e2d126a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af740ed7ffa5b0d30cb79215b5e2d126a">&#9670;&nbsp;</a></span>get_cb() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -495,7 +495,7 @@ template&lt;typename OutputType , typename Callable , GARLIC_VIEW Layer&gt; </di
         <tr>
           <td class="memname">static void garlic::get_cb </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -533,8 +533,8 @@ template&lt;typename OutputType , typename Callable , GARLIC_VIEW Layer&gt; </di
 
 </div>
 </div>
-<a id="aad3cc00522caa084571244ae5e22b6e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad3cc00522caa084571244ae5e22b6e9">&#9670;&nbsp;</a></span>get_cb() <span class="overload">[2/2]</span></h2>
+<a id="acb726b09f0ae1fa9c7b7623d9b904b1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb726b09f0ae1fa9c7b7623d9b904b1c">&#9670;&nbsp;</a></span>get_cb() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -547,7 +547,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, ty
         <tr>
           <td class="memname">static void garlic::get_cb </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -585,8 +585,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, ty
 
 </div>
 </div>
-<a id="af71a5b0136b0f2c014095021080d11e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af71a5b0136b0f2c014095021080d11e7">&#9670;&nbsp;</a></span>get_item()</h2>
+<a id="a1ffa04219f3b883ba9175597d901f85f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ffa04219f3b883ba9175597d901f85f">&#9670;&nbsp;</a></span>get_item()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -599,7 +599,7 @@ template&lt;GARLIC_VIEW Layer, std::integral IndexType, typename Callable &gt; <
         <tr>
           <td class="memname">static std::enable_if_t&lt;std::__is_random_access_iter&lt;ConstValueIteratorOf&lt;Layer&gt; &gt;::value&gt; garlic::get_item </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -901,8 +901,8 @@ template&lt;GARLIC_VIEW LayerType, typename Callable &gt; </div>
 
 </div>
 </div>
-<a id="a23734d0ef8173cec6790241c1e9e070e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23734d0ef8173cec6790241c1e9e070e">&#9670;&nbsp;</a></span>safe_get() <span class="overload">[1/2]</span></h2>
+<a id="a55262a00ca6aecc256d12e69f27b2259"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55262a00ca6aecc256d12e69f27b2259">&#9670;&nbsp;</a></span>safe_get() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -915,7 +915,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
         <tr>
           <td class="memname">static OutputType garlic::safe_get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -947,8 +947,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer&gt; </div>
 
 </div>
 </div>
-<a id="a28faf46399a4b2e1dcb1715640976087"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a28faf46399a4b2e1dcb1715640976087">&#9670;&nbsp;</a></span>safe_get() <span class="overload">[2/2]</span></h2>
+<a id="a710e8770da4b2e2a03dbc068b2eae601"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a710e8770da4b2e2a03dbc068b2eae601">&#9670;&nbsp;</a></span>safe_get() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -961,7 +961,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
         <tr>
           <td class="memname">static OutputType garlic::safe_get </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -993,8 +993,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType&gt;
 
 </div>
 </div>
-<a id="ad64523fb7013ed99b238a7ac993729bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad64523fb7013ed99b238a7ac993729bb">&#9670;&nbsp;</a></span>safe_get_cb() <span class="overload">[1/2]</span></h2>
+<a id="aef5dacf093e1e38cde74c9c13ed774b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef5dacf093e1e38cde74c9c13ed774b7">&#9670;&nbsp;</a></span>safe_get_cb() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1007,7 +1007,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </di
         <tr>
           <td class="memname">static void garlic::safe_get_cb </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -1045,8 +1045,8 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </di
 
 </div>
 </div>
-<a id="a9b275b5e4a34c2e1dade40acebdbeb21"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9b275b5e4a34c2e1dade40acebdbeb21">&#9670;&nbsp;</a></span>safe_get_cb() <span class="overload">[2/2]</span></h2>
+<a id="ad0889f1349f9272adf6e6ccaa29ce2af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0889f1349f9272adf6e6ccaa29ce2af">&#9670;&nbsp;</a></span>safe_get_cb() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1059,7 +1059,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, std::integral IndexType, ty
         <tr>
           <td class="memname">static void garlic::safe_get_cb </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -1209,7 +1209,7 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </di
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_043132c192ccade48f0995379cd19bfe.html">garlic</a></li><li class="navelem"><a class="el" href="utility_8h.html">utility.h</a></li>
+    <li class="navelem"><a class="el" href="dir_af30267d1ad5fcde68c5e8495a1d5b8d.html">garlic</a></li><li class="navelem"><a class="el" href="utility_8h.html">utility.h</a></li>
   </ul>
 </div>
 </body>

@@ -91,12 +91,12 @@ $(document).ready(function(){initNavTree('structgarlic_1_1field__tag.html',''); 
 <p><code>#include &lt;<a class="el" href="constraints_8h_source.html">constraints.h</a>&gt;</code></p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classgarlic_1_1Constraint.html" title="Smallest unit of data validation.">Constraint</a> Tag that passes if the specified <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a> passes the layer. </p>
-<div class="fragment"><div class="line">make_constraint&lt;field_tag&gt;(std::shared_ptr&lt;std::shared_ptr&lt;Field&gt;&gt;&amp;&amp; field_pointer_ref,</div>
+<div class="fragment"><div class="line">make_constraint&lt;field_tag&gt;(std::shared_ptr&lt;Field&gt; pointer,</div>
 <div class="line">                           <span class="keywordtype">bool</span> hide = <span class="keyword">false</span>,</div>
 <div class="line">                           <span class="keywordtype">bool</span> ignore_details = <span class="keyword">false</span>);</div>
 </div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">field_pointer_ref</td><td>a double pointer to the <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a> instance. </td></tr>
+    <tr><td class="paramname">field_pointer</td><td>a pointer to the <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a> instance. </td></tr>
     <tr><td class="paramname">hide</td><td>if true, <a class="el" href="structgarlic_1_1ConstraintResult.html" title="Result of a constriant test.">ConstraintResult</a> from the first failing constraint will be returned. This practically hides this constraint and leaves no trace of it in the resulting <a class="el" href="structgarlic_1_1ConstraintResult.html" title="Result of a constriant test.">ConstraintResult</a>. </td></tr>
     <tr><td class="paramname">ignore_details</td><td>if true, failing constraints will not be added to the resulting <a class="el" href="structgarlic_1_1ConstraintResult.html" title="Result of a constriant test.">ConstraintResult</a> as details. </td></tr>
   </table>

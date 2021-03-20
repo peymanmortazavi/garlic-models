@@ -1282,88 +1282,94 @@ $(document).ready(function(){initNavTree('constraints_8h_source.html',''); initR
 <div class="line"><a name="l01399"></a><span class="lineno"> 1399</span>&#160;              }</div>
 <div class="line"><a name="l01400"></a><span class="lineno"> 1400</span>&#160; </div>
 <div class="line"><a name="l01401"></a><span class="lineno"> 1401</span>&#160;      <span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Args&gt;</div>
-<div class="line"><a name="l01402"></a><span class="lineno"> 1402</span>&#160;      <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
-<div class="line"><a name="l01403"></a><span class="lineno"> 1403</span>&#160;      custom_message_fail(Args&amp;&amp;... args) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l01404"></a><span class="lineno"> 1404</span>&#160;        <span class="keywordflow">return</span> this-&gt;fail((*ref)-&gt;message(), std::forward&lt;Args&gt;(args)...);</div>
-<div class="line"><a name="l01405"></a><span class="lineno"> 1405</span>&#160;      }</div>
+<div class="line"><a name="l01402"></a><span class="lineno"> 1402</span>&#160;      Context(</div>
+<div class="line"><a name="l01403"></a><span class="lineno"> 1403</span>&#160;          field_pointer pointer, <span class="keywordtype">bool</span> hide = <span class="keyword">false</span>, <span class="keywordtype">bool</span> ignore_details = <span class="keyword">false</span>,</div>
+<div class="line"><a name="l01404"></a><span class="lineno"> 1404</span>&#160;          Args&amp;&amp;... args</div>
+<div class="line"><a name="l01405"></a><span class="lineno"> 1405</span>&#160;          ) : Context(std::make_shared&lt;field_pointer&gt;(pointer), hide, ignore_details, std::forward&lt;Args&gt;(args)...) {}</div>
 <div class="line"><a name="l01406"></a><span class="lineno"> 1406</span>&#160; </div>
-<div class="line"><a name="l01407"></a><span class="lineno"> 1407</span>&#160;      <span class="keywordtype">void</span> update_name() {</div>
-<div class="line"><a name="l01408"></a><span class="lineno"> 1408</span>&#160;        <span class="keywordflow">if</span> (*ref &amp;&amp; this-&gt;name.empty()) {</div>
-<div class="line"><a name="l01409"></a><span class="lineno"> 1409</span>&#160;          this-&gt;name = (*ref)-&gt;name();</div>
-<div class="line"><a name="l01410"></a><span class="lineno"> 1410</span>&#160;        }</div>
+<div class="line"><a name="l01407"></a><span class="lineno"> 1407</span>&#160;      <span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l01408"></a><span class="lineno"> 1408</span>&#160;      <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
+<div class="line"><a name="l01409"></a><span class="lineno"> 1409</span>&#160;      custom_message_fail(Args&amp;&amp;... args) <span class="keyword">const</span> noexcept {</div>
+<div class="line"><a name="l01410"></a><span class="lineno"> 1410</span>&#160;        <span class="keywordflow">return</span> this-&gt;fail((*ref)-&gt;message(), std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l01411"></a><span class="lineno"> 1411</span>&#160;      }</div>
 <div class="line"><a name="l01412"></a><span class="lineno"> 1412</span>&#160; </div>
-<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160;      <span class="keywordtype">void</span> set_field(field_pointer field) {</div>
-<div class="line"><a name="l01414"></a><span class="lineno"> 1414</span>&#160;        ref-&gt;swap(field);</div>
-<div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;        this-&gt;update_name();</div>
-<div class="line"><a name="l01416"></a><span class="lineno"> 1416</span>&#160;      }</div>
-<div class="line"><a name="l01417"></a><span class="lineno"> 1417</span>&#160; </div>
-<div class="line"><a name="l01418"></a><span class="lineno"> 1418</span>&#160;      field_pointer_ref ref;</div>
-<div class="line"><a name="l01419"></a><span class="lineno"> 1419</span>&#160;      <span class="keywordtype">bool</span> hide;</div>
-<div class="line"><a name="l01420"></a><span class="lineno"> 1420</span>&#160;      <span class="keywordtype">bool</span> ignore_details;</div>
-<div class="line"><a name="l01421"></a><span class="lineno"> 1421</span>&#160;    };</div>
-<div class="line"><a name="l01422"></a><span class="lineno"> 1422</span>&#160; </div>
-<div class="line"><a name="l01423"></a><span class="lineno"> 1423</span>&#160;    <span class="keyword">using</span> context_type = Context;</div>
-<div class="line"><a name="l01424"></a><span class="lineno"> 1424</span>&#160; </div>
-<div class="line"><a name="l01425"></a><span class="lineno"> 1425</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
-<div class="line"><a name="l01426"></a><span class="lineno"> 1426</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
-<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160;    test(<span class="keyword">const</span> Layer&amp; layer, <span class="keyword">const</span> Context&amp; context) noexcept {</div>
-<div class="line"><a name="l01428"></a><span class="lineno"> 1428</span>&#160;      <span class="keywordflow">if</span> (context.hide) {</div>
-<div class="line"><a name="l01429"></a><span class="lineno"> 1429</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="constraints_8h.html#a9d5e43103ae752d4640792e5ebdefdc7">test_constraints_first_failure</a>(layer, (*context.ref)-&gt;properties().constraints);</div>
-<div class="line"><a name="l01430"></a><span class="lineno"> 1430</span>&#160;      }</div>
-<div class="line"><a name="l01431"></a><span class="lineno"> 1431</span>&#160;      <span class="keyword">const</span> <span class="keyword">auto</span>&amp; field = *context.ref;</div>
-<div class="line"><a name="l01432"></a><span class="lineno"> 1432</span>&#160;      <span class="keywordflow">if</span> (context.ignore_details || field-&gt;properties().ignore_details) {</div>
-<div class="line"><a name="l01433"></a><span class="lineno"> 1433</span>&#160;        <span class="keywordflow">if</span> (field-&gt;quick_test(layer)) <span class="keywordflow">return</span> context.ok();</div>
-<div class="line"><a name="l01434"></a><span class="lineno"> 1434</span>&#160;        <span class="keywordflow">return</span> context.custom_message_fail();</div>
-<div class="line"><a name="l01435"></a><span class="lineno"> 1435</span>&#160;      }</div>
-<div class="line"><a name="l01436"></a><span class="lineno"> 1436</span>&#160;      <span class="keyword">auto</span> result = field-&gt;validate(layer);</div>
-<div class="line"><a name="l01437"></a><span class="lineno"> 1437</span>&#160;      <span class="keywordflow">if</span> (result.is_valid()) <span class="keywordflow">return</span> context.ok();</div>
-<div class="line"><a name="l01438"></a><span class="lineno"> 1438</span>&#160;      <span class="keywordflow">return</span> context.custom_message_fail(std::move(result.failures));</div>
-<div class="line"><a name="l01439"></a><span class="lineno"> 1439</span>&#160;    }</div>
-<div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160; </div>
-<div class="line"><a name="l01441"></a><span class="lineno"> 1441</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
-<div class="line"><a name="l01442"></a><span class="lineno"> 1442</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">bool</span> quick_test(<span class="keyword">const</span> Layer&amp; layer, <span class="keyword">const</span> Context&amp; context) noexcept {</div>
-<div class="line"><a name="l01443"></a><span class="lineno"> 1443</span>&#160;      <span class="keywordflow">return</span> (*context.ref)-&gt;quick_test(layer);</div>
-<div class="line"><a name="l01444"></a><span class="lineno"> 1444</span>&#160;    }</div>
-<div class="line"><a name="l01445"></a><span class="lineno"> 1445</span>&#160;  };</div>
+<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160;      <span class="keywordtype">void</span> update_name() {</div>
+<div class="line"><a name="l01414"></a><span class="lineno"> 1414</span>&#160;        <span class="keywordflow">if</span> (*ref &amp;&amp; this-&gt;name.empty()) {</div>
+<div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;          this-&gt;name = (*ref)-&gt;name();</div>
+<div class="line"><a name="l01416"></a><span class="lineno"> 1416</span>&#160;        }</div>
+<div class="line"><a name="l01417"></a><span class="lineno"> 1417</span>&#160;      }</div>
+<div class="line"><a name="l01418"></a><span class="lineno"> 1418</span>&#160; </div>
+<div class="line"><a name="l01419"></a><span class="lineno"> 1419</span>&#160;      <span class="keywordtype">void</span> set_field(field_pointer field) {</div>
+<div class="line"><a name="l01420"></a><span class="lineno"> 1420</span>&#160;        ref-&gt;swap(field);</div>
+<div class="line"><a name="l01421"></a><span class="lineno"> 1421</span>&#160;        this-&gt;update_name();</div>
+<div class="line"><a name="l01422"></a><span class="lineno"> 1422</span>&#160;      }</div>
+<div class="line"><a name="l01423"></a><span class="lineno"> 1423</span>&#160; </div>
+<div class="line"><a name="l01424"></a><span class="lineno"> 1424</span>&#160;      field_pointer_ref ref;</div>
+<div class="line"><a name="l01425"></a><span class="lineno"> 1425</span>&#160;      <span class="keywordtype">bool</span> hide;</div>
+<div class="line"><a name="l01426"></a><span class="lineno"> 1426</span>&#160;      <span class="keywordtype">bool</span> ignore_details;</div>
+<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160;    };</div>
+<div class="line"><a name="l01428"></a><span class="lineno"> 1428</span>&#160; </div>
+<div class="line"><a name="l01429"></a><span class="lineno"> 1429</span>&#160;    <span class="keyword">using</span> context_type = Context;</div>
+<div class="line"><a name="l01430"></a><span class="lineno"> 1430</span>&#160; </div>
+<div class="line"><a name="l01431"></a><span class="lineno"> 1431</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l01432"></a><span class="lineno"> 1432</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
+<div class="line"><a name="l01433"></a><span class="lineno"> 1433</span>&#160;    test(<span class="keyword">const</span> Layer&amp; layer, <span class="keyword">const</span> Context&amp; context) noexcept {</div>
+<div class="line"><a name="l01434"></a><span class="lineno"> 1434</span>&#160;      <span class="keywordflow">if</span> (context.hide) {</div>
+<div class="line"><a name="l01435"></a><span class="lineno"> 1435</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="constraints_8h.html#a9d5e43103ae752d4640792e5ebdefdc7">test_constraints_first_failure</a>(layer, (*context.ref)-&gt;properties().constraints);</div>
+<div class="line"><a name="l01436"></a><span class="lineno"> 1436</span>&#160;      }</div>
+<div class="line"><a name="l01437"></a><span class="lineno"> 1437</span>&#160;      <span class="keyword">const</span> <span class="keyword">auto</span>&amp; field = *context.ref;</div>
+<div class="line"><a name="l01438"></a><span class="lineno"> 1438</span>&#160;      <span class="keywordflow">if</span> (context.ignore_details || field-&gt;properties().ignore_details) {</div>
+<div class="line"><a name="l01439"></a><span class="lineno"> 1439</span>&#160;        <span class="keywordflow">if</span> (field-&gt;quick_test(layer)) <span class="keywordflow">return</span> context.ok();</div>
+<div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160;        <span class="keywordflow">return</span> context.custom_message_fail();</div>
+<div class="line"><a name="l01441"></a><span class="lineno"> 1441</span>&#160;      }</div>
+<div class="line"><a name="l01442"></a><span class="lineno"> 1442</span>&#160;      <span class="keyword">auto</span> result = field-&gt;validate(layer);</div>
+<div class="line"><a name="l01443"></a><span class="lineno"> 1443</span>&#160;      <span class="keywordflow">if</span> (result.is_valid()) <span class="keywordflow">return</span> context.ok();</div>
+<div class="line"><a name="l01444"></a><span class="lineno"> 1444</span>&#160;      <span class="keywordflow">return</span> context.custom_message_fail(std::move(result.failures));</div>
+<div class="line"><a name="l01445"></a><span class="lineno"> 1445</span>&#160;    }</div>
 <div class="line"><a name="l01446"></a><span class="lineno"> 1446</span>&#160; </div>
-<div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160;  <span class="keyword">using</span> <a class="code" href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9">constraint_registry</a> = internal::registry&lt;</div>
-<div class="line"><a name="l01449"></a><span class="lineno"> 1449</span>&#160;    <a class="code" href="structgarlic_1_1type__tag.html">type_tag</a>, <a class="code" href="structgarlic_1_1range__tag.html">range_tag</a>, <a class="code" href="structgarlic_1_1regex__tag.html">regex_tag</a>, <a class="code" href="structgarlic_1_1any__tag.html">any_tag</a>, <a class="code" href="structgarlic_1_1list__tag.html">list_tag</a>, <a class="code" href="classgarlic_1_1tuple__tag.html">tuple_tag</a>, <a class="code" href="classgarlic_1_1map__tag.html">map_tag</a>, <a class="code" href="structgarlic_1_1all__tag.html">all_tag</a>, <a class="code" href="structgarlic_1_1model__tag.html">model_tag</a>, <a class="code" href="structgarlic_1_1field__tag.html">field_tag</a>,</div>
-<div class="line"><a name="l01450"></a><span class="lineno"><a class="line" href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9"> 1450</a></span>&#160;    <a class="code" href="structgarlic_1_1literal__tag.html">string_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">int_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">double_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">bool_literal_tag</a>, null_literal_tag&gt;;</div>
-<div class="line"><a name="l01451"></a><span class="lineno"> 1451</span>&#160; </div>
-<div class="line"><a name="l01452"></a><span class="lineno"> 1452</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Tag, <span class="keyword">typename</span>... Args&gt;</div>
-<div class="line"><a name="l01453"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71"> 1453</a></span>&#160;   <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a> <a class="code" href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71">Constraint::make</a>(Args&amp;&amp;... args) noexcept {</div>
-<div class="line"><a name="l01454"></a><span class="lineno"> 1454</span>&#160;     constexpr <span class="keyword">auto</span> position = constraint_registry::position_of&lt;Tag&gt;();</div>
-<div class="line"><a name="l01455"></a><span class="lineno"> 1455</span>&#160;     static_assert(position != constraint_registry::not_found, <span class="stringliteral">&quot;Unregistered tag used to make a flat constraint.&quot;</span>);</div>
-<div class="line"><a name="l01456"></a><span class="lineno"> 1456</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a>(</div>
-<div class="line"><a name="l01457"></a><span class="lineno"> 1457</span>&#160;        position,</div>
-<div class="line"><a name="l01458"></a><span class="lineno"> 1458</span>&#160;        std::make_shared&lt;typename Tag::context_type&gt;(std::forward&lt;Args&gt;(args)...));</div>
-<div class="line"><a name="l01459"></a><span class="lineno"> 1459</span>&#160;  }</div>
-<div class="line"><a name="l01460"></a><span class="lineno"> 1460</span>&#160; </div>
-<div class="line"><a name="l01461"></a><span class="lineno"> 1461</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
-<div class="line"><a name="l01462"></a><span class="lineno"> 1462</span>&#160;  <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
-<div class="line"><a name="l01463"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d"> 1463</a></span>&#160;  <a class="code" href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d">Constraint::test</a>(<span class="keyword">const</span> Layer&amp; value) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l01464"></a><span class="lineno"> 1464</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> handlers = constraint_registry::test_handlers&lt;Layer&gt;();</div>
-<div class="line"><a name="l01465"></a><span class="lineno"> 1465</span>&#160;    <span class="keywordflow">return</span> handlers[index_](value, context_.get());</div>
-<div class="line"><a name="l01466"></a><span class="lineno"> 1466</span>&#160;  }</div>
-<div class="line"><a name="l01467"></a><span class="lineno"> 1467</span>&#160; </div>
-<div class="line"><a name="l01468"></a><span class="lineno"> 1468</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
-<div class="line"><a name="l01469"></a><span class="lineno"> 1469</span>&#160;  <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l01470"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f"> 1470</a></span>&#160;  <a class="code" href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f">Constraint::quick_test</a>(<span class="keyword">const</span> Layer&amp; value) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l01471"></a><span class="lineno"> 1471</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> handlers = constraint_registry::quick_test_handlers&lt;Layer&gt;();</div>
-<div class="line"><a name="l01472"></a><span class="lineno"> 1472</span>&#160;    <span class="keywordflow">return</span> handlers[index_](value, context_.get());</div>
-<div class="line"><a name="l01473"></a><span class="lineno"> 1473</span>&#160;  }</div>
-<div class="line"><a name="l01474"></a><span class="lineno"> 1474</span>&#160; </div>
-<div class="line"><a name="l01476"></a><span class="lineno"> 1476</span>&#160; </div>
-<div class="line"><a name="l01480"></a><span class="lineno"> 1480</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Tag, <span class="keyword">typename</span>... Args&gt;</div>
-<div class="line"><a name="l01481"></a><span class="lineno"> 1481</span>&#160;  <span class="keyword">inline</span> <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a></div>
-<div class="line"><a name="l01482"></a><span class="lineno"><a class="line" href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412"> 1482</a></span>&#160;  <a class="code" href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412">make_constraint</a>(Args&amp;&amp;... args) noexcept {</div>
-<div class="line"><a name="l01483"></a><span class="lineno"> 1483</span>&#160;    <span class="keywordflow">return</span> Constraint::make&lt;Tag&gt;(std::forward&lt;Args&gt;(args)...);</div>
-<div class="line"><a name="l01484"></a><span class="lineno"> 1484</span>&#160;  }</div>
-<div class="line"><a name="l01485"></a><span class="lineno"> 1485</span>&#160; </div>
-<div class="line"><a name="l01486"></a><span class="lineno"> 1486</span>&#160;}</div>
-<div class="line"><a name="l01487"></a><span class="lineno"> 1487</span>&#160; </div>
-<div class="line"><a name="l01488"></a><span class="lineno"> 1488</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* end of include guard: GARLIC_CONSTRAINTS_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">bool</span> quick_test(<span class="keyword">const</span> Layer&amp; layer, <span class="keyword">const</span> Context&amp; context) noexcept {</div>
+<div class="line"><a name="l01449"></a><span class="lineno"> 1449</span>&#160;      <span class="keywordflow">return</span> (*context.ref)-&gt;quick_test(layer);</div>
+<div class="line"><a name="l01450"></a><span class="lineno"> 1450</span>&#160;    }</div>
+<div class="line"><a name="l01451"></a><span class="lineno"> 1451</span>&#160;  };</div>
+<div class="line"><a name="l01452"></a><span class="lineno"> 1452</span>&#160; </div>
+<div class="line"><a name="l01454"></a><span class="lineno"> 1454</span>&#160;  <span class="keyword">using</span> <a class="code" href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9">constraint_registry</a> = internal::registry&lt;</div>
+<div class="line"><a name="l01455"></a><span class="lineno"> 1455</span>&#160;    <a class="code" href="structgarlic_1_1type__tag.html">type_tag</a>, <a class="code" href="structgarlic_1_1range__tag.html">range_tag</a>, <a class="code" href="structgarlic_1_1regex__tag.html">regex_tag</a>, <a class="code" href="structgarlic_1_1any__tag.html">any_tag</a>, <a class="code" href="structgarlic_1_1list__tag.html">list_tag</a>, <a class="code" href="classgarlic_1_1tuple__tag.html">tuple_tag</a>, <a class="code" href="classgarlic_1_1map__tag.html">map_tag</a>, <a class="code" href="structgarlic_1_1all__tag.html">all_tag</a>, <a class="code" href="structgarlic_1_1model__tag.html">model_tag</a>, <a class="code" href="structgarlic_1_1field__tag.html">field_tag</a>,</div>
+<div class="line"><a name="l01456"></a><span class="lineno"><a class="line" href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9"> 1456</a></span>&#160;    <a class="code" href="structgarlic_1_1literal__tag.html">string_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">int_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">double_literal_tag</a>, <a class="code" href="structgarlic_1_1literal__tag.html">bool_literal_tag</a>, null_literal_tag&gt;;</div>
+<div class="line"><a name="l01457"></a><span class="lineno"> 1457</span>&#160; </div>
+<div class="line"><a name="l01458"></a><span class="lineno"> 1458</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Tag, <span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l01459"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71"> 1459</a></span>&#160;   <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a> <a class="code" href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71">Constraint::make</a>(Args&amp;&amp;... args) noexcept {</div>
+<div class="line"><a name="l01460"></a><span class="lineno"> 1460</span>&#160;     constexpr <span class="keyword">auto</span> position = constraint_registry::position_of&lt;Tag&gt;();</div>
+<div class="line"><a name="l01461"></a><span class="lineno"> 1461</span>&#160;     static_assert(position != constraint_registry::not_found, <span class="stringliteral">&quot;Unregistered tag used to make a flat constraint.&quot;</span>);</div>
+<div class="line"><a name="l01462"></a><span class="lineno"> 1462</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a>(</div>
+<div class="line"><a name="l01463"></a><span class="lineno"> 1463</span>&#160;        position,</div>
+<div class="line"><a name="l01464"></a><span class="lineno"> 1464</span>&#160;        std::make_shared&lt;typename Tag::context_type&gt;(std::forward&lt;Args&gt;(args)...));</div>
+<div class="line"><a name="l01465"></a><span class="lineno"> 1465</span>&#160;  }</div>
+<div class="line"><a name="l01466"></a><span class="lineno"> 1466</span>&#160; </div>
+<div class="line"><a name="l01467"></a><span class="lineno"> 1467</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l01468"></a><span class="lineno"> 1468</span>&#160;  <span class="keyword">inline</span> <a class="code" href="structgarlic_1_1ConstraintResult.html">ConstraintResult</a></div>
+<div class="line"><a name="l01469"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d"> 1469</a></span>&#160;  <a class="code" href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d">Constraint::test</a>(<span class="keyword">const</span> Layer&amp; value) <span class="keyword">const</span> noexcept {</div>
+<div class="line"><a name="l01470"></a><span class="lineno"> 1470</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> handlers = constraint_registry::test_handlers&lt;Layer&gt;();</div>
+<div class="line"><a name="l01471"></a><span class="lineno"> 1471</span>&#160;    <span class="keywordflow">return</span> handlers[index_](value, context_.get());</div>
+<div class="line"><a name="l01472"></a><span class="lineno"> 1472</span>&#160;  }</div>
+<div class="line"><a name="l01473"></a><span class="lineno"> 1473</span>&#160; </div>
+<div class="line"><a name="l01474"></a><span class="lineno"> 1474</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l01475"></a><span class="lineno"> 1475</span>&#160;  <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l01476"></a><span class="lineno"><a class="line" href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f"> 1476</a></span>&#160;  <a class="code" href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f">Constraint::quick_test</a>(<span class="keyword">const</span> Layer&amp; value) <span class="keyword">const</span> noexcept {</div>
+<div class="line"><a name="l01477"></a><span class="lineno"> 1477</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> handlers = constraint_registry::quick_test_handlers&lt;Layer&gt;();</div>
+<div class="line"><a name="l01478"></a><span class="lineno"> 1478</span>&#160;    <span class="keywordflow">return</span> handlers[index_](value, context_.get());</div>
+<div class="line"><a name="l01479"></a><span class="lineno"> 1479</span>&#160;  }</div>
+<div class="line"><a name="l01480"></a><span class="lineno"> 1480</span>&#160; </div>
+<div class="line"><a name="l01482"></a><span class="lineno"> 1482</span>&#160; </div>
+<div class="line"><a name="l01486"></a><span class="lineno"> 1486</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Tag, <span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l01487"></a><span class="lineno"> 1487</span>&#160;  <span class="keyword">inline</span> <a class="code" href="classgarlic_1_1Constraint.html">Constraint</a></div>
+<div class="line"><a name="l01488"></a><span class="lineno"><a class="line" href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412"> 1488</a></span>&#160;  <a class="code" href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412">make_constraint</a>(Args&amp;&amp;... args) noexcept {</div>
+<div class="line"><a name="l01489"></a><span class="lineno"> 1489</span>&#160;    <span class="keywordflow">return</span> Constraint::make&lt;Tag&gt;(std::forward&lt;Args&gt;(args)...);</div>
+<div class="line"><a name="l01490"></a><span class="lineno"> 1490</span>&#160;  }</div>
+<div class="line"><a name="l01491"></a><span class="lineno"> 1491</span>&#160; </div>
+<div class="line"><a name="l01492"></a><span class="lineno"> 1492</span>&#160;}</div>
+<div class="line"><a name="l01493"></a><span class="lineno"> 1493</span>&#160; </div>
+<div class="line"><a name="l01494"></a><span class="lineno"> 1494</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* end of include guard: GARLIC_CONSTRAINTS_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="aclassgarlic_1_1Constraint_html"><div class="ttname"><a href="classgarlic_1_1Constraint.html">garlic::Constraint</a></div><div class="ttdoc">Smallest unit of data validation.</div><div class="ttdef"><b>Definition:</b> constraints.h:275</div></div>
@@ -1379,10 +1385,10 @@ $(document).ready(function(){initNavTree('constraints_8h_source.html',''); initR
 <div class="ttc" id="aclassgarlic_1_1Field_html_abb382fc82172409154a3357b6bc60b78"><div class="ttname"><a href="classgarlic_1_1Field.html#abb382fc82172409154a3357b6bc60b78">garlic::Field::begin_constraints</a></div><div class="ttdeci">const_constraint_iterator begin_constraints() const noexcept</div><div class="ttdef"><b>Definition:</b> constraints.h:1132</div></div>
 <div class="ttc" id="astructgarlic_1_1model__tag_html"><div class="ttname"><a href="structgarlic_1_1model__tag.html">garlic::model_tag</a></div><div class="ttdoc">Constraint Tag that passes if the specified Model passes the layer.</div><div class="ttdef"><b>Definition:</b> constraints.h:1329</div></div>
 <div class="ttc" id="astructgarlic_1_1list__tag_html"><div class="ttname"><a href="structgarlic_1_1list__tag.html">garlic::list_tag</a></div><div class="ttdoc">Constraint Tag that passes if the layer is a list and all its elements pass the inner constraints.</div><div class="ttdef"><b>Definition:</b> constraints.h:615</div></div>
-<div class="ttc" id="aclassgarlic_1_1Constraint_html_a44a17f2bcb09ee649ba2118b11391a71"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71">garlic::Constraint::make</a></div><div class="ttdeci">static Constraint make(Args &amp;&amp;... args) noexcept</div><div class="ttdoc">Create a generic Constraint based on a constraint tag.</div><div class="ttdef"><b>Definition:</b> constraints.h:1453</div></div>
+<div class="ttc" id="aclassgarlic_1_1Constraint_html_a44a17f2bcb09ee649ba2118b11391a71"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a44a17f2bcb09ee649ba2118b11391a71">garlic::Constraint::make</a></div><div class="ttdeci">static Constraint make(Args &amp;&amp;... args) noexcept</div><div class="ttdoc">Create a generic Constraint based on a constraint tag.</div><div class="ttdef"><b>Definition:</b> constraints.h:1459</div></div>
 <div class="ttc" id="autility_8h_html"><div class="ttname"><a href="utility_8h.html">utility.h</a></div><div class="ttdoc">This file contains various functions and classes to work with layers like getting or resolving using ...</div></div>
 <div class="ttc" id="aclassgarlic_1_1map__tag_html"><div class="ttname"><a href="classgarlic_1_1map__tag.html">garlic::map_tag</a></div><div class="ttdoc">Constraint Tag that passes if the layer's members pass key and value constraints.</div><div class="ttdef"><b>Definition:</b> constraints.h:799</div></div>
-<div class="ttc" id="aclassgarlic_1_1Constraint_html_a78ae5860e10589138d30fefe8104ee9d"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d">garlic::Constraint::test</a></div><div class="ttdeci">ConstraintResult test(const Layer &amp;value) const noexcept</div><div class="ttdoc">Perform the constraint test on the layer and return the result.</div><div class="ttdef"><b>Definition:</b> constraints.h:1463</div></div>
+<div class="ttc" id="aclassgarlic_1_1Constraint_html_a78ae5860e10589138d30fefe8104ee9d"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a78ae5860e10589138d30fefe8104ee9d">garlic::Constraint::test</a></div><div class="ttdeci">ConstraintResult test(const Layer &amp;value) const noexcept</div><div class="ttdoc">Perform the constraint test on the layer and return the result.</div><div class="ttdef"><b>Definition:</b> constraints.h:1469</div></div>
 <div class="ttc" id="aclassgarlic_1_1Model_html_ab6634a99f5d0273fc33badeb15a5b160"><div class="ttname"><a href="classgarlic_1_1Model.html#ab6634a99f5d0273fc33badeb15a5b160">garlic::Model::quick_test</a></div><div class="ttdeci">bool quick_test(const Layer &amp;layer) const noexcept</div><div class="ttdoc">Run a quick test on a layer.</div><div class="ttdef"><b>Definition:</b> constraints.h:1233</div></div>
 <div class="ttc" id="astructgarlic_1_1Model_1_1FieldDescriptor_html"><div class="ttname"><a href="structgarlic_1_1Model_1_1FieldDescriptor.html">garlic::Model::FieldDescriptor</a></div><div class="ttdoc">Field Record.</div><div class="ttdef"><b>Definition:</b> constraints.h:1165</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_ae6c84f2e15bb37e1921f37cdebbdf050"><div class="ttname"><a href="classgarlic_1_1Field.html#ae6c84f2e15bb37e1921f37cdebbdf050">garlic::Field::Field</a></div><div class="ttdeci">Field(text &amp;&amp;name)</div><div class="ttdoc">Create an empty Field by a name.</div><div class="ttdef"><b>Definition:</b> constraints.h:1077</div></div>
@@ -1394,10 +1400,10 @@ $(document).ready(function(){initNavTree('constraints_8h_source.html',''); initR
 <div class="ttc" id="aclassgarlic_1_1Model_html_a87d00bc08bd85b9f8b976a1acd03c5f2"><div class="ttname"><a href="classgarlic_1_1Model.html#a87d00bc08bd85b9f8b976a1acd03c5f2">garlic::Model::Model</a></div><div class="ttdeci">Model()</div><div class="ttdoc">Create an empty Model.</div><div class="ttdef"><b>Definition:</b> constraints.h:1180</div></div>
 <div class="ttc" id="astructgarlic_1_1ConstraintResult_html_abcefb6039998e3362ba732dbb0055232"><div class="ttname"><a href="structgarlic_1_1ConstraintResult.html#abcefb6039998e3362ba732dbb0055232">garlic::ConstraintResult::is_leaf</a></div><div class="ttdeci">bool is_leaf() const noexcept</div><div class="ttdef"><b>Definition:</b> constraints.h:37</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_a3efa02efa064dcb06cb3c037dc153cc4"><div class="ttname"><a href="classgarlic_1_1Field.html#a3efa02efa064dcb06cb3c037dc153cc4">garlic::Field::validate</a></div><div class="ttdeci">ValidationResult validate(const Layer &amp;layer) const noexcept</div><div class="ttdoc">test the layer with all the constraints in the field.</div><div class="ttdef"><b>Definition:</b> constraints.h:1139</div></div>
-<div class="ttc" id="aconstraints_8h_html_ab092fe8be61488b61ea4bee14afce412"><div class="ttname"><a href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412">garlic::make_constraint</a></div><div class="ttdeci">Constraint make_constraint(Args &amp;&amp;... args) noexcept</div><div class="ttdoc">Create a generic Constraint based on a constraint tag.</div><div class="ttdef"><b>Definition:</b> constraints.h:1482</div></div>
+<div class="ttc" id="aconstraints_8h_html_ab092fe8be61488b61ea4bee14afce412"><div class="ttname"><a href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412">garlic::make_constraint</a></div><div class="ttdeci">Constraint make_constraint(Args &amp;&amp;... args) noexcept</div><div class="ttdoc">Create a generic Constraint based on a constraint tag.</div><div class="ttdef"><b>Definition:</b> constraints.h:1488</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_a147108f88b4d0ad230232770c402f2f0"><div class="ttname"><a href="classgarlic_1_1Field.html#a147108f88b4d0ad230232770c402f2f0">garlic::Field::message</a></div><div class="ttdeci">text message() const noexcept</div><div class="ttdef"><b>Definition:</b> constraints.h:1120</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_a062d4bcd7b4c3fc91097028e98ce643f"><div class="ttname"><a href="classgarlic_1_1Field.html#a062d4bcd7b4c3fc91097028e98ce643f">garlic::Field::set_ignore_details</a></div><div class="ttdeci">void set_ignore_details(bool value)</div><div class="ttdoc">Set whether or not the field should ignore details.</div><div class="ttdef"><b>Definition:</b> constraints.h:1117</div></div>
-<div class="ttc" id="aconstraints_8h_html_a85c90cc99edda95a692f1acdba1823c9"><div class="ttname"><a href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9">garlic::constraint_registry</a></div><div class="ttdeci">internal::registry&lt; type_tag, range_tag, regex_tag, any_tag, list_tag, tuple_tag, map_tag, all_tag, model_tag, field_tag, string_literal_tag, int_literal_tag, double_literal_tag, bool_literal_tag, null_literal_tag &gt; constraint_registry</div><div class="ttdoc">Built-in constraint tags.</div><div class="ttdef"><b>Definition:</b> constraints.h:1450</div></div>
+<div class="ttc" id="aconstraints_8h_html_a85c90cc99edda95a692f1acdba1823c9"><div class="ttname"><a href="constraints_8h.html#a85c90cc99edda95a692f1acdba1823c9">garlic::constraint_registry</a></div><div class="ttdeci">internal::registry&lt; type_tag, range_tag, regex_tag, any_tag, list_tag, tuple_tag, map_tag, all_tag, model_tag, field_tag, string_literal_tag, int_literal_tag, double_literal_tag, bool_literal_tag, null_literal_tag &gt; constraint_registry</div><div class="ttdoc">Built-in constraint tags.</div><div class="ttdef"><b>Definition:</b> constraints.h:1456</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_aaa95e1f6e8e47c77b4c6a24ad0f716cc"><div class="ttname"><a href="classgarlic_1_1Field.html#aaa95e1f6e8e47c77b4c6a24ad0f716cc">garlic::Field::add_constraint</a></div><div class="ttdeci">void add_constraint(Constraint &amp;&amp;constraint)</div><div class="ttdoc">Add a constraint to the Field.</div><div class="ttdef"><b>Definition:</b> constraints.h:1094</div></div>
 <div class="ttc" id="aclassgarlic_1_1Field_html_ae351f7ebc3d9615a76a48eb94de29d81"><div class="ttname"><a href="classgarlic_1_1Field.html#ae351f7ebc3d9615a76a48eb94de29d81">garlic::Field::quick_test</a></div><div class="ttdeci">bool quick_test(const Layer &amp;layer) const noexcept</div><div class="ttdoc">perform a quick and efficient test of all constraints in the field.</div><div class="ttdef"><b>Definition:</b> constraints.h:1147</div></div>
 <div class="ttc" id="aclassgarlic_1_1sequence_html_a683292e4e6f41d6026f651ca4f21045b"><div class="ttname"><a href="classgarlic_1_1sequence.html#a683292e4e6f41d6026f651ca4f21045b">garlic::sequence::empty</a></div><div class="ttdeci">bool empty() const noexcept</div><div class="ttdef"><b>Definition:</b> containers.h:244</div></div>
@@ -1417,7 +1423,7 @@ $(document).ready(function(){initNavTree('constraints_8h_source.html',''); initR
 <div class="ttc" id="astructgarlic_1_1ConstraintResult_html_aaf6ffa69f38de517c2a03368ed5c012d"><div class="ttname"><a href="structgarlic_1_1ConstraintResult.html#aaf6ffa69f38de517c2a03368ed5c012d">garlic::ConstraintResult::reason</a></div><div class="ttdeci">text reason</div><div class="ttdoc">reason for the failure, if any. empty if successful.</div><div class="ttdef"><b>Definition:</b> constraints.h:32</div></div>
 <div class="ttc" id="aclassgarlic_1_1Model_html_a2282dc17a3401a4ef9d99ebcc350dd3b"><div class="ttname"><a href="classgarlic_1_1Model.html#a2282dc17a3401a4ef9d99ebcc350dd3b">garlic::Model::find_field</a></div><div class="ttdeci">const_field_iterator find_field(const text &amp;name) const noexcept</div><div class="ttdef"><b>Definition:</b> constraints.h:1229</div></div>
 <div class="ttc" id="astructgarlic_1_1ConstraintResult_html_a5fefc0ab9bb8e916a9bf7879e247674f"><div class="ttname"><a href="structgarlic_1_1ConstraintResult.html#a5fefc0ab9bb8e916a9bf7879e247674f">garlic::ConstraintResult::is_valid</a></div><div class="ttdeci">bool is_valid() const noexcept</div><div class="ttdef"><b>Definition:</b> constraints.h:40</div></div>
-<div class="ttc" id="aclassgarlic_1_1Constraint_html_a4fdc5068efb70772e885ce52d100157f"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f">garlic::Constraint::quick_test</a></div><div class="ttdeci">bool quick_test(const Layer &amp;value) const noexcept</div><div class="ttdoc">Very similar to Constraint::test() but it only returns a boolean.</div><div class="ttdef"><b>Definition:</b> constraints.h:1470</div></div>
+<div class="ttc" id="aclassgarlic_1_1Constraint_html_a4fdc5068efb70772e885ce52d100157f"><div class="ttname"><a href="classgarlic_1_1Constraint.html#a4fdc5068efb70772e885ce52d100157f">garlic::Constraint::quick_test</a></div><div class="ttdeci">bool quick_test(const Layer &amp;value) const noexcept</div><div class="ttdoc">Very similar to Constraint::test() but it only returns a boolean.</div><div class="ttdef"><b>Definition:</b> constraints.h:1476</div></div>
 <div class="ttc" id="aconstraints_8h_html_aafe0dd27ec33bd965395dc725ece036d"><div class="ttname"><a href="constraints_8h.html#aafe0dd27ec33bd965395dc725ece036d">garlic::test_constraints_quick</a></div><div class="ttdeci">static bool test_constraints_quick(Layer &amp;&amp;value, Container &amp;&amp;constraints)</div><div class="ttdef"><b>Definition:</b> constraints.h:363</div></div>
 <div class="ttc" id="astructgarlic_1_1all__tag_html"><div class="ttname"><a href="structgarlic_1_1all__tag.html">garlic::all_tag</a></div><div class="ttdoc">Constraint Tag that passes if all inner constraints pass the layer.</div><div class="ttdef"><b>Definition:</b> constraints.h:901</div></div>
 <div class="ttc" id="astructgarlic_1_1Field_1_1ValidationResult_html_a0d441d572840e36ecd94e40c0973d722"><div class="ttname"><a href="structgarlic_1_1Field_1_1ValidationResult.html#a0d441d572840e36ecd94e40c0973d722">garlic::Field::ValidationResult::failures</a></div><div class="ttdeci">constraint_sequence failures</div><div class="ttdoc">all failed constraints.</div><div class="ttdef"><b>Definition:</b> constraints.h:1058</div></div>
@@ -1439,7 +1445,7 @@ $(document).ready(function(){initNavTree('constraints_8h_source.html',''); initR
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_043132c192ccade48f0995379cd19bfe.html">garlic</a></li><li class="navelem"><a class="el" href="constraints_8h.html">constraints.h</a></li>
+    <li class="navelem"><a class="el" href="dir_af30267d1ad5fcde68c5e8495a1d5b8d.html">garlic</a></li><li class="navelem"><a class="el" href="constraints_8h.html">constraints.h</a></li>
   </ul>
 </div>
 </body>

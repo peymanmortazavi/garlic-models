@@ -129,24 +129,24 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af5453a2916b648daa804be7b0dbf9db5"><td class="memTemplParams" colspan="2">template&lt;typename Type , GARLIC_VIEW Layer&gt; </td></tr>
-<tr class="memitem:af5453a2916b648daa804be7b0dbf9db5"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_explicit_decoder&lt; Type, Layer &gt;, Type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#af5453a2916b648daa804be7b0dbf9db5">garlic::decode</a> (Layer layer)</td></tr>
-<tr class="memdesc:af5453a2916b648daa804be7b0dbf9db5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decodes a layer.  <a href="encoding_8h.html#af5453a2916b648daa804be7b0dbf9db5">More...</a><br /></td></tr>
-<tr class="separator:af5453a2916b648daa804be7b0dbf9db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a69ab7bae94a8965da9b558598b3c30"><td class="memTemplParams" colspan="2">template&lt;typename Type , GARLIC_VIEW Layer, typename Callable &gt; </td></tr>
-<tr class="memitem:a7a69ab7bae94a8965da9b558598b3c30"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_safe_decode_layer_method&lt; Type, Layer &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#a7a69ab7bae94a8965da9b558598b3c30">garlic::safe_decode</a> (Layer layer, Callable &amp;&amp;cb)</td></tr>
-<tr class="memdesc:a7a69ab7bae94a8965da9b558598b3c30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely attempt to decode a value and if successful, call the callback method.  <a href="encoding_8h.html#a7a69ab7bae94a8965da9b558598b3c30">More...</a><br /></td></tr>
-<tr class="separator:a7a69ab7bae94a8965da9b558598b3c30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14220d069e44afc5bdfa9370ff9b5e2f"><td class="memTemplParams" colspan="2">template&lt;GARLIC_REF Layer, typename Type &gt; </td></tr>
-<tr class="memitem:a14220d069e44afc5bdfa9370ff9b5e2f"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_encode_layer_method&lt; Type, Layer &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#a14220d069e44afc5bdfa9370ff9b5e2f">garlic::encode</a> (Layer layer, const Type &amp;value)</td></tr>
-<tr class="memdesc:a14220d069e44afc5bdfa9370ff9b5e2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Encode a value in a <a class="el" href="classgarlic_1_1RefLayer.html" title="Concept for reading from and writing to containers.">garlic::RefLayer</a>.  <a href="encoding_8h.html#a14220d069e44afc5bdfa9370ff9b5e2f">More...</a><br /></td></tr>
-<tr class="separator:a14220d069e44afc5bdfa9370ff9b5e2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c63aaa3bcd17930c8e94aa8431af497"><td class="memTemplParams" colspan="2">template&lt;typename Type , GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a1c63aaa3bcd17930c8e94aa8431af497"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_explicit_decoder&lt; Type, Layer &gt;, Type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#a1c63aaa3bcd17930c8e94aa8431af497">garlic::decode</a> (Layer &amp;&amp;layer)</td></tr>
+<tr class="memdesc:a1c63aaa3bcd17930c8e94aa8431af497"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decodes a layer.  <a href="encoding_8h.html#a1c63aaa3bcd17930c8e94aa8431af497">More...</a><br /></td></tr>
+<tr class="separator:a1c63aaa3bcd17930c8e94aa8431af497"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe39ec5509d7445b9d082b19a25b6140"><td class="memTemplParams" colspan="2">template&lt;typename Type , GARLIC_VIEW Layer, typename Callable &gt; </td></tr>
+<tr class="memitem:abe39ec5509d7445b9d082b19a25b6140"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_safe_decode_layer_method&lt; Type, Layer &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#abe39ec5509d7445b9d082b19a25b6140">garlic::safe_decode</a> (Layer &amp;&amp;layer, Callable &amp;&amp;cb)</td></tr>
+<tr class="memdesc:abe39ec5509d7445b9d082b19a25b6140"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely attempt to decode a value and if successful, call the callback method.  <a href="encoding_8h.html#abe39ec5509d7445b9d082b19a25b6140">More...</a><br /></td></tr>
+<tr class="separator:abe39ec5509d7445b9d082b19a25b6140"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77e0bcf3da4a7087cc834da98f7f6137"><td class="memTemplParams" colspan="2">template&lt;GARLIC_REF Layer, typename Type &gt; </td></tr>
+<tr class="memitem:a77e0bcf3da4a7087cc834da98f7f6137"><td class="memTemplItemLeft" align="right" valign="top">static std::enable_if_t&lt; internal::use_encode_layer_method&lt; Type, Layer &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="encoding_8h.html#a77e0bcf3da4a7087cc834da98f7f6137">garlic::encode</a> (Layer &amp;&amp;layer, const Type &amp;value)</td></tr>
+<tr class="memdesc:a77e0bcf3da4a7087cc834da98f7f6137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Encode a value in a <a class="el" href="classgarlic_1_1RefLayer.html" title="Concept for reading from and writing to containers.">garlic::RefLayer</a>.  <a href="encoding_8h.html#a77e0bcf3da4a7087cc834da98f7f6137">More...</a><br /></td></tr>
+<tr class="separator:a77e0bcf3da4a7087cc834da98f7f6137"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains classes and methods for defining and using encoders/decoders for various types. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="af5453a2916b648daa804be7b0dbf9db5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af5453a2916b648daa804be7b0dbf9db5">&#9670;&nbsp;</a></span>decode()</h2>
+<a id="a1c63aaa3bcd17930c8e94aa8431af497"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c63aaa3bcd17930c8e94aa8431af497">&#9670;&nbsp;</a></span>decode()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -159,7 +159,7 @@ template&lt;typename Type , GARLIC_VIEW Layer&gt; </div>
         <tr>
           <td class="memname">static std::enable_if_t&lt;internal::use_explicit_decoder&lt;Type, Layer&gt;, Type&gt; garlic::decode </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em></td><td>)</td>
           <td></td>
         </tr>
@@ -188,8 +188,8 @@ template&lt;typename Type , GARLIC_VIEW Layer&gt; </div>
 
 </div>
 </div>
-<a id="a14220d069e44afc5bdfa9370ff9b5e2f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a14220d069e44afc5bdfa9370ff9b5e2f">&#9670;&nbsp;</a></span>encode()</h2>
+<a id="a77e0bcf3da4a7087cc834da98f7f6137"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77e0bcf3da4a7087cc834da98f7f6137">&#9670;&nbsp;</a></span>encode()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -202,7 +202,7 @@ template&lt;GARLIC_REF Layer, typename Type &gt; </div>
         <tr>
           <td class="memname">static std::enable_if_t&lt;internal::use_encode_layer_method&lt;Type, Layer&gt; &gt; garlic::encode </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -242,8 +242,8 @@ template&lt;GARLIC_REF Layer, typename Type &gt; </div>
 
 </div>
 </div>
-<a id="a7a69ab7bae94a8965da9b558598b3c30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a69ab7bae94a8965da9b558598b3c30">&#9670;&nbsp;</a></span>safe_decode()</h2>
+<a id="abe39ec5509d7445b9d082b19a25b6140"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe39ec5509d7445b9d082b19a25b6140">&#9670;&nbsp;</a></span>safe_decode()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -256,7 +256,7 @@ template&lt;typename Type , GARLIC_VIEW Layer, typename Callable &gt; </div>
         <tr>
           <td class="memname">static std::enable_if_t&lt;internal::use_safe_decode_layer_method&lt;Type, Layer&gt; &gt; garlic::safe_decode </td>
           <td>(</td>
-          <td class="paramtype">Layer&#160;</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
           <td class="paramname"><em>layer</em>, </td>
         </tr>
         <tr>
@@ -302,7 +302,7 @@ template&lt;typename Type , GARLIC_VIEW Layer, typename Callable &gt; </div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_043132c192ccade48f0995379cd19bfe.html">garlic</a></li><li class="navelem"><a class="el" href="encoding_8h.html">encoding.h</a></li>
+    <li class="navelem"><a class="el" href="dir_af30267d1ad5fcde68c5e8495a1d5b8d.html">garlic</a></li><li class="navelem"><a class="el" href="encoding_8h.html">encoding.h</a></li>
   </ul>
 </div>
 </body>
