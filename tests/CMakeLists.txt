@@ -10,7 +10,7 @@ option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." OFF)
 option(GARLIC_TEST_PROVIDERS "Build tests for the built-in providers." ON)
 
 option(GARLIC_BUILD_LAB "Build lab tests." OFF)
-set(GARLIC_BUILD_LAB OFF)
+set(GARLIC_BUILD_LAB ON)
 
 enable_testing()
 
