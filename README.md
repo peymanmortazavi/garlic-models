@@ -157,6 +157,13 @@ down to at least C++ 17 and support more compilers. This is just very alpha at t
 
 * Better documentation, there are some but not sure if it's good to set someone up their way.
 
+## How do I play with this?
+
+You can either use the docker-compose file in the `docker` directory to compile all tests and lab.cpp
+or if you have GCC 10 and C++ 20 around, you can just compile lab.cpp and take it for a ride!
+
+You might want to disable running tests in `tests/CMakeLists.txt` if that long compilation bothers you.
+
 ## Performance Tests
 
 Just don't run them :) they're not ready but if you do, run the following commands beforehand.
