@@ -26,7 +26,7 @@ namespace garlic {
               return "An element with the same identification is already defined. Redifinition is not allowed.";
             case GarlicError::UndefinedObject:
               return "Use of an undefined/unresolved object.";
-            case GarlicError::UnexpectedLayerDataType:
+            case GarlicError::InvalidModule:
               return "Module description is invalid and could not be used to create a Module.";
             default:
               return "unknown";

@@ -1,7 +1,9 @@
-#include "garlic/clove.h"
 #include <iostream>
+
 #include <garlic/layer.h>
 #include <garlic/constraints.h>
+
+#include <garlic/providers/rapidjson.h>
 
 using namespace garlic;
 
