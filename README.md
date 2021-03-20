@@ -34,6 +34,8 @@ void iterate_over_lists(Layer&& layer) {
 }
 ```
 
+[Read More About This](https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Layer.html)
+
 ### 2. Schema Validation to validate data containers
 
 There is a constraint system you can work with. The plan is to add parsers for JSON Schema and other formats
@@ -99,6 +101,8 @@ int main() {
 
 The nice thing is that these wrappers likely get optimized away, leaving very minimal cost to this abstraction.
 
+[Read More](https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html)
+
 ### 3. Encoding Utilities to serialize and deserialize custom C++ classes and types.
 
 
@@ -138,6 +142,8 @@ int main() {
     return 0;
 }
 ```
+
+[Read More](https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Encoding.html)
 
 ## What's missing?
 
