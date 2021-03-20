@@ -14,7 +14,7 @@ This library provides three things:
 Woooah what a buzz word. It's just two C++ concepts to provide a common interface
 so that various different data containers could be described using a set of methods.
 
-Long story short, most JSON and YAML libraries you find on the are probably going to have
+Long story short, most JSON and YAML libraries you find are probably going to have
 ways to get strings, numbers, booleans, lists and objects. What if we make a contract that
 designates one interface that includes a common set of functions these libraries provide.
 Then we can wrap these types with adapters so they all have same methods then we can write code
