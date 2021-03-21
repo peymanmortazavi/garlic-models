@@ -7,7 +7,8 @@
 *****************************************************************************/
 
 #include <gtest/gtest.h>
-#include <garlic/garlic.h>
+
+#include <garlic/clove.h>
 
 #include "test_protocol.h"
 

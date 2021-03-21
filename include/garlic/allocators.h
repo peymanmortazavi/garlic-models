@@ -1,12 +1,11 @@
 #ifndef GARLIC_ALLOCATORS_H
 #define GARLIC_ALLOCATORS_H
 
-#include <concepts>
-#include <cstdlib>
+#include "garlic.h"
 
 namespace garlic {
 
-#if __cpp_concepts >= 201907L
+#ifdef GARLIC_USE_CONCEPTS
   template<typename T> concept Allocator = requires(T t) {
     { T::needs_free } -> std::convertible_to<bool>;
 

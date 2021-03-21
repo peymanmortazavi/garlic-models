@@ -5,8 +5,6 @@
  *  \brief Contains classes and methods for defining and using encoders/decoders for various types.
  */
 
-#include <type_traits>
-
 #include "layer.h"
 #include "containers.h"
 

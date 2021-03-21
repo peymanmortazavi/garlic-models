@@ -1,8 +1,7 @@
 #ifndef GARLIC_ERROR_H
 #define GARLIC_ERROR_H
 
-#include <system_error>
-#include <type_traits>
+#include "garlic.h"
 
 namespace garlic {
 

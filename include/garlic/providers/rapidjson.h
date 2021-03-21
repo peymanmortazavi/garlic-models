@@ -1,11 +1,8 @@
 #ifndef GARLIC_RAPIDJSON_H
 #define GARLIC_RAPIDJSON_H
 
-#include <iterator>
-#include <string>
-#include <type_traits>
-
 #include "../layer.h"
+
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/filewritestream.h"

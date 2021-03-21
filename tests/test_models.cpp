@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include "test_utility.h"

@@ -1,8 +1,6 @@
 #ifndef GARLIC_PARSING_FLAT_CONSTRAINTS
 #define GARLIC_PARSING_FLAT_CONSTRAINTS
 
-#include <memory>
-
 #include "../constraints.h"
 
 namespace garlic::parsing {

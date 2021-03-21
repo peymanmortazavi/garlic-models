@@ -1,14 +1,10 @@
 #ifndef GARLIC_LIBYAML_LAYER_H
 #define GARLIC_LIBYAML_LAYER_H
 
-#include "yaml.h"
-#include <cstdlib>
-#include <cstring>
-#include <iterator>
-#include <string>
-#include <deque>
-#include "../../parsing/numbers.h"
 #include "../../layer.h"
+#include "../../parsing/numbers.h"
+
+#include "yaml.h"
 
 
 namespace garlic::providers::libyaml {

@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <iterator>
-
 #include <gtest/gtest.h>
 #include <garlic/containers.h>
 

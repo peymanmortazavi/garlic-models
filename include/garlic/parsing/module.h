@@ -5,8 +5,6 @@
  *  \brief Resources for parsing/loading and dumping Module instances.
  */
 
-#include <memory>
-
 #include "constraints.h"
 #include "../module.h"
 #include "../utility.h"
