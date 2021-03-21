@@ -545,9 +545,27 @@ namespace garlic {
         ++count;
       return count;
     }
+
+    template<GARLIC_VIEW, class = void>
+    static constexpr bool has_explicit_string_length_method = false;
+
+    template<GARLIC_VIEW Layer>
+    static constexpr bool has_explicit_string_length_method<Layer, decltype(std::declval<Layer>().string_length())>  = true;
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<has_explicit_string_length_method<Layer>, size_t>
+    string_length_impl(Layer&& layer) {
+      return layer.string_length();
+    }
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<!has_explicit_string_length_method<Layer>, size_t>
+    string_length_impl(Layer&& layer) {
+      return strlen(layer.get_cstr());
+    }
   }
 
-  //! Get the size of the list in the layer.
+  //! Get the size of a list from a layer.
   /*! \note This method does **NOT** check if the layer is a list type.
    *  \note Depending on the layer's capabilities, this method chooses the best way to
             get this count. If the layer has a list_size() method or it has random access
@@ -556,6 +574,16 @@ namespace garlic {
   template<GARLIC_VIEW Layer>
   static inline size_t list_size(Layer&& layer) {
     return internal::list_size_impl(layer);
+  }
+
+  //! Get the length of a string from a layer.
+  /*! \note This method does **NOT** check if the layer is a string type.
+   *  \note This method relies on the layer's string_length method if provided.
+   *        Otherwise, it's a simple strlen(layer.get_cstr()) call.
+   */
+  template<GARLIC_VIEW Layer>
+  static inline size_t string_length(Layer&& layer) {
+    return internal::string_length_impl(layer);
   }
 
 
