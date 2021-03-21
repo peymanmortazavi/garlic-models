@@ -511,6 +511,53 @@ namespace garlic {
     }
   }
 
+  namespace internal {
+
+    template<GARLIC_VIEW Layer>
+    static constexpr bool has_random_access_list_iterator = std::__is_random_access_iter<ConstValueIteratorOf<Layer>>::value;
+
+    template<GARLIC_VIEW, class = void>
+    static constexpr bool has_explicit_list_size_method = false;
+
+    template<GARLIC_VIEW Layer>
+    static constexpr bool has_explicit_list_size_method<Layer, decltype(std::declval<Layer>().list_size())>  = true;
+
+    // Use explicit list_size method.
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<has_explicit_list_size_method<Layer>, size_t>
+    list_size_impl(Layer&& layer) {
+      return layer.list_size();
+    }
+
+    // Use random access iterators when available and there is no explicit list_size() method defined.
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<has_random_access_list_iterator<Layer> && !has_explicit_list_size_method<Layer>, size_t>
+    list_size_impl(Layer&& layer) {
+      return layer.end_list() - layer.begin_list();
+    }
+
+    // Worst outcome, use a loop!
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<!has_random_access_list_iterator<Layer> && !has_explicit_list_size_method<Layer>, size_t>
+    list_size_impl(Layer&& layer) {
+      size_t count = 0;
+      for (auto it = layer.begin_list(); it != layer.end_list(); ++it)
+        ++count;
+      return count;
+    }
+  }
+
+  //! Get the size of the list in the layer.
+  /*! \note This method does **NOT** check if the layer is a list type.
+   *  \note Depending on the layer's capabilities, this method chooses the best way to
+            get this count. If the layer has a list_size() method or it has random access
+            iterators, this has time complexity of O(1), otherwise it'll be O(n)
+   */
+  template<GARLIC_VIEW Layer>
+  static inline size_t list_size(Layer&& layer) {
+    return internal::list_size_impl(layer);
+  }
+
 
   template<int BufferSize = 65536>
   class FileStreamBuffer : public std::streambuf {

@@ -494,12 +494,11 @@ namespace garlic {
         if(static_cast<size_type>(ivalue) > context.max || static_cast<size_type>(ivalue) < context.min)
           return context.fail("out of range value.");
       } else if (layer.is_list()) {
-        size_type count = 0;
-        for (const auto& item : layer.get_list()) {
-          ++count;
-          if (count > context.max) return context.fail("too many items in the list.");
-        }
-        if (count < context.min) return context.fail("too few items in the list.");
+        size_type count = garlic::list_size(layer);
+        if (count > context.max)
+          return context.fail("too many items in the list.");
+        if (count < context.min)
+          return context.fail("too few items in the list.");
       }
       return context.ok();
     }
@@ -518,12 +517,11 @@ namespace garlic {
         if(static_cast<size_type>(ivalue) > context.max || static_cast<size_type>(ivalue) < context.min)
           return false;
       } else if (layer.is_list()) {
-        size_type count = 0;
-        for (const auto& item : layer.get_list()) {
-          ++count;
-          if (count > context.max) return false;
-        }
-        if (count < context.min) return false;
+        size_type count = garlic::list_size(layer);
+        if (count > context.max)
+          return false;
+        if (count < context.min)
+          return false;
       }
       return true;
 
