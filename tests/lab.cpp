@@ -3,7 +3,7 @@
 #include <garlic/layer.h>
 #include <garlic/constraints.h>
 
-#include <garlic/providers/rapidjson.h>
+#include <garlic/adapters/rapidjson.h>
 
 using namespace garlic;
 

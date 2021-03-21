@@ -6,7 +6,7 @@
 #include <deque>
 
 
-namespace garlic::providers::libyaml {
+namespace garlic::adapters::libyaml {
 
   enum libyaml_error : uint8_t {
     no_error = 0,

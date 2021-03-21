@@ -5,10 +5,10 @@
 #include <gtest/gtest.h>
 #include "yaml.h"
 #include <garlic/garlic.h>
-#include <garlic/providers/libyaml/parser.h>
+#include <garlic/adapters/libyaml/parser.h>
 
 using namespace garlic;
-using namespace garlic::providers::libyaml;
+using namespace garlic::adapters::libyaml;
 
 void print_document(YamlView value, int level) {
   std::string prefix = "";

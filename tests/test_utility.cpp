@@ -1,17 +1,17 @@
 #include "test_utility.h"
 
-garlic::providers::libyaml::YamlDocument
+garlic::adapters::libyaml::YamlDocument
 get_libyaml_document(const char * name) {
   auto file = fopen(name, "r");
-  auto doc = garlic::providers::libyaml::Yaml::load(file);
+  auto doc = garlic::adapters::libyaml::Yaml::load(file);
   fclose(file);
   return doc;
 }
 
-garlic::providers::rapidjson::JsonDocument
+garlic::adapters::rapidjson::JsonDocument
 get_rapidjson_document(const char* name) {
   auto file = fopen(name, "r");
-  auto doc = garlic::providers::rapidjson::Json::load(file);
+  auto doc = garlic::adapters::rapidjson::Json::load(file);
   fclose(file);
   return doc;
 }

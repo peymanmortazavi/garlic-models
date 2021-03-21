@@ -7,7 +7,7 @@
 #include "yaml.h"
 
 
-namespace garlic::providers::libyaml {
+namespace garlic::adapters::libyaml {
 
   class YamlView {
 

@@ -10,7 +10,7 @@
 #include "rapidjson/writer.h"
 
 
-namespace garlic::providers::rapidjson {
+namespace garlic::adapters::rapidjson {
 
   template<typename Layer, typename Iterator, typename Allocator>
   struct MemberIteratorWrapper {

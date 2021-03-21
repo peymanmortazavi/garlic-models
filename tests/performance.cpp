@@ -3,8 +3,8 @@
 #include <string>
 #include <tuple>
 #include "garlic/constraints.h"
-#include "garlic/providers/libyaml/parser.h"
-#include "garlic/providers/rapidjson.h"
+#include "garlic/adapters/libyaml/parser.h"
+#include "garlic/adapters/rapidjson.h"
 #include "garlic/containers.h"
 #include "test_utility.h"
 
@@ -12,14 +12,14 @@
 static void BM_LibYamlModuleLoad(benchmark::State& state) {
   auto doc = get_libyaml_document("data/performance/module.yaml");
   for (auto _ : state) {
-    garlic::Module<garlic::providers::libyaml::YamlView> module;
+    garlic::Module<garlic::adapters::libyaml::YamlView> module;
     module.parse(doc.get_view());
   }
 }
 //BENCHMARK(BM_LibYamlModuleLoad);
 
 static void BM_LoadRapidJsonModule(benchmark::State& state) {
-  garlic::Module<garlic::providers::rapidjson::JsonView> module;
+  garlic::Module<garlic::adapters::rapidjson::JsonView> module;
   load_libyaml_module(module, "data/performance/module.yaml");
   auto doc = get_rapidjson_document("data/performance/test1.json");
   for (auto _ : state) {
@@ -68,7 +68,7 @@ static void BM_LoadRapidJsonDocument_Native(benchmark::State& state) {
 }
 
 static void BM_LoadRapidJsonDocument_Garlic(benchmark::State& state) {
-  garlic::providers::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
+  garlic::adapters::rapidjson::JsonView view {CreateLargeRapidJsonDocument()};
   long long character_count = 0;
   long long total = 0;
   const char* text = "text";
@@ -215,7 +215,7 @@ static void BM_Modern(benchmark::State& state) {
   seq.push_back(r2);
   auto constraint = garlic::make_constraint<garlic::any_tag>(std::move(seq));
   auto& doc = CreateLargeRapidJsonDocument();
-  auto view = garlic::providers::rapidjson::JsonView(doc);
+  auto view = garlic::adapters::rapidjson::JsonView(doc);
   state.counters["valid"] = 0;
   for (auto _ : state) {
     for (const auto& v : view.get_list()) {
@@ -225,7 +225,7 @@ static void BM_Modern(benchmark::State& state) {
 }
 
 static void BM_Old(benchmark::State& state) {
-  using T = garlic::providers::rapidjson::JsonView;
+  using T = garlic::adapters::rapidjson::JsonView;
   auto r1 = std::make_shared<garlic::RegexConstraint<T>>("\\d{1,5}", "r1");
   auto r2 = std::make_shared<garlic::RegexConstraint<T>>("\\w{1,5}", "r2");
   garlic::sequence<std::shared_ptr<garlic::Constraint<T>>> seq(2);

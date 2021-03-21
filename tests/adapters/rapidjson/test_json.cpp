@@ -15,7 +15,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
+#include <garlic/adapters/rapidjson.h>
 
 #include "../../test_protocol.h"
 #include "garlic/meta.h"
@@ -24,7 +24,7 @@
 using namespace std;
 
 using namespace garlic;
-using namespace garlic::providers::rapidjson;
+using namespace garlic::adapters::rapidjson;
 using namespace rapidjson;
 
 

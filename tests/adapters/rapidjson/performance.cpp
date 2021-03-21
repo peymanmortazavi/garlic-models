@@ -1,10 +1,10 @@
 #include <benchmark/benchmark.h>
 #include <rapidjson/document.h>
 #include <garlic/garlic.h>
-#include <garlic/providers/rapidjson.h>
+#include <garlic/adapters/rapidjson.h>
 
 using namespace garlic;
-using namespace garlic::providers::rapidjson;
+using namespace garlic::adapters::rapidjson;
 
 static rapidjson::Document& CreateLargeRapidJsonDocument() {
   static rapidjson::Document* d;

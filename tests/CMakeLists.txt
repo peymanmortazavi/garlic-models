@@ -7,7 +7,7 @@ find_package(Threads REQUIRED)
 
 option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." ON)
 
-option(GARLIC_TEST_PROVIDERS "Build tests for the built-in providers." ON)
+option(GARLIC_TEST_PROVIDERS "Build tests for the built-in adapters." ON)
 
 option(GARLIC_BUILD_LAB "Build lab tests." ON)
 
@@ -29,7 +29,7 @@ add_executable(GarlicModelTests ${TEST_SOURCES})
 target_link_libraries(GarlicModelTests GarlicModel yaml-cpp yaml Threads::Threads ${GTEST_BOTH_LIBRARIES})
 
 IF(GARLIC_TEST_PROVIDERS)
-    add_subdirectory(providers)
+    add_subdirectory(adapters)
 ENDIF()
 
 IF(GARLIC_BUILD_PERFORMANCE_TESTS)
