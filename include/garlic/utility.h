@@ -7,9 +7,7 @@
 #ifndef GARLIC_UTILITY_H
 #define GARLIC_UTILITY_H
 
-#include <charconv>
-#include <string_view>
-
+#include "garlic.h"
 #include "meta.h"
 #include "encoding.h"
 

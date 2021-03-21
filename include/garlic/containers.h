@@ -15,9 +15,7 @@
  *  containers.
  */
 
-#include <cstring>
-#include <cstdlib>
-#include <memory>
+#include "garlic.h"
 
 namespace garlic {
 

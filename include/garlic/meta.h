@@ -1,9 +1,7 @@
 #ifndef GARLIC_META_H
 #define GARLIC_META_H
 
-#include <cstdint>
-#include <string>
-#include <type_traits>
+#include "garlic.h"
 
 namespace garlic {
 

@@ -1,16 +1,21 @@
 #ifndef GARLIC_H
 #define GARLIC_H
 
-#include "clove.h"
-#include "layer.h"
-#include "utility.h"
-#include "constraints.h"
-#include "module.h"
 
-namespace garlic {
+#include <cstddef>
+#include <cstring>
+#include <charconv>
 
-  const char * version();
+#include <memory>
+#include <string>
+#include <string_view>
+#include <iterator>
+#include <type_traits>
+#include <system_error>
 
-}
+#if __cpp_concepts >= 201907L
+#include <concepts>
+#define GARLIC_USE_CONCEPTS
+#endif
 
 #endif /* GARLIC_H */

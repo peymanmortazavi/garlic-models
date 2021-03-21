@@ -2,7 +2,9 @@
 #define GARLIC_LIBYAML_PARSER_H
 
 #include "layer.h"
-#include "yaml.h"
+
+#include <deque>
+
 
 namespace garlic::providers::libyaml {
 

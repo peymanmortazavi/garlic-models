@@ -1,10 +1,9 @@
 #include <deque>
-#include <string>
 
 #include <gtest/gtest.h>
 
-#include <garlic/utility.h>
 #include <garlic/clove.h>
+#include <garlic/utility.h>
 
 #include "test_utility.h"
 #include "test_protocol.h"

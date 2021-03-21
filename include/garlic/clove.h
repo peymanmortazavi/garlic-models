@@ -11,12 +11,7 @@
  *  \endcode
  */
 
-#include <cstddef>
-#include <cstring>
-#include <algorithm>
-#include <memory>
-#include <type_traits>
-
+#include "garlic.h"
 #include "allocators.h"
 #include "layer.h"
 
