@@ -12,6 +12,7 @@ var utility_8h =
     [ "get_item", "utility_8h.html#a1ffa04219f3b883ba9175597d901f85f", null ],
     [ "get_member", "utility_8h.html#a5006ab12b1f2039c67f742a9ca96d1cf", null ],
     [ "get_member", "utility_8h.html#aa7e63946aa4dd4d5ffc03569fd538f32", null ],
+    [ "list_size", "utility_8h.html#a6894295e94080fcf3108a14b9a148ba4", null ],
     [ "resolve", "utility_8h.html#a561466333596999d0bb55ddb4e55a7c1", null ],
     [ "resolve_cb", "utility_8h.html#acfb4f9bc8911144b5558d9d375ba59c8", null ],
     [ "resolve_layer_cb", "utility_8h.html#a617d7424f15ce61fb41446e33b787788", null ],
@@ -20,5 +21,6 @@ var utility_8h =
     [ "safe_get_cb", "utility_8h.html#aef5dacf093e1e38cde74c9c13ed774b7", null ],
     [ "safe_get_cb", "utility_8h.html#ad0889f1349f9272adf6e6ccaa29ce2af", null ],
     [ "safe_resolve", "utility_8h.html#afad23e63a2d400e6c23d5e76bf66586e", null ],
-    [ "safe_resolve_cb", "utility_8h.html#ab72b447f47218b67345ad1a6f39a6e68", null ]
+    [ "safe_resolve_cb", "utility_8h.html#ab72b447f47218b67345ad1a6f39a6e68", null ],
+    [ "string_length", "utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd", null ]
 ];

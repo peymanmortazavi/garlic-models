@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['garlicerror_132',['GarlicError',['../classGarlicError.html',1,'']]]
+  ['garlicerror_134',['GarlicError',['../classGarlicError.html',1,'']]]
 ];

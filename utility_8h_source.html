@@ -429,30 +429,97 @@ $(document).ready(function(){initNavTree('utility_8h_source.html',''); initResiz
 <div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;    }</div>
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;  }</div>
 <div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160; </div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160; </div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> BufferSize = 65536&gt;</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;  <span class="keyword">class </span>FileStreamBuffer : <span class="keyword">public</span> std::streambuf {</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    FileStreamBuffer(FILE* file) : file_(file) {}</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160; </div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    std::streambuf::int_type underflow()<span class="keyword"> override </span>{</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;      <span class="keyword">auto</span> length = fread(read_buffer_, 1, <span class="keyword">sizeof</span>(read_buffer_), file_);</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;      <span class="keywordflow">if</span> (!length) <span class="keywordflow">return</span> traits_type::eof();</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;      setg(read_buffer_, read_buffer_, read_buffer_ + length);</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;      <span class="keywordflow">return</span> traits_type::to_int_type(*gptr());</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    }</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160; </div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    FILE* file_;</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    <span class="keywordtype">char</span> read_buffer_[BufferSize];</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  };</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  <span class="keyword">namespace </span>internal {</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160; </div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> has_random_access_list_iterator = std::__is_random_access_iter&lt;ConstValueIteratorOf&lt;Layer&gt;&gt;::value;</div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160; </div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW, <span class="keyword">class</span> = <span class="keywordtype">void</span>&gt;</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> has_explicit_list_size_method = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160; </div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> has_explicit_list_size_method&lt;Layer, decltype(std::declval&lt;Layer&gt;().list_size())&gt;  = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160; </div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <span class="comment">// Use explicit list_size method.</span></div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> std::enable_if_t&lt;has_explicit_list_size_method&lt;Layer&gt;, <span class="keywordtype">size_t</span>&gt;</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    list_size_impl(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      <span class="keywordflow">return</span> layer.list_size();</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;    }</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160; </div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;}</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160; </div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* end of include guard: GARLIC_UTILITY_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    <span class="comment">// Use random access iterators when available and there is no explicit list_size() method defined.</span></div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> std::enable_if_t&lt;has_random_access_list_iterator&lt;Layer&gt; &amp;&amp; !has_explicit_list_size_method&lt;Layer&gt;, <span class="keywordtype">size_t</span>&gt;</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    list_size_impl(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;      <span class="keywordflow">return</span> layer.end_list() - layer.begin_list();</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    }</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160; </div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    <span class="comment">// Worst outcome, use a loop!</span></div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> std::enable_if_t&lt;!has_random_access_list_iterator&lt;Layer&gt; &amp;&amp; !has_explicit_list_size_method&lt;Layer&gt;, <span class="keywordtype">size_t</span>&gt;</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    list_size_impl(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;      <span class="keywordtype">size_t</span> count = 0;</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = layer.begin_list(); it != layer.end_list(); ++it)</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;        ++count;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;      <span class="keywordflow">return</span> count;</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    }</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160; </div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW, <span class="keyword">class</span> = <span class="keywordtype">void</span>&gt;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> has_explicit_string_length_method = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160; </div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> has_explicit_string_length_method&lt;Layer, decltype(std::declval&lt;Layer&gt;().string_length())&gt;  = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160; </div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> std::enable_if_t&lt;has_explicit_string_length_method&lt;Layer&gt;, <span class="keywordtype">size_t</span>&gt;</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    string_length_impl(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      <span class="keywordflow">return</span> layer.string_length();</div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    }</div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160; </div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> std::enable_if_t&lt;!has_explicit_string_length_method&lt;Layer&gt;, <span class="keywordtype">size_t</span>&gt;</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    string_length_impl(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;      <span class="keywordflow">return</span> strlen(layer.get_cstr());</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    }</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  }</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160; </div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160; </div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00575"></a><span class="lineno"><a class="line" href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4">  575</a></span>&#160;  <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">size_t</span> <a class="code" href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4">list_size</a>(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="keywordflow">return</span> internal::list_size_impl(layer);</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  }</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160; </div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160; </div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;  <span class="keyword">template</span>&lt;GARLIC_VIEW Layer&gt;</div>
+<div class="line"><a name="l00585"></a><span class="lineno"><a class="line" href="utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd">  585</a></span>&#160;  <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">size_t</span> <a class="code" href="utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd">string_length</a>(Layer&amp;&amp; layer) {</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="keywordflow">return</span> internal::string_length_impl(layer);</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  }</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160; </div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160; </div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;  <span class="keyword">template</span>&lt;<span class="keywordtype">int</span> BufferSize = 65536&gt;</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  <span class="keyword">class </span>FileStreamBuffer : <span class="keyword">public</span> std::streambuf {</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    FileStreamBuffer(FILE* file) : file_(file) {}</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160; </div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    std::streambuf::int_type underflow()<span class="keyword"> override </span>{</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      <span class="keyword">auto</span> length = fread(read_buffer_, 1, <span class="keyword">sizeof</span>(read_buffer_), file_);</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;      <span class="keywordflow">if</span> (!length) <span class="keywordflow">return</span> traits_type::eof();</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;      setg(read_buffer_, read_buffer_, read_buffer_ + length);</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;      <span class="keywordflow">return</span> traits_type::to_int_type(*gptr());</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    }</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160; </div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    FILE* file_;</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordtype">char</span> read_buffer_[BufferSize];</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;  };</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160; </div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;}</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160; </div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* end of include guard: GARLIC_UTILITY_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="aclassgarlic_1_1basic__text_html"><div class="ttname"><a href="classgarlic_1_1basic__text.html">garlic::basic_text&lt; char &gt;</a></div></div>
+<div class="ttc" id="autility_8h_html_a8d939cf3ff41baa7bf44ae723cf445cd"><div class="ttname"><a href="utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd">garlic::string_length</a></div><div class="ttdeci">static size_t string_length(Layer &amp;&amp;layer)</div><div class="ttdoc">Get the length of a string from a layer.</div><div class="ttdef"><b>Definition:</b> utility.h:585</div></div>
 <div class="ttc" id="autility_8h_html_a617d7424f15ce61fb41446e33b787788"><div class="ttname"><a href="utility_8h.html#a617d7424f15ce61fb41446e33b787788">garlic::resolve_layer_cb</a></div><div class="ttdeci">static void resolve_layer_cb(const LayerType &amp;value, std::string_view path, Callable &amp;&amp;cb)</div><div class="ttdef"><b>Definition:</b> utility.h:153</div></div>
 <div class="ttc" id="aencoding_8h_html"><div class="ttname"><a href="encoding_8h.html">encoding.h</a></div><div class="ttdoc">Contains classes and methods for defining and using encoders/decoders for various types.</div></div>
 <div class="ttc" id="autility_8h_html_acfb4f9bc8911144b5558d9d375ba59c8"><div class="ttname"><a href="utility_8h.html#acfb4f9bc8911144b5558d9d375ba59c8">garlic::resolve_cb</a></div><div class="ttdeci">static void resolve_cb(const Layer &amp;value, std::string_view key, Callable &amp;&amp;cb)</div><div class="ttdef"><b>Definition:</b> utility.h:248</div></div>
@@ -461,6 +528,7 @@ $(document).ready(function(){initNavTree('utility_8h_source.html',''); initResiz
 <div class="ttc" id="autility_8h_html_a561466333596999d0bb55ddb4e55a7c1"><div class="ttname"><a href="utility_8h.html#a561466333596999d0bb55ddb4e55a7c1">garlic::resolve</a></div><div class="ttdeci">static OutputType resolve(const Layer &amp;value, std::string_view key, OutputType default_value)</div><div class="ttdef"><b>Definition:</b> utility.h:230</div></div>
 <div class="ttc" id="autility_8h_html_a8d862d6858398925095a5aeeb6f363c0"><div class="ttname"><a href="utility_8h.html#a8d862d6858398925095a5aeeb6f363c0">garlic::get</a></div><div class="ttdeci">static OutputType get(Layer &amp;&amp;layer, const char *key)</div><div class="ttdef"><b>Definition:</b> utility.h:319</div></div>
 <div class="ttc" id="autility_8h_html_ab72b447f47218b67345ad1a6f39a6e68"><div class="ttname"><a href="utility_8h.html#ab72b447f47218b67345ad1a6f39a6e68">garlic::safe_resolve_cb</a></div><div class="ttdeci">static void safe_resolve_cb(const Layer &amp;value, std::string_view key, Callable &amp;&amp;cb)</div><div class="ttdef"><b>Definition:</b> utility.h:214</div></div>
+<div class="ttc" id="autility_8h_html_a6894295e94080fcf3108a14b9a148ba4"><div class="ttname"><a href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4">garlic::list_size</a></div><div class="ttdeci">static size_t list_size(Layer &amp;&amp;layer)</div><div class="ttdoc">Get the size of a list from a layer.</div><div class="ttdef"><b>Definition:</b> utility.h:575</div></div>
 <div class="ttc" id="autility_8h_html_a4dd27d9b9b615303dbd8c3c60f53be22"><div class="ttname"><a href="utility_8h.html#a4dd27d9b9b615303dbd8c3c60f53be22">garlic::cmp_layers</a></div><div class="ttdeci">static std::enable_if_t&lt;!is_comparable&lt; L1, L2 &gt;::value, bool &gt; cmp_layers(const L1 &amp;layer1, const L2 &amp;layer2)</div><div class="ttdoc">Checks the equality of two layers.</div><div class="ttdef"><b>Definition:</b> utility.h:34</div></div>
 <div class="ttc" id="autility_8h_html_a5006ab12b1f2039c67f742a9ca96d1cf"><div class="ttname"><a href="utility_8h.html#a5006ab12b1f2039c67f742a9ca96d1cf">garlic::get_member</a></div><div class="ttdeci">static void get_member(const Layer &amp;value, const char *key, Callable &amp;&amp;cb) noexcept</div><div class="ttdef"><b>Definition:</b> utility.h:263</div></div>
 <div class="ttc" id="autility_8h_html_a1ffa04219f3b883ba9175597d901f85f"><div class="ttname"><a href="utility_8h.html#a1ffa04219f3b883ba9175597d901f85f">garlic::get_item</a></div><div class="ttdeci">static std::enable_if_t&lt; std::__is_random_access_iter&lt; ConstValueIteratorOf&lt; Layer &gt; &gt;::value &gt; get_item(Layer &amp;&amp;layer, IndexType index, Callable &amp;&amp;cb) noexcept</div><div class="ttdef"><b>Definition:</b> utility.h:284</div></div>

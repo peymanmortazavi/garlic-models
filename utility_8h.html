@@ -202,6 +202,14 @@ Functions</h2></td></tr>
 <tr class="memitem:a4098cb2598656db969e6e6d856696c37"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer, GARLIC_REF Output&gt; </td></tr>
 <tr class="memitem:a4098cb2598656db969e6e6d856696c37"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a4098cb2598656db969e6e6d856696c37">garlic::copy_layer</a> (Layer &amp;&amp;layer, Output output)</td></tr>
 <tr class="separator:a4098cb2598656db969e6e6d856696c37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6894295e94080fcf3108a14b9a148ba4"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a6894295e94080fcf3108a14b9a148ba4"><td class="memTemplItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4">garlic::list_size</a> (Layer &amp;&amp;layer)</td></tr>
+<tr class="memdesc:a6894295e94080fcf3108a14b9a148ba4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the size of a list from a layer.  <a href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4">More...</a><br /></td></tr>
+<tr class="separator:a6894295e94080fcf3108a14b9a148ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d939cf3ff41baa7bf44ae723cf445cd"><td class="memTemplParams" colspan="2">template&lt;GARLIC_VIEW Layer&gt; </td></tr>
+<tr class="memitem:a8d939cf3ff41baa7bf44ae723cf445cd"><td class="memTemplItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd">garlic::string_length</a> (Layer &amp;&amp;layer)</td></tr>
+<tr class="memdesc:a8d939cf3ff41baa7bf44ae723cf445cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the length of a string from a layer.  <a href="utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd">More...</a><br /></td></tr>
+<tr class="separator:a8d939cf3ff41baa7bf44ae723cf445cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file contains various functions and classes to work with layers like getting or resolving using a path. </p>
@@ -743,6 +751,39 @@ template&lt;GARLIC_VIEW Layer, typename Callable &gt; </div>
 
 </div>
 </div>
+<a id="a6894295e94080fcf3108a14b9a148ba4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6894295e94080fcf3108a14b9a148ba4">&#9670;&nbsp;</a></span>list_size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;GARLIC_VIEW Layer&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static size_t garlic::list_size </td>
+          <td>(</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
+          <td class="paramname"><em>layer</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the size of a list from a layer. </p>
+<dl class="section note"><dt>Note</dt><dd>This method does <b>NOT</b> check if the layer is a list type. </dd>
+<dd>
+Depending on the layer's capabilities, this method chooses the best way to get this count. If the layer has a <a class="el" href="utility_8h.html#a6894295e94080fcf3108a14b9a148ba4" title="Get the size of a list from a layer.">list_size()</a> method or it has random access iterators, this has time complexity of O(1), otherwise it'll be O(n) </dd></dl>
+
+</div>
+</div>
 <a id="a561466333596999d0bb55ddb4e55a7c1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a561466333596999d0bb55ddb4e55a7c1">&#9670;&nbsp;</a></span>resolve()</h2>
 
@@ -1200,6 +1241,39 @@ template&lt;typename OutputType , GARLIC_VIEW Layer, typename Callable &gt; </di
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a8d939cf3ff41baa7bf44ae723cf445cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d939cf3ff41baa7bf44ae723cf445cd">&#9670;&nbsp;</a></span>string_length()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;GARLIC_VIEW Layer&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static size_t garlic::string_length </td>
+          <td>(</td>
+          <td class="paramtype">Layer &amp;&amp;&#160;</td>
+          <td class="paramname"><em>layer</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the length of a string from a layer. </p>
+<dl class="section note"><dt>Note</dt><dd>This method does <b>NOT</b> check if the layer is a string type. </dd>
+<dd>
+This method relies on the layer's string_length method if provided. Otherwise, it's a simple strlen(layer.get_cstr()) call. </dd></dl>
 
 </div>
 </div>
