@@ -92,6 +92,8 @@ namespace garlic::providers::rapidjson {
     double get_double() const noexcept { return value_.GetDouble(); }
     bool get_bool() const noexcept { return value_.GetBool(); }
 
+    size_t string_length() const noexcept { return value_.GetStringLength(); }
+
     JsonView operator = (const JsonView& another) { return JsonView(another); }
 
     ConstValueIterator begin_list() const {
