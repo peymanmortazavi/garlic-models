@@ -1,13 +1,14 @@
-#include <algorithm>
 #include <cstdio>
+
+#include <algorithm>
 #include <functional>
 #include <deque>
-#include <gtest/gtest.h>
-#include "yaml.h"
-#include <garlic/garlic.h>
-#include <garlic/adapters/libyaml/parser.h>
 
-using namespace garlic;
+#include <gtest/gtest.h>
+
+#include <garlic/garlic.h>
+#include <garlic/adapters/libyaml.h>
+
 using namespace garlic::adapters::libyaml;
 
 void print_document(YamlView value, int level) {
@@ -36,18 +37,12 @@ void print_document(YamlView value, int level) {
 }
 
 TEST(YamlCpp, ProtocolTest) {
-  yaml_parser_t parser;
-  yaml_parser_initialize(&parser);
-
   auto file = fopen("data/test.yaml", "r");
-  yaml_parser_set_input_file(&parser, file);
+  auto result = load(file);
+  ASSERT_TRUE(result);
+  print_document(result->get_view(), 0);
 
-  yaml_document_t document;
-  yaml_parser_load(&parser, &document);
-
-  auto node = yaml_document_get_root_node(&document);
-
-  YamlView doc {&document};
+  YamlView view = result->get_view();
 
   auto assertions = std::deque<std::function<bool(const YamlView&)>> {
     [](const auto& value) { return value.is_double() && value.get_double() == 1.1; },
@@ -57,7 +52,7 @@ TEST(YamlCpp, ProtocolTest) {
     [](const auto& value) { return value.is_null(); },
   };
 
-  auto values = *doc.get_view().find_member("values");
+  auto values = *view.get_view().find_member("values");
   for (const auto& value : values.value.get_list()) {
     ASSERT_TRUE(assertions.front()(value));
     assertions.pop_front();
