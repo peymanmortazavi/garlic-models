@@ -18,4 +18,6 @@
 #define GARLIC_USE_CONCEPTS
 #endif
 
+#include "lib/expected.h"
+
 #endif /* GARLIC_H */

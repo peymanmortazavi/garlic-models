@@ -1,14 +1,21 @@
-#ifndef GARLIC_LIBYAML_LAYER_H
-#define GARLIC_LIBYAML_LAYER_H
+#ifndef GARLIC_LIBYAML_DOCUMENT_H
+#define GARLIC_LIBYAML_DOCUMENT_H
 
-#include "../../layer.h"
+/*! \file garlic/adapters/libyaml/document.h
+ *  \brief Contains adapters for yaml_document_t
+ */
+
 #include "../../parsing/numbers.h"
+#include "../../layer.h"
 
 #include "yaml.h"
+
+#include "error.h"
 
 
 namespace garlic::adapters::libyaml {
 
+  //! An adapter for yaml_document_t conforming to garlic::ViewLayer
   class YamlView {
 
     struct ValueIteratorWrapper {
@@ -146,19 +153,104 @@ namespace garlic::adapters::libyaml {
     }
   };
 
+
+  //! An object that wraps around a yaml_document_t and deallocates it upon deletion.
+  //! \note This object does **NOT** conform to garlic::ViewLayer concept.
   class YamlDocument {
+  protected:
+    yaml_document_t doc_;
+    bool ready_ = false;
+
   public:
-    ~YamlDocument() { yaml_document_delete(&doc_); }
+    YamlDocument() = default;
+    YamlDocument(const YamlDocument&) = delete;
+    YamlDocument(YamlDocument&& doc) : doc_(std::move(doc.doc_)), ready_(true) {
+      doc.ready_ = false;
+    }
+
+    ~YamlDocument() {
+      if (this->ready_)
+        yaml_document_delete(&doc_);
+    }
 
     YamlView get_view() {
       return YamlView{&doc_};
     }
+
     yaml_document_t* get_inner_document() { return &doc_; }
 
-  protected:
-    yaml_document_t doc_;
+    //! \return whether or not the yaml_document_t life is managed by this instance.
+    bool ready() const { return this->ready_; }
+
+    //! Set if the yaml_document_t is ready.
+    void set_ready(bool value) { this->ready_ = value; }
+
+    YamlDocument move() {
+      return std::move(*this);
+    }
   };
+
+  template<typename Initializer>
+  static tl::expected<YamlDocument, ParserProblem>
+  load(Initializer&& initializer) {
+    YamlDocument doc;
+    yaml_parser_t parser;
+
+    if (!yaml_parser_initialize(&parser))
+      return tl::make_unexpected(ParserProblem(parser));
+
+    initializer(&parser);
+
+    doc.set_ready(true);
+    if (!yaml_parser_load(&parser, doc.get_inner_document())) {
+      ParserProblem problem(parser);
+      yaml_parser_delete(&parser);  // Done with the parser, delete it.
+      return tl::make_unexpected(problem);
+    }
+
+    yaml_parser_delete(&parser);  // Everything is good, delete the parser!
+    return doc;
+  }
+
+  //! Uses an initialized and ready libyaml_parser_t to load a yaml_document_t and wraps it in YamlDocument.
+  //! \param parser an initialized libyaml parser.
+  static YamlDocument load(yaml_parser_t* parser) {
+    YamlDocument doc;
+    yaml_parser_load(parser, doc.get_inner_document());
+    return doc;
+  }
+
+
+  //! Uses libyaml parser to create a yaml_document_t and wraps it in YamlDocument.
+  //! \param data valid YAML string.
+  //! \param length the length of the string to load.
+  static inline tl::expected<YamlDocument, ParserProblem>
+  load(const char* data, size_t length) {
+    return load([&](yaml_parser_t* parser) {
+        yaml_parser_set_input_string(
+            parser,
+            reinterpret_cast<const unsigned char*>(data),
+            length);
+        });
+  }
+
+  //! Uses libyaml parser to create a yaml_document_t and wraps it in YamlDocument.
+  //! \param data valid YAML string.
+  static inline tl::expected<YamlDocument, ParserProblem>
+  load(const char * data) {
+    return load(data, strlen((char*)data));
+  }
+
+  //! Uses libyaml parser to create a yaml_document_t and wraps it in YamlDocument.
+  //! \param file An open and readable file.
+  //! \note This function does not close the file afterward.
+  static tl::expected<YamlDocument, ParserProblem>
+  load(FILE * file) {
+    return load([&](yaml_parser_t* parser) {
+        yaml_parser_set_input_file(parser, file);
+        });
+  }
 
 }
 
-#endif /* end of include guard: GARLIC_LIBYAML_LAYER_H */
+#endif /* end of include guard: GARLIC_LIBYAML_DOCUMENT_H */
