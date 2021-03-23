@@ -3,9 +3,9 @@
 garlic::adapters::libyaml::YamlDocument
 get_libyaml_document(const char * name) {
   auto file = fopen(name, "r");
-  auto doc = garlic::adapters::libyaml::Yaml::load(file);
+  auto doc = garlic::adapters::libyaml::load(file);
   fclose(file);
-  return doc;
+  return doc->move();
 }
 
 garlic::adapters::rapidjson::JsonDocument

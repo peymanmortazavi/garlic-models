@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <garlic/parsing/module.h>
 #include <garlic/adapters/rapidjson.h>
-#include <garlic/adapters/libyaml/parser.h>
+#include <garlic/adapters/libyaml.h>
 
 
 using NameQueue = std::deque<std::string>;
