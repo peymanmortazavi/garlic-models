@@ -17,6 +17,11 @@ namespace garlic::adapters::libyaml {
             offset(parser.problem_offset), value(parser.problem_value) {}
   };
 
+  //! Describes a libyaml emitter error.
+  struct EmitterProblem {
+    const char* problem;  //!< message.
+  };
+
 }
 
 #endif /* end of include guard: GARLIC_LIBYAML_ERROR_H */

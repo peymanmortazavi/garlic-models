@@ -148,7 +148,7 @@ namespace garlic::adapters::libyaml {
     if (!yaml_parser_initialize(&parser))
       return tl::make_unexpected(ParserProblem(parser));
 
-    initializer(parser);
+    initializer(&parser);
 
     if (!RecursiveParser(&parser).parse(layer)) {
       auto problem = ParserProblem(parser);
