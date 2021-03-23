@@ -1,8 +1,8 @@
 var dir_af30267d1ad5fcde68c5e8495a1d5b8d =
 [
+    [ "adapters", "dir_a6fcf67cbbd570b9050dc665c11081b9.html", "dir_a6fcf67cbbd570b9050dc665c11081b9" ],
     [ "lib", "dir_ba5fa946c4766c45add1b02037ff6172.html", "dir_ba5fa946c4766c45add1b02037ff6172" ],
     [ "parsing", "dir_6f2629a7b9cb70d1d59f7a9672e5f560.html", "dir_6f2629a7b9cb70d1d59f7a9672e5f560" ],
-    [ "providers", "dir_e53dbe443ae5f23c17aad1c38726419c.html", "dir_e53dbe443ae5f23c17aad1c38726419c" ],
     [ "allocators.h", "allocators_8h_source.html", null ],
     [ "clove.h", "clove_8h.html", "clove_8h" ],
     [ "constraints.h", "constraints_8h.html", "constraints_8h" ],

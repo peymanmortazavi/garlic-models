@@ -1,11 +1,10 @@
 <map id="garlic/containers.h" name="garlic/containers.h">
-<area shape="rect" id="node1" title="Supporting containers for the garlic model." alt="" coords="227,5,370,32"/>
-<area shape="rect" id="node2" href="$encoding_8h.html" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="180,80,313,107"/>
-<area shape="rect" id="node4" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="280,237,427,263"/>
-<area shape="rect" id="node3" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="189,155,299,181"/>
-<area shape="rect" id="node5" href="$garlic_8h_source.html" title=" " alt="" coords="365,393,475,420"/>
-<area shape="rect" id="node6" href="$module_8h.html" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="260,319,383,345"/>
-<area shape="rect" id="node7" href="$parsing_2module_8h.html" title="Resources for parsing/loading and dumping Module instances." alt="" coords="49,393,223,420"/>
-<area shape="rect" id="node9" href="$yaml-cpp_8h_source.html" title=" " alt="" coords="45,229,205,271"/>
-<area shape="rect" id="node8" href="$parsing_2constraints_8h_source.html" title=" " alt="" coords="37,319,235,345"/>
+<area shape="rect" id="node1" title="Supporting containers for the garlic model." alt="" coords="207,5,350,32"/>
+<area shape="rect" id="node2" href="$encoding_8h.html" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="160,80,293,107"/>
+<area shape="rect" id="node5" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="261,237,408,263"/>
+<area shape="rect" id="node3" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="169,155,279,181"/>
+<area shape="rect" id="node4" href="$yaml-cpp_8h_source.html" title=" " alt="" coords="30,229,186,271"/>
+<area shape="rect" id="node6" href="$module_8h.html" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="125,319,248,345"/>
+<area shape="rect" id="node7" href="$parsing_2module_8h.html" title="Resources for parsing/loading and dumping Module instances." alt="" coords="99,393,274,420"/>
+<area shape="rect" id="node8" href="$parsing_2constraints_8h_source.html" title=" " alt="" coords="273,319,471,345"/>
 </map>

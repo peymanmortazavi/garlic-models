@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
-<title>Garlic Model: garlic/providers Directory Reference</title>
+<title>Garlic Model: garlic::adapters::libyaml::YamlDocument Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,7 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('dir_e53dbe443ae5f23c17aad1c38726419c.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -80,31 +80,63 @@ $(document).ready(function(){initNavTree('dir_e53dbe443ae5f23c17aad1c38726419c.h
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
-<div class="title">providers Directory Reference</div>  </div>
+<div class="title">garlic::adapters::libyaml::YamlDocument Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Directory dependency graph for providers:</div>
-<div class="dyncontent">
-<div class="center"><img src="dir_e53dbe443ae5f23c17aad1c38726419c_dep.png" border="0" usemap="#dir__e53dbe443ae5f23c17aad1c38726419c__dep" alt="garlic/providers"/></div>
-<map name="dir__e53dbe443ae5f23c17aad1c38726419c__dep" id="dir__e53dbe443ae5f23c17aad1c38726419c__dep">
-<area shape="rect" href="dir_95a8fda8ed08633bb2e3f03ff79b37d8.html" title="libyaml" alt="" coords="37,63,109,111"/>
-<area shape="rect" href="dir_e53dbe443ae5f23c17aad1c38726419c.html" alt="" coords="27,52,227,121"/>
-<area shape="rect" href="dir_af30267d1ad5fcde68c5e8495a1d5b8d.html" title="garlic" alt="" coords="16,16,237,132"/>
-</map>
-</div>
+
+<p><code>#include &lt;<a class="el" href="document_8h_source.html">document.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="subdirs"></a>
-Directories</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a828f01157484070291862bc373e5b510"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html#a828f01157484070291862bc373e5b510">ready</a> () const</td></tr>
+<tr class="separator:a828f01157484070291862bc373e5b510"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e5479a64f1d3d1d9372e0c4be5b1283"><td class="memItemLeft" align="right" valign="top"><a id="a7e5479a64f1d3d1d9372e0c4be5b1283"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html#a7e5479a64f1d3d1d9372e0c4be5b1283">set_ready</a> (bool value)</td></tr>
+<tr class="memdesc:a7e5479a64f1d3d1d9372e0c4be5b1283"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set if the yaml_document_t is ready. <br /></td></tr>
+<tr class="separator:a7e5479a64f1d3d1d9372e0c4be5b1283"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>An object that wraps around a yaml_document_t and deallocates it upon deletion. </p><dl class="section note"><dt>Note</dt><dd>This object does <b>NOT</b> conform to <a class="el" href="classgarlic_1_1ViewLayer.html" title="Concept for reading values from containers.">garlic::ViewLayer</a> concept. </dd></dl>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a828f01157484070291862bc373e5b510"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a828f01157484070291862bc373e5b510">&#9670;&nbsp;</a></span>ready()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool garlic::adapters::libyaml::YamlDocument::ready </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>whether or not the yaml_document_t life is managed by this instance. </dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>garlic/adapters/libyaml/<a class="el" href="document_8h_source.html">document.h</a></li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_af30267d1ad5fcde68c5e8495a1d5b8d.html">garlic</a></li><li class="navelem"><a class="el" href="dir_e53dbe443ae5f23c17aad1c38726419c.html">providers</a></li>
+    <li class="navelem"><b>garlic</b></li><li class="navelem"><b>adapters</b></li><li class="navelem"><b>libyaml</b></li><li class="navelem"><a class="el" href="classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html">YamlDocument</a></li>
   </ul>
 </div>
 </body>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['iteratorwrapper_135',['IteratorWrapper',['../classgarlic_1_1IteratorWrapper.html',1,'']]]
+  ['garlicerror_147',['GarlicError',['../classGarlicError.html',1,'']]]
 ];

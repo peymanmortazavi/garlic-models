@@ -1,6 +1,14 @@
 var annotated_dup =
 [
     [ "garlic", null, [
+      [ "adapters", null, [
+        [ "libyaml", null, [
+          [ "EmitterProblem", "structgarlic_1_1adapters_1_1libyaml_1_1EmitterProblem.html", "structgarlic_1_1adapters_1_1libyaml_1_1EmitterProblem" ],
+          [ "ParserProblem", "structgarlic_1_1adapters_1_1libyaml_1_1ParserProblem.html", "structgarlic_1_1adapters_1_1libyaml_1_1ParserProblem" ],
+          [ "YamlDocument", "classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html", "classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument" ],
+          [ "YamlView", "classgarlic_1_1adapters_1_1libyaml_1_1YamlView.html", null ]
+        ] ]
+      ] ],
       [ "all_tag", "structgarlic_1_1all__tag.html", null ],
       [ "any_tag", "structgarlic_1_1any__tag.html", null ],
       [ "back_inserter_iterator", "classgarlic_1_1back__inserter__iterator.html", null ],

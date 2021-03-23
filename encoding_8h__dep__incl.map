@@ -1,10 +1,9 @@
 <map id="garlic/encoding.h" name="garlic/encoding.h">
-<area shape="rect" id="node1" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="315,5,449,32"/>
-<area shape="rect" id="node2" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="327,80,437,107"/>
-<area shape="rect" id="node3" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="161,162,307,189"/>
-<area shape="rect" id="node4" href="$garlic_8h_source.html" title=" " alt="" coords="5,319,116,345"/>
-<area shape="rect" id="node5" href="$module_8h.html" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="321,244,443,271"/>
-<area shape="rect" id="node6" href="$parsing_2module_8h.html" title="Resources for parsing/loading and dumping Module instances." alt="" coords="295,319,469,345"/>
-<area shape="rect" id="node8" href="$yaml-cpp_8h_source.html" title=" " alt="" coords="518,155,678,196"/>
-<area shape="rect" id="node7" href="$parsing_2constraints_8h_source.html" title=" " alt="" coords="97,244,296,271"/>
+<area shape="rect" id="node1" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="187,5,321,32"/>
+<area shape="rect" id="node2" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="199,80,309,107"/>
+<area shape="rect" id="node3" href="$yaml-cpp_8h_source.html" title=" " alt="" coords="5,155,161,196"/>
+<area shape="rect" id="node4" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="237,162,383,189"/>
+<area shape="rect" id="node5" href="$module_8h.html" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="101,244,223,271"/>
+<area shape="rect" id="node6" href="$parsing_2module_8h.html" title="Resources for parsing/loading and dumping Module instances." alt="" coords="260,319,435,345"/>
+<area shape="rect" id="node7" href="$parsing_2constraints_8h_source.html" title=" " alt="" coords="248,244,447,271"/>
 </map>

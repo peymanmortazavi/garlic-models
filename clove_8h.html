@@ -89,11 +89,7 @@ $(document).ready(function(){initNavTree('clove_8h.html',''); initResizable(); }
 
 <p>Built-in type that provides readable and writable layers.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;cstddef&gt;</code><br />
-<code>#include &lt;cstring&gt;</code><br />
-<code>#include &lt;algorithm&gt;</code><br />
-<code>#include &lt;memory&gt;</code><br />
-<code>#include &lt;type_traits&gt;</code><br />
+<div class="textblock"><code>#include &quot;garlic.h&quot;</code><br />
 <code>#include &quot;allocators.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="layer_8h_source.html">layer.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -101,27 +97,23 @@ Include dependency graph for clove.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="clove_8h__incl.png" border="0" usemap="#garlic_2clove_8h" alt=""/></div>
 <map name="garlic_2clove_8h" id="garlic_2clove_8h">
-<area shape="rect" title="Built&#45;in type that provides readable and writable layers." alt="" coords="343,5,453,32"/>
-<area shape="rect" title=" " alt="" coords="549,155,620,181"/>
-<area shape="rect" title=" " alt="" coords="159,80,226,107"/>
-<area shape="rect" title=" " alt="" coords="250,80,335,107"/>
-<area shape="rect" title=" " alt="" coords="359,80,437,107"/>
-<area shape="rect" title=" " alt="" coords="461,80,553,107"/>
-<area shape="rect" href="allocators_8h_source.html" title=" " alt="" coords="37,80,135,107"/>
-<area shape="rect" href="layer_8h.html" title="This file contains concepts for C++ 20 along with some helper types to make it easier to produce iter..." alt="" coords="641,80,707,107"/>
-<area shape="rect" title=" " alt="" coords="95,155,175,181"/>
-<area shape="rect" title=" " alt="" coords="5,155,71,181"/>
-<area shape="rect" title=" " alt="" coords="739,155,798,181"/>
-<area shape="rect" title=" " alt="" coords="644,155,715,181"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
-<div class="dyncontent">
-<div class="center"><img src="clove_8h__dep__incl.png" border="0" usemap="#garlic_2clove_8hdep" alt=""/></div>
-<map name="garlic_2clove_8hdep" id="garlic_2clove_8hdep">
-<area shape="rect" title="Built&#45;in type that provides readable and writable layers." alt="" coords="6,5,115,32"/>
-<area shape="rect" href="garlic_8h_source.html" title=" " alt="" coords="5,80,116,107"/>
+<area shape="rect" title="Built&#45;in type that provides readable and writable layers." alt="" coords="425,5,534,32"/>
+<area shape="rect" href="garlic_8h_source.html" title=" " alt="" coords="444,155,515,181"/>
+<area shape="rect" href="allocators_8h_source.html" title=" " alt="" coords="430,80,529,107"/>
+<area shape="rect" href="layer_8h.html" title="This file contains concepts for C++ 20 along with some helper types to make it easier to produce iter..." alt="" coords="553,80,619,107"/>
+<area shape="rect" title=" " alt="" coords="5,229,76,256"/>
+<area shape="rect" title=" " alt="" coords="101,229,167,256"/>
+<area shape="rect" title=" " alt="" coords="192,229,273,256"/>
+<area shape="rect" title=" " alt="" coords="298,229,375,256"/>
+<area shape="rect" title=" " alt="" coords="399,229,458,256"/>
+<area shape="rect" title=" " alt="" coords="483,229,580,256"/>
+<area shape="rect" title=" " alt="" coords="604,229,675,256"/>
+<area shape="rect" title=" " alt="" coords="669,304,761,331"/>
+<area shape="rect" title=" " alt="" coords="751,229,859,256"/>
+<area shape="rect" href="expected_8h_source.html" title=" " alt="" coords="883,229,998,256"/>
+<area shape="rect" title=" " alt="" coords="787,304,873,331"/>
+<area shape="rect" title=" " alt="" coords="897,304,984,331"/>
+<area shape="rect" title=" " alt="" coords="1008,304,1068,331"/>
 </map>
 </div>
 </div>
@@ -154,10 +146,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clo
 <div class="line"><a class="code" href="clove_8h.html#a0ceb9ba43aacc8ddc80a59f7cd5d28d4">CloveValue</a> value(doc);  <span class="comment">// use the allocator of the document root. (conforms to garlic::RefLayer)</span></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- doc-content -->
-<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:525</div></div>
-<div class="ttc" id="aclove_8h_html_a0ceb9ba43aacc8ddc80a59f7cd5d28d4"><div class="ttname"><a href="clove_8h.html#a0ceb9ba43aacc8ddc80a59f7cd5d28d4">garlic::CloveValue</a></div><div class="ttdeci">GenericCloveValue&lt; CAllocator &gt; CloveValue</div><div class="ttdoc">A clove value conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:522</div></div>
-<div class="ttc" id="aclove_8h_html_a03c78e9d44a769a647515fb921e7f34f"><div class="ttname"><a href="clove_8h.html#a03c78e9d44a769a647515fb921e7f34f">garlic::CloveRef</a></div><div class="ttdeci">GenericCloveRef&lt; CAllocator &gt; CloveRef</div><div class="ttdoc">A reference to the a clove value/document conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:519</div></div>
-<div class="ttc" id="aclove_8h_html_aa609005400aa1f195372df58b60b51ac"><div class="ttname"><a href="clove_8h.html#aa609005400aa1f195372df58b60b51ac">garlic::CloveView</a></div><div class="ttdeci">GenericCloveView&lt; CAllocator &gt; CloveView</div><div class="ttdoc">A view to the a clove value/document conforming to garlic::ViewLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:516</div></div>
+<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:520</div></div>
+<div class="ttc" id="aclove_8h_html_a0ceb9ba43aacc8ddc80a59f7cd5d28d4"><div class="ttname"><a href="clove_8h.html#a0ceb9ba43aacc8ddc80a59f7cd5d28d4">garlic::CloveValue</a></div><div class="ttdeci">GenericCloveValue&lt; CAllocator &gt; CloveValue</div><div class="ttdoc">A clove value conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:517</div></div>
+<div class="ttc" id="aclove_8h_html_a03c78e9d44a769a647515fb921e7f34f"><div class="ttname"><a href="clove_8h.html#a03c78e9d44a769a647515fb921e7f34f">garlic::CloveRef</a></div><div class="ttdeci">GenericCloveRef&lt; CAllocator &gt; CloveRef</div><div class="ttdoc">A reference to the a clove value/document conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:514</div></div>
+<div class="ttc" id="aclove_8h_html_aa609005400aa1f195372df58b60b51ac"><div class="ttname"><a href="clove_8h.html#aa609005400aa1f195372df58b60b51ac">garlic::CloveView</a></div><div class="ttdeci">GenericCloveView&lt; CAllocator &gt; CloveView</div><div class="ttdoc">A view to the a clove value/document conforming to garlic::ViewLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:511</div></div>
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -1,13 +1,13 @@
 var searchData=
 [
-  ['safe_5fdecode_99',['safe_decode',['../encoding_8h.html#abe39ec5509d7445b9d082b19a25b6140',1,'garlic']]],
-  ['safe_5fget_100',['safe_get',['../utility_8h.html#a55262a00ca6aecc256d12e69f27b2259',1,'garlic::safe_get(Layer &amp;&amp;layer, const char *key, OutputType default_value)'],['../utility_8h.html#a710e8770da4b2e2a03dbc068b2eae601',1,'garlic::safe_get(Layer &amp;&amp;layer, IndexType index, OutputType default_value)']]],
-  ['safe_5fget_5fcb_101',['safe_get_cb',['../utility_8h.html#aef5dacf093e1e38cde74c9c13ed774b7',1,'garlic::safe_get_cb(Layer &amp;&amp;layer, const char *key, Callable &amp;&amp;cb)'],['../utility_8h.html#ad0889f1349f9272adf6e6ccaa29ce2af',1,'garlic::safe_get_cb(Layer &amp;&amp;layer, IndexType index, Callable &amp;&amp;cb)']]],
-  ['safe_5fresolve_102',['safe_resolve',['../utility_8h.html#afad23e63a2d400e6c23d5e76bf66586e',1,'garlic']]],
-  ['safe_5fresolve_5fcb_103',['safe_resolve_cb',['../utility_8h.html#ab72b447f47218b67345ad1a6f39a6e68',1,'garlic']]],
-  ['sequence_104',['sequence',['../classgarlic_1_1sequence.html',1,'garlic']]],
-  ['sequence_3c_20constraintresult_20_3e_105',['sequence&lt; ConstraintResult &gt;',['../classgarlic_1_1sequence.html',1,'garlic']]],
-  ['set_5fignore_5fdetails_106',['set_ignore_details',['../classgarlic_1_1Field.html#a062d4bcd7b4c3fc91097028e98ce643f',1,'garlic::Field']]],
-  ['size_107',['size',['../classgarlic_1_1sequence.html#a5d96e64f795cb9a8b199e0d55260e509',1,'garlic::sequence']]],
-  ['string_5flength_108',['string_length',['../utility_8h.html#a8d939cf3ff41baa7bf44ae723cf445cd',1,'garlic']]]
+  ['randomaccessiterator_97',['RandomAccessIterator',['../classgarlic_1_1RandomAccessIterator.html',1,'garlic']]],
+  ['range_5ftag_98',['range_tag',['../structgarlic_1_1range__tag.html',1,'garlic']]],
+  ['ready_99',['ready',['../classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html#a828f01157484070291862bc373e5b510',1,'garlic::adapters::libyaml::YamlDocument']]],
+  ['reason_100',['reason',['../structgarlic_1_1ConstraintResult.html#aaf6ffa69f38de517c2a03368ed5c012d',1,'garlic::ConstraintResult']]],
+  ['reflayer_101',['RefLayer',['../classgarlic_1_1RefLayer.html',1,'']]],
+  ['regex_5ftag_102',['regex_tag',['../structgarlic_1_1regex__tag.html',1,'garlic']]],
+  ['required_103',['required',['../structgarlic_1_1Model_1_1FieldDescriptor.html#aa805dd0f2ef330963bdf33232abbdb4d',1,'garlic::Model::FieldDescriptor']]],
+  ['resolve_104',['resolve',['../utility_8h.html#a561466333596999d0bb55ddb4e55a7c1',1,'garlic']]],
+  ['resolve_5fcb_105',['resolve_cb',['../utility_8h.html#acfb4f9bc8911144b5558d9d375ba59c8',1,'garlic']]],
+  ['resolve_5flayer_5fcb_106',['resolve_layer_cb',['../utility_8h.html#a617d7424f15ce61fb41446e33b787788',1,'garlic']]]
 ];

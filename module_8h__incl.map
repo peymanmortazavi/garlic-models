@@ -1,29 +1,28 @@
 <map id="garlic/module.h" name="garlic/module.h">
-<area shape="rect" id="node1" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="478,5,601,32"/>
+<area shape="rect" id="node1" title="A repository of models, fields and constraints that can be serialized/deserialized." alt="" coords="339,5,461,32"/>
 <area shape="rect" id="node2" title=" " alt="" coords="135,80,259,107"/>
-<area shape="rect" id="node3" href="$expected_8h_source.html" title=" " alt="" coords="283,80,398,107"/>
-<area shape="rect" id="node8" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="486,80,593,107"/>
-<area shape="rect" id="node16" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="795,155,865,181"/>
-<area shape="rect" id="node26" href="$error_8h_source.html" title=" " alt="" coords="871,80,935,107"/>
-<area shape="rect" id="node4" title=" " alt="" coords="200,155,287,181"/>
-<area shape="rect" id="node5" title=" " alt="" coords="5,155,92,181"/>
-<area shape="rect" id="node6" title=" " alt="" coords="661,304,753,331"/>
-<area shape="rect" id="node7" title=" " alt="" coords="116,155,176,181"/>
-<area shape="rect" id="node9" title=" " alt="" coords="463,155,549,181"/>
-<area shape="rect" id="node10" title=" " alt="" coords="573,155,687,181"/>
-<area shape="rect" id="node11" title=" " alt="" coords="711,155,770,181"/>
-<area shape="rect" id="node12" href="$layer_8h.html" title="This file contains concepts for C++ 20 along with some helper types to make it easier to produce iter..." alt="" coords="477,304,543,331"/>
-<area shape="rect" id="node22" href="$containers_8h.html" title="Supporting containers for the garlic model." alt="" coords="275,304,377,331"/>
-<area shape="rect" id="node13" title=" " alt="" coords="475,379,545,405"/>
-<area shape="rect" id="node14" title=" " alt="" coords="806,379,865,405"/>
-<area shape="rect" id="node15" title=" " alt="" coords="569,379,640,405"/>
-<area shape="rect" id="node17" title=" " alt="" coords="663,229,744,256"/>
-<area shape="rect" id="node18" title=" " alt="" coords="768,229,865,256"/>
-<area shape="rect" id="node19" href="$meta_8h_source.html" title=" " alt="" coords="941,229,1009,256"/>
-<area shape="rect" id="node21" href="$encoding_8h.html" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="463,229,557,256"/>
-<area shape="rect" id="node20" title=" " alt="" coords="871,304,938,331"/>
-<area shape="rect" id="node23" title=" " alt="" coords="293,379,359,405"/>
-<area shape="rect" id="node24" title=" " alt="" coords="384,379,449,405"/>
-<area shape="rect" id="node25" title=" " alt="" coords="191,379,269,405"/>
-<area shape="rect" id="node27" title=" " alt="" coords="941,155,1049,181"/>
+<area shape="rect" id="node3" href="$constraints_8h.html" title="Contains constraints, built&#45;in constraint tags, fields and models." alt="" coords="284,80,391,107"/>
+<area shape="rect" id="node22" href="$utility_8h.html" title="This file contains various functions and classes to work with layers like getting or resolving using ..." alt="" coords="443,155,514,181"/>
+<area shape="rect" id="node26" href="$error_8h_source.html" title=" " alt="" coords="668,229,732,256"/>
+<area shape="rect" id="node4" title=" " alt="" coords="277,155,363,181"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,155,120,181"/>
+<area shape="rect" id="node6" title=" " alt="" coords="144,155,203,181"/>
+<area shape="rect" id="node7" href="$layer_8h.html" title="This file contains concepts for C++ 20 along with some helper types to make it easier to produce iter..." alt="" coords="331,304,397,331"/>
+<area shape="rect" id="node25" href="$containers_8h.html" title="Supporting containers for the garlic model." alt="" coords="422,304,525,331"/>
+<area shape="rect" id="node8" href="$garlic_8h_source.html" title=" " alt="" coords="527,379,598,405"/>
+<area shape="rect" id="node9" title=" " alt="" coords="89,453,159,480"/>
+<area shape="rect" id="node10" title=" " alt="" coords="184,453,251,480"/>
+<area shape="rect" id="node11" title=" " alt="" coords="275,453,357,480"/>
+<area shape="rect" id="node12" title=" " alt="" coords="381,453,459,480"/>
+<area shape="rect" id="node13" title=" " alt="" coords="483,453,541,480"/>
+<area shape="rect" id="node14" title=" " alt="" coords="566,453,663,480"/>
+<area shape="rect" id="node15" title=" " alt="" coords="687,453,758,480"/>
+<area shape="rect" id="node16" title=" " alt="" coords="731,528,823,555"/>
+<area shape="rect" id="node17" title=" " alt="" coords="973,453,1081,480"/>
+<area shape="rect" id="node18" href="$expected_8h_source.html" title=" " alt="" coords="833,453,948,480"/>
+<area shape="rect" id="node19" title=" " alt="" coords="847,528,934,555"/>
+<area shape="rect" id="node20" title=" " alt="" coords="958,528,1045,555"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1069,528,1129,555"/>
+<area shape="rect" id="node23" href="$meta_8h_source.html" title=" " alt="" coords="601,304,669,331"/>
+<area shape="rect" id="node24" href="$encoding_8h.html" title="Contains classes and methods for defining and using encoders/decoders for various types." alt="" coords="432,229,525,256"/>
 </map>

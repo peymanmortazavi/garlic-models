@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['tuple_5ftag_153',['tuple_tag',['../classgarlic_1_1tuple__tag.html',1,'garlic']]],
-  ['type_5ftag_154',['type_tag',['../structgarlic_1_1type__tag.html',1,'garlic']]]
+  ['randomaccessiterator_161',['RandomAccessIterator',['../classgarlic_1_1RandomAccessIterator.html',1,'garlic']]],
+  ['range_5ftag_162',['range_tag',['../structgarlic_1_1range__tag.html',1,'garlic']]],
+  ['reflayer_163',['RefLayer',['../classgarlic_1_1RefLayer.html',1,'']]],
+  ['regex_5ftag_164',['regex_tag',['../structgarlic_1_1regex__tag.html',1,'garlic']]]
 ];
