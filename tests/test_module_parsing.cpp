@@ -7,8 +7,8 @@
 #include "test_utility.h"
 
 using namespace garlic;
-using namespace garlic::providers::rapidjson;
-using namespace garlic::providers::libyaml;
+using namespace garlic::adapters::rapidjson;
+using namespace garlic::adapters::libyaml;
 using namespace std;
 
 

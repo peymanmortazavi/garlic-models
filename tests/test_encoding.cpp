@@ -6,7 +6,7 @@
 #include "test_utility.h"
 
 using namespace garlic;
-using namespace garlic::providers::rapidjson;
+using namespace garlic::adapters::rapidjson;
 
 inline static CloveRef get_test_clove() {
   static std::unique_ptr<CloveDocument> doc;

@@ -2,12 +2,12 @@
 #include <iostream>
 
 #include <gtest/gtest.h>
-#include <garlic/providers/rapidjson.h>
+#include <garlic/adapters/rapidjson.h>
 
 #include "test_utility.h"
 
 using namespace garlic;
-using namespace garlic::providers::rapidjson;
+using namespace garlic::adapters::rapidjson;
 
 
 TEST(Constraints, FieldConstraint) {

@@ -7,18 +7,18 @@
 
 #include <gtest/gtest.h>
 #include <garlic/parsing/module.h>
-#include <garlic/providers/rapidjson.h>
-#include <garlic/providers/libyaml/parser.h>
+#include <garlic/adapters/rapidjson.h>
+#include <garlic/adapters/libyaml.h>
 
 
 using NameQueue = std::deque<std::string>;
 using ModelStructure = std::unordered_map<garlic::text, NameQueue>;  // map of fields to their constraints.
 using ModuleStructure = std::unordered_map<garlic::text, ModelStructure>;  // map of models to their fields to their constraints.
 
-garlic::providers::libyaml::YamlDocument
+garlic::adapters::libyaml::YamlDocument
 get_libyaml_document(const char * name);
 
-garlic::providers::rapidjson::JsonDocument
+garlic::adapters::rapidjson::JsonDocument
 get_rapidjson_document(const char* name);
 
 void print_constraint_result(const garlic::ConstraintResult& result, int level=0);

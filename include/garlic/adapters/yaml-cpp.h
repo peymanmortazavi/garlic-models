@@ -15,7 +15,7 @@
 #include "yaml-cpp/node/type.h"
 #include "yaml-cpp/yaml.h"
 
-namespace garlic::providers::yamlcpp {
+namespace garlic::adapters::yamlcpp {
 
   class YamlNode {
 
