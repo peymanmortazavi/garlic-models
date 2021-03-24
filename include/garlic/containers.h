@@ -24,7 +24,7 @@ namespace garlic {
     copy,
   };
 
-  //! A container for storing small strings that can manage both act as a view and as an owner.
+  //! A container for storing small strings that can either act as a view or as an owner.
   /*!
    * \code
    * text view = "Some Text";  // only a view.
