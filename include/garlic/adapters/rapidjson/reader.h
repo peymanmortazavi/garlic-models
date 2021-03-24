@@ -14,46 +14,177 @@ namespace garlic::adapters::rapidjson {
     using Ch = char;
     using reference_type = decltype(std::declval<Layer>().get_reference());
 
-  private:
-    std::deque<reference_type> layers_;
+    enum class node_state {
+      key,
+      push,
+      set,
+      value,
+    };
 
-    inline reference_type layer() const { return layers_.front(); }
+  private:
+    struct node {
+      std::string_view key;
+      reference_type layer;
+      node_state state;
+
+      node(reference_type layer,
+           node_state state = node_state::set) : key(""), layer(layer), state(state) {}
+    };
+    std::deque<node> nodes_;
+
+    inline reference_type layer() const { return nodes_.front().layer(); }
+    inline node front() const { return nodes_.front(); }
+    inline void pop() { nodes_.pop_front(); }
+    
+    template<typename Initializer>
+    void add_member(Initializer&& initializer) {
+      initializer(front().key, this->layer());
+      this->front().state = node_state::key;
+    }
     
   public:
     LayerHandler(Layer&& layer) {
-      layers_.emplace_front(layer->get_reference());
+      nodes_.emplace_front( node(layer.get_reference()) );
     }
 
     bool Null() {
-      this->layer().set_null();
-      return true;
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_null();
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back();
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([](auto key, auto ref) { ref.add_member(key); });
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool Bool(bool value) {
-      this->layer().set_bool(value);
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_bool(value);
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back(value);
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          return true;
+        }
+        default: return false;
+      }
       return true;
     }
 
     bool Int(int value) {
-      this->layer().set_int(value);
-      return true;
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_int(value);
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back(value);
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool Double(double value) {
-      this->layer().set_double(value);
-      return true;
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_double(value);
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back(value);
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool Uint(unsigned value) {
-      return Double(static_cast<double>(value));
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_double(static_cast<double>(value));
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back(static_cast<double>(value));
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([&value](auto key, auto ref) {
+              ref.add_member(key, static_cast<double>(value));
+              });
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool Int64(int64_t value) {
-      return Double(static_cast<double>(value));
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_double(static_cast<double>(value));
+          this->pop();
+          return true;
+        }
+        case node_state::push: {
+          this->layer().push_back(static_cast<double>(value));
+          return true;
+        }
+        case node_state::value: {
+          this->add_member([&value](auto key, auto ref) {
+              ref.add_member(key, static_cast<double>(value));
+              });
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool String(const Ch* str, ::rapidjson::SizeType length, bool copy) {
-      this->layer().set_string(std::string_view(str, length));
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_string(std::string_view(str, length));
+          this->pop();
+          break;
+        }
+        case node_state::push: {
+          this->layer().push_back(std::string_view(str, length));
+          break;
+        }
+        case node_state::value: {
+          this->add_member([&str, &length](auto key, auto ref) {
+              ref.add_member(key, std::string_view(key, length));
+              });
+          return true;
+        }
+        default: return false;
+      }
       return true;
     }
 
@@ -62,36 +193,84 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool StartObject() {
-      this->layer().set_object();
-      return true;
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_object();
+          this->front().state = node_state::key;
+          return true;
+        }
+        case node_state::push: {
+          auto& layer = this->layer();
+          layer.push_back();
+          this->nodes_.emplace_front( node(*--layer.end_list(), node_state::key) );
+          this->layer().set_object();
+          return true;
+        }
+        case node_state::value: {
+          auto& layer = this->layer();
+          layer.push_back();
+          front().state = node_state::key;
+          this->nodes_.emplace_front( node((*--layer.end_member()).value, node_state::key) );
+          this->layer().set_object();
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool Key(const Ch* str, ::rapidjson::SizeType length, bool copy) {
-      this->layer().add_member(std::string_view(str, length));
-      this->layers_.emplace_front((*--this->layer().end_member()).value);
+      switch (front().state) {
+        case node_state::key: {
+          front().key = std::string_view(str, length);
+          front().state = node_state::value;
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool EndObject(::rapidjson::SizeType length) {
-      this->layers_.pop_front();
-      return true;
+      if (front().state == node_state::key) {
+        this->pop();
+        return true;
+      }
+      return false;
     }
 
     bool StartArray() {
-      this->layer().set_list();
-      this->layers_.emplace_front((*--this->layer().end_list()));
-      return true;
+      switch (front().state) {
+        case node_state::set: {
+          this->layer().set_list();
+          this->front().state = node_state::push;
+          return true;
+        }
+        case node_state::push: {
+          auto& layer = this->layer();
+          layer.push_back();
+          this->nodes_.emplace_front( node(*--layer.end_list(), node_state::push) );
+          this->layer().set_list();
+          return true;
+        }
+        case node_state::value: {
+          auto& layer = this->layer();
+          layer.push_back();
+          front().state = node_state::key;
+          this->nodes_.emplace_front( node((*--layer.end_member()).value, node_state::push) );
+          this->layer().set_list();
+          return true;
+        }
+        default: return false;
+      }
     }
 
     bool EndArray(::rapidjson::SizeType length) {
-      this->layers_.pop_front();
-      return true;
+      if (front().state == node_state::push) {
+        this->pop();
+        return true;
+      }
+      return false;
     }
   };
-    
-  template<typename Reader, GARLIC_REF Layer>
-  static void load(Reader&& reader, Layer&& layer) {
-    
-  }
 
 }
 
