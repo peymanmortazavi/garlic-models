@@ -9,25 +9,6 @@
 #include "test_utility.h"
 
 
-static void BM_LibYamlModuleLoad(benchmark::State& state) {
-  auto doc = get_libyaml_document("data/performance/module.yaml");
-  for (auto _ : state) {
-    garlic::Module<garlic::adapters::libyaml::YamlView> module;
-    module.parse(doc.get_view());
-  }
-}
-//BENCHMARK(BM_LibYamlModuleLoad);
-
-static void BM_LoadRapidJsonModule(benchmark::State& state) {
-  garlic::Module<garlic::adapters::rapidjson::JsonView> module;
-  load_libyaml_module(module, "data/performance/module.yaml");
-  auto doc = get_rapidjson_document("data/performance/test1.json");
-  for (auto _ : state) {
-    module.get_model("Module")->validate(doc.get_view());
-  }
-}
-//BENCHMARK(BM_LoadRapidJsonModule);
-
 static rapidjson::Document& CreateLargeRapidJsonDocument() {
   static rapidjson::Document* d;
   if (!d) {
@@ -151,98 +132,17 @@ static void BM_Sequence_ConstraintResult(benchmark::State& state) {
 
 static void BM_std_string(benchmark::State& state) {
   for (auto _ : state) {
-    std::string x("This is something quite long and we need to overlook this.");
+    auto text = std::string("This is quite fascinating. A very large fucking string because blah blah.");
   }
 }
 
 static void BM_garlic_text(benchmark::State& state) {
   for (auto _ : state) {
-    garlic::text x("This is something quite long and we need to overlook this.", garlic::text_type::copy);
+    auto text = garlic::text::copy("This is quite fascinating. A very large fucking string because blah blah.");
   }
 }
-//BENCHMARK(BM_std_string);
-//BENCHMARK(BM_garlic_text);
-//
-
-template<typename T>
-using test_handler = int (*)(const T&);
-
-template<typename T>
-using quick_test_handler = bool (*)(const T&);
-
-template<typename T>
-struct regex_executioner {
-  static int test_handler(const T&) { return 0; }
-  static bool quick_test_handler(const T&) { return false; }
-};
-
-
-template<typename T, typename... Constraints>
-struct registry {
-
-  struct element {
-    int value;
-  };
-
-  template<typename Tag>
-  constexpr element& get_info() const noexcept {
-    //constexpr element x;
-  }
-
-  constexpr registry() {
-    create_table<0, Constraints...>();
-  }
-
-  template<size_t I = 0, typename... Cs>
-  constexpr void create_table() {
-
-  }
-
-  //template<int Value, typename Tag, typename... Tags>
-  //struct position {
-  //};
-
-  static constexpr unsigned size = sizeof...(Constraints);
-  std::tuple<Constraints...> executioners;
-};
-
-
-static void BM_Modern(benchmark::State& state) {
-  auto r1 = garlic::make_constraint<garlic::regex_tag>("\\d{1,5}", "r1");
-  auto r2 = garlic::make_constraint<garlic::regex_tag>("\\w{1,5}", "r2");
-  garlic::sequence<std::shared_ptr<garlic::FlatConstraint>> seq(2);
-  seq.push_back(r1);
-  seq.push_back(r2);
-  auto constraint = garlic::make_constraint<garlic::any_tag>(std::move(seq));
-  auto& doc = CreateLargeRapidJsonDocument();
-  auto view = garlic::adapters::rapidjson::JsonView(doc);
-  state.counters["valid"] = 0;
-  for (auto _ : state) {
-    for (const auto& v : view.get_list()) {
-      state.counters["valid"] += (constraint->test(v).is_valid() ? 1 : 0);
-    }
-  }
-}
-
-static void BM_Old(benchmark::State& state) {
-  using T = garlic::adapters::rapidjson::JsonView;
-  auto r1 = std::make_shared<garlic::RegexConstraint<T>>("\\d{1,5}", "r1");
-  auto r2 = std::make_shared<garlic::RegexConstraint<T>>("\\w{1,5}", "r2");
-  garlic::sequence<std::shared_ptr<garlic::Constraint<T>>> seq(2);
-  seq.push_back(r1);
-  seq.push_back(r2);
-  auto constraint = std::make_shared<garlic::AnyConstraint<T>>(std::move(seq), garlic::ConstraintProperties::create_default());
-  auto& doc = CreateLargeRapidJsonDocument();
-  auto view = T(doc);
-  state.counters["valid"] = 0;
-  for (auto _ : state) {
-    for (const auto& v : view.get_list()) {
-      state.counters["valid"] += (constraint->test(v).is_valid() ? 1 : 0);
-    }
-  }
-}
-BENCHMARK(BM_Old);
-BENCHMARK(BM_Modern);
+BENCHMARK(BM_garlic_text);
+BENCHMARK(BM_std_string);
 
 //BENCHMARK(BM_LoadRapidJsonDocument_Native);
 //BENCHMARK(BM_LoadRapidJsonDocument_Garlic);
