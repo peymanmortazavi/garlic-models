@@ -6,10 +6,12 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 option(GARLIC_BUILD_PERFORMANCE_TESTS "Build performance tests." ON)
+set(GARLIC_BUILD_PERFORMANCE_TESTS ON)
 
 option(GARLIC_TEST_PROVIDERS "Build tests for the built-in adapters." ON)
 
 option(GARLIC_BUILD_LAB "Build lab tests." ON)
+set(GARLIC_BUILD_LAB ON)
 
 enable_testing()
 
