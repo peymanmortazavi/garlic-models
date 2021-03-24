@@ -11,7 +11,7 @@ get_libyaml_document(const char * name) {
 garlic::adapters::rapidjson::JsonDocument
 get_rapidjson_document(const char* name) {
   auto file = fopen(name, "r");
-  auto doc = garlic::adapters::rapidjson::Json::load(file);
+  auto doc = garlic::adapters::rapidjson::load(file);
   fclose(file);
   return doc;
 }
