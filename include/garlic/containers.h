@@ -133,6 +133,14 @@ namespace garlic {
     inline constexpr SizeType size() const noexcept { return size_; }
     inline constexpr bool empty() const noexcept { return !size_; }
     inline constexpr bool is_view() const noexcept { return type_ == text_type::reference; }
+    
+    inline int compare(const char* value) {
+      return strncmp(value, data_, size_);
+    }
+
+    inline int compare(const basic_text& value) {
+      return strncmp(value.data_, data_, size_);
+    }
 
     constexpr static inline basic_text no_text() noexcept {
       return basic_text("");

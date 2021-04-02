@@ -136,14 +136,9 @@ namespace garlic {
     ConstMemberIterator end_member() const {
       return ConstMemberIterator({data_.object.data + data_.object.length});
     }
-    ConstMemberIterator find_member(const char* key) const {
+    ConstMemberIterator find_member(text key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
-        return strcmp(item.key.get_cstr(), key) == 0;
-      });
-    }
-    ConstMemberIterator find_member(std::string_view key) const {
-      return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
-        return key.compare(item.key.get_cstr()) == 0;
+        return strncmp(item.key.get_cstr(), key.data(), key.size()) == 0;
       });
     }
     ConstMemberIterator find_member(const GenericCloveView& value) const {
@@ -183,18 +178,17 @@ namespace garlic {
         DataType& data, AllocatorType& allocator
     ) : data_(data), allocator_(allocator), ViewType(data) {}
 
+
     void set_string(const char* str) {
       this->prepare_string(strlen(str));
       strcpy(this->data_.string.data, str);
     }
-    void set_string(const std::string& str) {
-      this->prepare_string(str.size());
-      strncpy(this->data_.string.data, str.c_str(), str.size());
+
+    void set_string(text value) {
+      this->prepare_string(value.size());
+      strncpy(this->data_.string.data, value.data(), value.size());
     }
-    void set_string(std::string_view str) {
-      this->prepare_string(str.size());
-      strncpy(this->data_.string.data, str.data(), str.size());
-    }
+
     void set_double(double value) {
       this->clean();
       this->data_.type = TypeFlag::Double;
@@ -238,13 +232,7 @@ namespace garlic {
     GenericCloveRef& operator = (double value) { this->set_double(value); return *this; }
     GenericCloveRef& operator = (int value) { this->set_int(value); return *this; }
     GenericCloveRef& operator = (bool value) { this->set_bool(value); return *this; }
-    GenericCloveRef& operator = (const std::string& value) {
-      this->set_string(value); return *this;
-    }
-    GenericCloveRef& operator = (const std::string_view& value) {
-      this->set_string(value); return *this;
-    }
-    GenericCloveRef& operator = (const char* value) { this->set_string(value); return *this; }
+    GenericCloveRef& operator = (text value) { this->set_string(value); return *this; }
 
     ValueIterator begin_list() {
       return ValueIterator({data_.list.data, &allocator_});
@@ -281,18 +269,13 @@ namespace garlic {
       this->check_list();
       this->data_.list.data[this->data_.list.length++] = std::move(value);
     }
-    void push_back() { this->push_back(DataType{}); }
-    void push_back(const std::string& value) {
-      DataType data;
-      GenericCloveRef(data, allocator_).set_string(value);
-      this->push_back(std::move(data));
-    }
-    void push_back(const std::string_view& value) {
-      DataType data;
-      GenericCloveRef(data, allocator_).set_string(value);
-      this->push_back(std::move(data));
+    void push_back() {
+      this->push_back(DataType{});
     }
     void push_back(const char* value) {
+      this->push_back(text (value));
+    }
+    void push_back(text value) {
       DataType data;
       GenericCloveRef(data, allocator_).set_string(value);
       this->push_back(std::move(data));
@@ -329,19 +312,14 @@ namespace garlic {
     void erase(const ValueIterator& position) { this->erase(position, std::next(position)); }
 
     // member functions
-    MemberIterator find_member(const char* key) {
-      return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
-        return strcmp(item.key.get_cstr(), key) == 0;
-      });
-    }
-    MemberIterator find_member(std::string_view key) {
+    MemberIterator find_member(text key) {
       return std::find_if(this->begin_member(), this->end_member(), [&key](auto item) {
         return key.compare(item.key.get_cstr()) == 0;
       });
     }
 
     template<typename Callable>
-    void add_member_builder(const char* key, Callable&& cb) {
+    void add_member_builder(text key, Callable&& cb) {
       DataType value;
       cb(GenericCloveRef(value, allocator_));
       this->add_member(key, std::move(value));
@@ -352,30 +330,33 @@ namespace garlic {
       this->data_.object.data[this->data_.object.length] = MemberPair<DataType>{std::move(key), std::move(value)};
       this->data_.object.length++;
     }
-    void add_member(const char* key, DataType&& value) {
+    void add_member(text key, DataType&& value) {
       DataType data; GenericCloveRef(data, allocator_).set_string(key);
       this->add_member(std::move(data), std::move(value));
     }
-    void add_member(const char* key) {
+    void add_member(text key) {
       this->add_member(key, DataType{});
     }
-    void add_member(const char* key, const char* value) {
+    void add_member(text key, const char* value) {
+      this->add_member(key, text(value));
+    }
+    void add_member(text key, text value) {
       DataType data; GenericCloveRef(data, allocator_).set_string(value);
       this->add_member(key, std::move(data));
     }
-    void add_member(const char* key, bool value) {
+    void add_member(text key, bool value) {
       DataType data; GenericCloveRef(data, allocator_).set_bool(value);
       this->add_member(key, std::move(data));
     }
-    void add_member(const char* key, double value) {
+    void add_member(text key, double value) {
       DataType data; GenericCloveRef(data, allocator_).set_double(value);
       this->add_member(key, std::move(data));
     }
-    void add_member(const char* key, int value) {
+    void add_member(text key, int value) {
       DataType data; GenericCloveRef(data, allocator_).set_int(value);
       this->add_member(key, std::move(data));
     }
-    void remove_member(const char* key) {
+    void remove_member(text key) {
       auto it = this->find_member(key);
       if (it != this->end_member()) this->erase_member(it);
     }
@@ -430,6 +411,7 @@ namespace garlic {
       this->data_.string.length = length;
       this->data_.string.data = reinterpret_cast<char*>(
           allocator_.allocate(sizeof(char) * (length + 1)));
+      this->data_.string.data[length] = '\0';  // make it null terminated.
     }
 
     void clean() {

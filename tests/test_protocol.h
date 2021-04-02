@@ -123,6 +123,7 @@ void test_full_list_value(LayerType& value) {
   
   test_readonly_list_range(value);
   auto it = value.begin_list();
+  ASSERT_TRUE((*it).is_string());
   ASSERT_STREQ((*it).get_cstr(), "string");
   it++;
   ASSERT_EQ((*it).get_int(), 25);

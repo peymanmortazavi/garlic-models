@@ -107,10 +107,7 @@ namespace garlic::adapters::rapidjson {
     ConstMemberIterator end_member() const {
       return ConstMemberIterator({value_.MemberEnd()});
     }
-    ConstMemberIterator find_member(const char* key) const {
-      return ConstMemberIterator({value_.FindMember(key)});
-    }
-    ConstMemberIterator find_member(std::string_view key) const {
+    ConstMemberIterator find_member(text key) const {
       return std::find_if(this->begin_member(), this->end_member(),
           [&key](const auto& item) {
             return key.compare(item.key.get_cstr()) == 0;
@@ -205,14 +202,8 @@ namespace garlic::adapters::rapidjson {
       JsonWrapper(enable_for_value_type<Target, DocumentType&> doc)
         : JsonView(value_), allocator_(doc.get_allocator()) {}
 
-      void set_string(const char* value) {
-        value_.SetString(value, allocator_);
-      }
-      void set_string(const std::string& value) {
-        value_.SetString(value.data(), value.length(), allocator_);
-      }
-      void set_string(std::string_view value) {
-        value_.SetString(value.data(), value.length(), allocator_);
+      void set_string(text value) {
+        value_.SetString(value.data(), value.size(), allocator_);
       }
       void set_int(int value) { value_.SetInt(value); }
       void set_double(double value) { value_.SetDouble(value); }
@@ -223,9 +214,7 @@ namespace garlic::adapters::rapidjson {
 
       JsonWrapper& operator = (double value) { this->set_double(value); return *this; }
       JsonWrapper& operator = (int value) { this->set_int(value); return *this; }
-      JsonWrapper& operator = (const char* value) { this->set_string(value); return *this; }
-      JsonWrapper& operator = (const std::string& value) { this->set_string(value); return *this; }
-      JsonWrapper& operator = (std::string_view value) { this->set_string(value); return *this; }
+      JsonWrapper& operator = (text value) { this->set_string(value); return *this; }
       JsonWrapper& operator = (bool value) { this->set_bool(value); return *this; }
 
       bool operator == (const ViewType& view) const {
@@ -273,13 +262,10 @@ namespace garlic::adapters::rapidjson {
         value_.PushBack(value, allocator_);
       }
       void push_back(const char* value) {
-        push_back(ProviderValueType().SetString(value, allocator_));
+        this->push_back(text(value));
       }
-      void push_back(const std::string& value) {
-        push_back(ProviderValueType().SetString(value.data(), value.length(), allocator_));
-      }
-      void push_back(std::string_view value) {
-        push_back(ProviderValueType().SetString(value.data(), value.length(), allocator_));
+      void push_back(text value) {
+        push_back(ProviderValueType().SetString(value.data(), value.size(), allocator_));
       }
       void push_back(int value) { push_back(ProviderValueType(value)); }
       void push_back(double value) { push_back(ProviderValueType(value)); }
@@ -295,10 +281,7 @@ namespace garlic::adapters::rapidjson {
       }
 
       // member functions.
-      MemberIterator find_member(const char* key) {
-        return MemberIterator({value_.FindMember(key), &allocator_});
-      }
-      MemberIterator find_member(std::string_view key) {
+      MemberIterator find_member(text key) {
         return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
             return key.compare(item.key.get_cstr()) == 0;
             });
@@ -315,16 +298,16 @@ namespace garlic::adapters::rapidjson {
         value_.AddMember(key, value, allocator_);
       }
 
-      void add_member(const char* key, ProviderValueType&& value) {
+      void add_member(text key, ProviderValueType&& value) {
         value_.AddMember(
-            ProviderValueType().SetString(key, allocator_),
+            ProviderValueType().SetString(key.data(), key.size(), allocator_),
             value,
             allocator_);
       }
 
-      void add_member(const char* key, ProviderValueType& value) {
+      void add_member(text key, ProviderValueType& value) {
         value_.AddMember(
-            ProviderValueType().SetString(key, allocator_),
+            ProviderValueType().SetString(key.data(), key.size(), allocator_),
             value,
             allocator_);
       }
@@ -343,7 +326,7 @@ namespace garlic::adapters::rapidjson {
             );
       }
 
-      void add_member(const char* key, ValueType& value) {
+      void add_member(text key, ValueType& value) {
         add_member(key, value.get_inner_value());
       }
 
@@ -352,41 +335,36 @@ namespace garlic::adapters::rapidjson {
       }
 
       template<typename Callable>
-      void add_member_builder(const char* key, Callable&& cb) {
+      void add_member_builder(text key, Callable&& cb) {
         ProviderValueType value;
         cb(ReferenceType(value, allocator_));
         add_member(key, value);
       }
-      void add_member(const char* key) {
-        add_member(ProviderValueType().SetString(key, allocator_));
+      void add_member(text key) {
+        add_member(ProviderValueType().SetString(key.data(), key.size(), allocator_));
       }
-      void add_member(const char* key, const JsonWrapper& value) {
+      void add_member(text key, const JsonWrapper& value) {
         add_member(key, value.get_inner_value());
       }
-      void add_member(const char* key, const char* value) {
+      void add_member(text key, const char* value) {
         add_member(key, ProviderValueType().SetString(value, allocator_));
       }
-      void add_member(const char* key, const std::string& value) {
+      void add_member(text key, text value) {
         add_member(
             key,
-            ProviderValueType().SetString(value.data(), value.length(), allocator_));
+            ProviderValueType().SetString(value.data(), value.size(), allocator_));
       }
-      void add_member(const char* key, std::string_view value) {
-        add_member(
-            key,
-            ProviderValueType().SetString(value.data(), value.length(), allocator_));
-      }
-      void add_member(const char* key, double value) {
+      void add_member(text key, double value) {
         add_member(key, ProviderValueType(value));
       }
-      void add_member(const char* key, int value) {
+      void add_member(text key, int value) {
         add_member(key, ProviderValueType(value));
       }
-      void add_member(const char* key, bool value) {
+      void add_member(text key, bool value) {
         add_member(key, ProviderValueType(value));
       }
 
-      void remove_member(const char* key) { value_.RemoveMember(key); }
+      void remove_member(text key) { value_.RemoveMember(key.data()); }
       void remove_member(const JsonView& key) { value_.RemoveMember(key.get_inner_value()); }
       void erase_member(MemberIterator position) {
         value_.EraseMember(position.get_inner_iterator());
