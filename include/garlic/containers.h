@@ -24,6 +24,34 @@ namespace garlic {
     copy,
   };
 
+  template<typename Ch, typename SizeType = unsigned>
+  class basic_string_ref {
+  private:
+    const Ch* data_;
+    SizeType size_;
+
+  public:
+    explicit constexpr basic_string_ref(const Ch* data) : data_(data) {
+      size_ = strlen(data);
+    }
+
+    explicit constexpr basic_string_ref(const Ch* data, SizeType size) : data_(data), size_(size) {}
+
+    explicit constexpr basic_string_ref(
+        const std::basic_string_view<Ch>& data) : data_(data.data()), size_(data.size()) {}
+
+    explicit basic_string_ref(
+        const std::basic_string<Ch>& data) : data_(data.data()), size_(data.size()) {}
+
+    explicit constexpr basic_string_ref(const basic_string_ref&) = default;
+    explicit constexpr basic_string_ref(basic_string_ref&&) = default;
+
+    constexpr const Ch* data() const { return data_; }
+    constexpr SizeType size() const { return size_; }
+  };
+
+  using string_ref = basic_string_ref<char>;
+
   //! A container for storing small strings that can either act as a view or as an owner.
   /*!
    * \code
@@ -64,6 +92,10 @@ namespace garlic {
 
     constexpr basic_text(
         const std::basic_string_view<Ch>& value,
+        text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
+
+    constexpr basic_text(
+        const basic_string_ref<Ch>& value,
         text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
 
     constexpr basic_text(

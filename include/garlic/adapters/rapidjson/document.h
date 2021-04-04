@@ -205,6 +205,9 @@ namespace garlic::adapters::rapidjson {
       void set_string(text value) {
         value_.SetString(value.data(), value.size(), allocator_);
       }
+      void set_string(string_ref value) {
+        value_.SetString(::rapidjson::StringRef(value.data(), value.size()));
+      }
       void set_int(int value) { value_.SetInt(value); }
       void set_double(double value) { value_.SetDouble(value); }
       void set_bool(bool value) { value_.SetBool(value); }
@@ -266,6 +269,9 @@ namespace garlic::adapters::rapidjson {
       }
       void push_back(text value) {
         push_back(ProviderValueType().SetString(value.data(), value.size(), allocator_));
+      }
+      void push_back(string_ref value) {
+        push_back(ProviderValueType().SetString(::rapidjson::StringRef(value.data(), value.size())));
       }
       void push_back(int value) { push_back(ProviderValueType(value)); }
       void push_back(double value) { push_back(ProviderValueType(value)); }

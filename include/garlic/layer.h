@@ -205,7 +205,6 @@ namespace garlic {
     { t.begin_member() } -> forward_pair_iterator;
     { t.end_member() } -> forward_pair_iterator;
     { t.find_member(std::declval<text>()) } -> forward_pair_iterator;
-    //{ t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
     { t.get_view() };
@@ -230,7 +229,6 @@ namespace garlic {
     { t.begin_member() } -> forward_pair_iterator;
     { t.end_member() } -> forward_pair_iterator;
     { t.find_member(std::declval<text>()) } -> forward_pair_iterator;
-    //{ t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
     /* TODO:  <29-01-21, Peyman> Add a constraint to support pushing T. */
