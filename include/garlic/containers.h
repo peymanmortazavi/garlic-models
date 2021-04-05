@@ -43,8 +43,8 @@ namespace garlic {
     explicit basic_string_ref(
         const std::basic_string<Ch>& data) : data_(data.data()), size_(data.size()) {}
 
-    explicit constexpr basic_string_ref(const basic_string_ref&) = default;
-    explicit constexpr basic_string_ref(basic_string_ref&&) = default;
+    explicit constexpr basic_string_ref(const basic_string_ref& value) : data_(value.data_), size_(value.size_) {};
+    explicit constexpr basic_string_ref(basic_string_ref&& value) : data_(value.data_), size_(value.size_) {};
 
     constexpr const Ch* data() const { return data_; }
     constexpr SizeType size() const { return size_; }

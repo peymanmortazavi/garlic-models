@@ -300,74 +300,100 @@ namespace garlic::adapters::rapidjson {
         value_.AddMember(key, value, allocator_);
       }
 
+      void add_member(ProviderValueType&& key, ProviderValueType& value) {
+        value_.AddMember(key, value, allocator_);
+      }
+
+      void add_member(ProviderValueType& key, ProviderValueType&& value) {
+        value_.AddMember(key, value, allocator_);
+      }
+
       void add_member(ProviderValueType& key, ProviderValueType& value) {
         value_.AddMember(key, value, allocator_);
       }
 
-      void add_member(text key, ProviderValueType&& value) {
-        value_.AddMember(
-            ProviderValueType().SetString(key.data(), key.size(), allocator_),
-            value,
-            allocator_);
+      template<typename Key>
+      void add_member(Key key, ProviderValueType&& value) {
+        value_.AddMember(this->build_key(key), value, allocator_);
       }
 
-      void add_member(text key, ProviderValueType& value) {
-        value_.AddMember(
-            ProviderValueType().SetString(key.data(), key.size(), allocator_),
-            value,
-            allocator_);
+      template<typename Key>
+      void add_member(Key key, ProviderValueType& value) {
+        value_.AddMember(this->build_key(key), value, allocator_);
       }
 
       void add_member(JsonView key, JsonView value) {
-        add_member(
+        this->add_member(
             ProviderValueType(key.get_inner_value(), allocator_),
             ProviderValueType(value.get_inner_value(), allocator_)
             );
       }
 
       void add_member(JsonView key) {
-        add_member(
+        this->add_member(
             ProviderValueType(key.get_inner_value(), allocator_),
             ProviderValueType()
             );
       }
 
-      void add_member(text key, ValueType& value) {
-        add_member(key, value.get_inner_value());
+      template<typename Key>
+      void add_member(Key key, ValueType& value) {
+        this->add_member(this->build_key(key), value.get_inner_value());
       }
 
       void add_member(ValueType& key, ValueType& value) {
-        add_member(key.get_inner_value(), value.get_inner_value());
+        this->add_member(key.get_inner_value(), value.get_inner_value());
       }
 
-      template<typename Callable>
-      void add_member_builder(text key, Callable&& cb) {
+      template<typename Key, typename Callable>
+      void add_member_builder(Key key, Callable&& cb) {
         ProviderValueType value;
         cb(ReferenceType(value, allocator_));
-        add_member(key, value);
+        this->add_member(this->build_key(key), value);
       }
-      void add_member(text key) {
-        add_member(ProviderValueType().SetString(key.data(), key.size(), allocator_));
+
+      template<typename Key>
+      void add_member(Key key) {
+        this->add_member(this->build_key(key));
       }
-      void add_member(text key, const JsonWrapper& value) {
-        add_member(key, value.get_inner_value());
+
+      template<typename Key>
+      void add_member(Key key, const JsonWrapper& value) {
+        this->add_member(this->build_key(key), value.get_inner_value());
       }
-      void add_member(text key, const char* value) {
-        add_member(key, ProviderValueType().SetString(value, allocator_));
+
+      template<typename Key>
+      void add_member(Key key, const char* value) {
+        this->add_member(this->build_key(key), ProviderValueType().SetString(value, allocator_));
       }
-      void add_member(text key, text value) {
-        add_member(
-            key,
+
+      template<typename Key>
+      void add_member(Key key, text value) {
+        this->add_member(
+            this->build_key(key),
             ProviderValueType().SetString(value.data(), value.size(), allocator_));
       }
-      void add_member(text key, double value) {
-        add_member(key, ProviderValueType(value));
+
+      template<typename Key>
+      void add_member(Key key, string_ref value) {
+        this->add_member(
+            this->build_key(key),
+            ProviderValueType().SetString(::rapidjson::StringRef(value.data(), value.size())));
       }
-      void add_member(text key, int value) {
-        add_member(key, ProviderValueType(value));
+
+      template<typename Key>
+      void add_member(Key key, double value) {
+        add_member(this->build_key(key), ProviderValueType(value));
       }
-      void add_member(text key, bool value) {
-        add_member(key, ProviderValueType(value));
+
+      template<typename Key>
+      void add_member(Key key, int value) {
+        add_member(this->build_key(key), ProviderValueType(value));
+      }
+
+      template<typename Key>
+      void add_member(Key key, bool value) {
+        add_member(this->build_key(key), ProviderValueType(value));
       }
 
       void remove_member(text key) { value_.RemoveMember(key.data()); }
@@ -389,6 +415,18 @@ namespace garlic::adapters::rapidjson {
     private:
       T value_;
       AllocatorType& allocator_;
+
+      inline ProviderValueType build_key(text key) const noexcept {
+        auto value = ProviderValueType();
+        value.SetString(key.data(), key.size(), allocator_);
+        return value;
+      }
+
+      inline ProviderValueType build_key(const string_ref& key) const noexcept {
+        auto value = ProviderValueType();
+        value.SetString(::rapidjson::StringRef(key.data(), key.size()));
+        return value;
+      }
     };
 
   }
