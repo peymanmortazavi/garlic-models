@@ -24,7 +24,35 @@ namespace garlic {
     copy,
   };
 
-  //! A container for storing small strings that can manage both act as a view and as an owner.
+  template<typename Ch, typename SizeType = unsigned>
+  class basic_string_ref {
+  private:
+    const Ch* data_;
+    SizeType size_;
+
+  public:
+    explicit constexpr basic_string_ref(const Ch* data) : data_(data) {
+      size_ = strlen(data);
+    }
+
+    explicit constexpr basic_string_ref(const Ch* data, SizeType size) : data_(data), size_(size) {}
+
+    explicit constexpr basic_string_ref(
+        const std::basic_string_view<Ch>& data) : data_(data.data()), size_(data.size()) {}
+
+    explicit basic_string_ref(
+        const std::basic_string<Ch>& data) : data_(data.data()), size_(data.size()) {}
+
+    constexpr basic_string_ref(const basic_string_ref& value) : data_(value.data_), size_(value.size_) {};
+    constexpr basic_string_ref(basic_string_ref&& value) : data_(value.data_), size_(value.size_) {};
+
+    constexpr const Ch* data() const { return data_; }
+    constexpr SizeType size() const { return size_; }
+  };
+
+  using string_ref = basic_string_ref<char>;
+
+  //! A container for storing small strings that can either act as a view or as an owner.
   /*!
    * \code
    * text view = "Some Text";  // only a view.
@@ -67,6 +95,10 @@ namespace garlic {
         text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
 
     constexpr basic_text(
+        const basic_string_ref<Ch>& value,
+        text_type type = text_type::reference) : basic_text(value.data(), value.size(), type) {}
+
+    constexpr basic_text(
         const basic_text& other
         ) : data_(other.data_), size_(other.size_), type_(text_type::reference) {};
 
@@ -105,6 +137,9 @@ namespace garlic {
     inline basic_text view() const noexcept {
       return basic_text(data_, size_, text_type::reference);
     }
+    inline basic_string_ref<Ch> string_ref() const noexcept {
+      return basic_string_ref<Ch>(data_, size_);
+    }
 
     constexpr ~basic_text() { destroy(); }
 
@@ -133,6 +168,14 @@ namespace garlic {
     inline constexpr SizeType size() const noexcept { return size_; }
     inline constexpr bool empty() const noexcept { return !size_; }
     inline constexpr bool is_view() const noexcept { return type_ == text_type::reference; }
+    
+    inline int compare(const char* value) {
+      return strncmp(value, data_, size_);
+    }
+
+    inline int compare(const basic_text& value) {
+      return strncmp(value.data_, data_, size_);
+    }
 
     constexpr static inline basic_text no_text() noexcept {
       return basic_text("");

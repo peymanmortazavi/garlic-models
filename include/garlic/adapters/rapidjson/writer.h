@@ -6,7 +6,7 @@
 #include "rapidjson/writer.h"
 
 namespace garlic::adapters::rapidjson {
-    
+
   //! Use a rapidjson writer to dump a readable layer.
   //! \tparam Writer a rapidjson Writer
   //! \tparam Layer any readable layer conforming to garlic::ViewLayer
@@ -14,18 +14,18 @@ namespace garlic::adapters::rapidjson {
   //! \param layer the layer to dump.
   template<typename Writer, GARLIC_VIEW Layer>
   static void
-  dump(Writer&& writer, Layer&& layer) {
+  write(Writer&& writer, Layer&& layer) {
     if (layer.is_object()) {
       writer.StartObject();
       for (const auto& pair : layer.get_object()) {
         writer.Key(pair.key.get_cstr());
-        dump(writer, pair.value);
+        write(writer, pair.value);
       }
       writer.EndObject();
     } else if (layer.is_list()) {
       writer.StartArray();
       for (const auto& item : layer.get_list()) {
-        dump(writer, item);
+        write(writer, item);
       }
       writer.EndArray();
     } else if (layer.is_bool()) {

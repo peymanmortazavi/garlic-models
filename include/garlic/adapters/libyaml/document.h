@@ -110,12 +110,7 @@ namespace garlic::adapters::libyaml {
 
     ConstMemberIterator begin_member() const { return ConstMemberIterator({node_->data.mapping.pairs.start, doc_}); }
     ConstMemberIterator end_member() const { return ConstMemberIterator({node_->data.mapping.pairs.top, doc_}); }
-    ConstMemberIterator find_member(const char* key) const {
-      return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
-        return strcmp(key, item.key.get_cstr()) == 0;
-      });
-    }
-    ConstMemberIterator find_member(std::string_view key) const {
+    ConstMemberIterator find_member(text key) const {
       return std::find_if(this->begin_member(), this->end_member(), [&key](const auto& item) {
         return key.compare(item.key.get_cstr()) == 0;
       });

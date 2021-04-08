@@ -7,6 +7,7 @@
  */
 
 #include "garlic.h"
+#include "containers.h"
 
 #ifdef GARLIC_USE_CONCEPTS
 #define GARLIC_VIEW garlic::ViewLayer
@@ -203,8 +204,7 @@ namespace garlic {
 
     { t.begin_member() } -> forward_pair_iterator;
     { t.end_member() } -> forward_pair_iterator;
-    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<text>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
     { t.get_view() };
@@ -214,9 +214,7 @@ namespace garlic {
     typename ValueIteratorOf<T>;
     typename MemberIteratorOf<T>;
 
-    { t.set_string(std::declval<const char*>()) };
-    { t.set_string(std::declval<std::string>()) };
-    { t.set_string(std::declval<std::string_view>()) };
+    { t.set_string(std::declval<text>()) };
     { t.set_bool(std::declval<bool>()) };
     { t.set_int(std::declval<int>()) };
     { t.set_double(std::declval<double>()) };
@@ -230,14 +228,14 @@ namespace garlic {
 
     { t.begin_member() } -> forward_pair_iterator;
     { t.end_member() } -> forward_pair_iterator;
-    { t.find_member(std::declval<const char*>()) } -> forward_pair_iterator;
-    { t.find_member(std::declval<std::string_view>()) } -> forward_pair_iterator;
+    { t.find_member(std::declval<text>()) } -> forward_pair_iterator;
     { t.get_object() } -> std::ranges::range;
 
     /* TODO:  <29-01-21, Peyman> Add a constraint to support pushing T. */
     { t.clear() };
     { t.push_back() };
     { t.push_back(std::declval<const char*>()) };
+    { t.push_back(std::declval<text>()) };
     { t.push_back(std::declval<bool>()) };
     { t.push_back(std::declval<int>()) };
     { t.push_back(std::declval<double>()) };
@@ -246,13 +244,14 @@ namespace garlic {
     { t.erase(std::declval<ValueIteratorOf<T>>()) };
     { t.erase(std::declval<ValueIteratorOf<T>>(), std::declval<ValueIteratorOf<T>>()) };
 
-    { t.add_member(std::declval<const char*>()) };
-    { t.add_member(std::declval<const char*>(), std::declval<const char*>()) };
-    { t.add_member(std::declval<const char*>(), std::declval<bool>()) };
-    { t.add_member(std::declval<const char*>(), std::declval<int>()) };
-    { t.add_member(std::declval<const char*>(), std::declval<double>()) };
-    { t.add_member_builder(std::declval<const char*>(), std::declval<void(*)(T)>()) };
-    { t.remove_member(std::declval<const char*>()) };
+    { t.add_member(std::declval<text>()) };
+    { t.add_member(std::declval<text>(), std::declval<const char*>()) };
+    { t.add_member(std::declval<text>(), std::declval<text>()) };
+    { t.add_member(std::declval<text>(), std::declval<bool>()) };
+    { t.add_member(std::declval<text>(), std::declval<int>()) };
+    { t.add_member(std::declval<text>(), std::declval<double>()) };
+    { t.add_member_builder(std::declval<text>(), std::declval<void(*)(T)>()) };
+    { t.remove_member(std::declval<text>()) };
     { t.erase_member(std::declval<MemberIteratorOf<T>>()) };
 
     { t.get_reference() };
