@@ -1,3 +1,5 @@
+#include "garlic/adapters/rapidjson/reader.h"
+#include "rapidjson/filereadstream.h"
 #include <benchmark/benchmark.h>
 #include <rapidjson/document.h>
 #include <garlic/garlic.h>
@@ -65,5 +67,33 @@ static void BM_CreateJsonDocument_Garlic(benchmark::State& state) {
 
 BENCHMARK(BM_CreateJsonDocument_Garlic);
 BENCHMARK(BM_CreateJsonDocument_Native);
+
+
+static void BM_ReadDocument(benchmark::State& state) {
+  for (auto _ : state) {
+    auto file = fopen("data/test.json", "r");
+    rapidjson::Document doc;
+    char buffer[256];
+    auto input_stream = rapidjson::FileReadStream(file, buffer, sizeof(buffer));
+    doc.ParseStream(input_stream);
+    fclose(file);
+  }
+}
+
+static void BM_ReadLayer(benchmark::State& state) {
+  for (auto _ : state) {
+    auto file = fopen("data/test.json", "r");
+    rapidjson::Reader reader;
+    rapidjson::Document doc;
+    char buffer[256];
+    auto input_stream = rapidjson::FileReadStream(file, buffer, sizeof(buffer));
+    auto handler = make_handler(JsonRef(doc));
+    reader.Parse(input_stream, handler);
+    fclose(file);
+  }
+}
+
+BENCHMARK(BM_ReadDocument);
+BENCHMARK(BM_ReadLayer);
 
 BENCHMARK_MAIN();

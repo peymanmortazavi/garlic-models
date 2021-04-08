@@ -7,6 +7,7 @@
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/prettywriter.h"
+#include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
 
 
@@ -58,6 +59,17 @@ namespace garlic::adapters::rapidjson {
     }
   };
 
+  template<typename, typename = void>
+  struct is_rapidjson_wrapper : std::false_type {};
+
+  template<typename T>
+  struct is_rapidjson_wrapper<T, std::void_t<typename std::decay_t<T>::RapidJsonWrapperTraits>> : std::true_type {};
+
+  template<bool View>
+  struct WrapperTraits {
+    static constexpr bool view = View;
+  };
+
   class JsonView {
   public:
     using ProviderValueType = ::rapidjson::Value;
@@ -67,6 +79,7 @@ namespace garlic::adapters::rapidjson {
       JsonView, typename ::rapidjson::Value::ConstValueIterator>;
     using ConstMemberIterator = RandomAccessIterator<
       ConstMemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>>;
+    using RapidJsonWrapperTraits = WrapperTraits<true>;
 
     JsonView (const ProviderValueType& value) : value_(value) {}
 
@@ -147,6 +160,7 @@ namespace garlic::adapters::rapidjson {
         ValueIteratorWrapper<ReferenceType, ProviderValueIterator, AllocatorType>>;
       using MemberIterator = RandomAccessIterator<
         MemberIteratorWrapper<ReferenceType, ProviderMemberIterator, AllocatorType>>;
+      using RapidJsonWrapperTraits = WrapperTraits<false>;
 
       using JsonView::begin_list;
       using JsonView::end_list;
@@ -412,6 +426,13 @@ namespace garlic::adapters::rapidjson {
       }
       AllocatorType& get_allocator() { return allocator_; }
 
+      template<typename InputStream>
+      ::rapidjson::ParseResult parse(InputStream& stream) {
+        auto handler = make_handler(*this);
+        ::rapidjson::Reader reader;
+        return reader.Parse(stream, handler);
+      }
+
     private:
       T value_;
       AllocatorType& allocator_;
@@ -428,6 +449,61 @@ namespace garlic::adapters::rapidjson {
         return value;
       }
     };
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<is_rapidjson_wrapper<Layer>::value, ::rapidjson::StringBuffer>
+    dump(Layer&& source, bool pretty = false) {
+      ::rapidjson::StringBuffer buffer;
+      if (pretty) {
+        auto writer = ::rapidjson::PrettyWriter<::rapidjson::StringBuffer>(buffer);
+        source.get_inner_value().Accept(writer);
+      } else {
+        auto writer = ::rapidjson::Writer<::rapidjson::StringBuffer>(buffer);
+        source.get_inner_value().Accept(writer);
+      }
+      return buffer;
+    }
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<!is_rapidjson_wrapper<Layer>::value, ::rapidjson::StringBuffer>
+    dump(Layer&& source, bool pretty = false) {
+      ::rapidjson::StringBuffer buffer;
+      if (pretty) {
+        auto writer = ::rapidjson::PrettyWriter<::rapidjson::StringBuffer>(buffer);
+        dump(writer, source);
+      } else {
+        auto writer = ::rapidjson::Writer<::rapidjson::StringBuffer>(buffer);
+        dump(writer, source);
+      }
+      return buffer;
+    }
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<is_rapidjson_wrapper<Layer>::value>
+    dump(FILE * file, Layer&& source, char* write_buffer, size_t length, bool pretty = false) {
+      ::rapidjson::FileWriteStream os(file, write_buffer, length);
+      if (pretty) {
+        auto writer = ::rapidjson::PrettyWriter<::rapidjson::FileWriteStream>(os);
+        source.get_inner_value().Accept(writer);
+      } else {
+        auto writer = ::rapidjson::Writer<::rapidjson::FileWriteStream>(os);
+        source.get_inner_value().Accept(writer);
+      }
+    }
+
+    template<GARLIC_VIEW Layer>
+    static inline std::enable_if_t<!is_rapidjson_wrapper<Layer>::value>
+    dump(FILE * file, Layer&& source, char* write_buffer, size_t length, bool pretty = false) {
+      ::rapidjson::FileWriteStream os(file, write_buffer, length);
+      if (pretty) {
+        auto writer = ::rapidjson::PrettyWriter<::rapidjson::FileWriteStream>(os);
+        dump(writer, source);
+      } else {
+        auto writer = ::rapidjson::Writer<::rapidjson::FileWriteStream>(os);
+        dump(writer, source);
+      }
+    }
+
 
   }
 
@@ -463,40 +539,36 @@ namespace garlic::adapters::rapidjson {
     return load(file, read_buffer, sizeof(read_buffer));
   }
 
-  //! Dump a rapidjson Json wrapper instance to a file.
-  //! \param file an open and writable file.
-  //! \param source the source rapidjson layer to dump.
-  //! \param write_buffer the write buffer to use.
-  //! \param length the length of the write buffer.
-  //! \param pretty whether or not to use pretty format.
-  //! \tparam JsonType either JsonValue, JsonView, JsonReference or JsonDocument.
-  template<typename JsonType>
-  static inline void dump(FILE * file, JsonType&& source, char* write_buffer, size_t length, bool pretty = false) {
-    ::rapidjson::FileWriteStream os(file, write_buffer, length);
-    if (pretty) {
-      source.get_inner_value().Accept(
-          ::rapidjson::PrettyWriter<::rapidjson::FileWriteStream>(os));
-    } else {
-      source.get_inner_value().Accept(
-          ::rapidjson::Writer<::rapidjson::FileWriteStream>(os));
-    }
+  //! Write JSON string representing the given layer to the given file.
+  //! \tparam Layer any type conforming to garlic::ViewLayer concept.
+  //! \param file the file to write to. It must be open and writable.
+  //! \param source the readable layer to dump its content.
+  //! \param buffer custom string buffer to use.
+  //! \param length size of the custom string buffer.
+  //! \param pretty if enabled, would output more readable JSON string.
+  template<GARLIC_VIEW Layer>
+  static inline void dump(FILE* file, Layer&& source, char* buffer, size_t length, bool pretty = false) {
+    internal::dump(file, source, buffer, length, pretty);
   }
 
-  //! Dump a rapidjson Json wrapper instance to a string.
-  //! \param source the source rapidjson layer to dump.
-  //! \param pretty whether or not to use pretty format.
-  //! \return a string representing a valid JSON format.
-  template<typename JsonType>
-  static inline const char* dump(JsonType&& source, bool pretty = false) {
-    ::rapidjson::StringBuffer buffer;
-    if (pretty) {
-      auto handler = ::rapidjson::PrettyWriter<::rapidjson::StringBuffer>(buffer);
-      source.get_inner_value().Accept(handler);
-    } else {
-      auto handler = ::rapidjson::Writer<::rapidjson::StringBuffer>(buffer);
-      source.get_inner_value().Accept(handler);
-    }
-    return buffer.GetString();
+  //! Write JSON string representing the given layer to the given file.
+  //! \tparam Layer any type conforming to garlic::ViewLayer concept.
+  //! \tparam BufferSize optional buffer size.
+  //! \param file the file to write to. It must be open and writable.
+  //! \param source the readable layer to dump its content.
+  //! \param pretty if enabled, would output more readable JSON string.
+  template<GARLIC_VIEW Layer, unsigned BufferSize = 65536>
+  static inline void dump(FILE* file, Layer&& source, bool pretty = false) {
+    char buffer[BufferSize];
+    internal::dump(file, source, buffer, sizeof(buffer), pretty);
+  }
+
+  //! Get a JSON string representing the given layer.
+  //! \tparam Layer any type conforming to garlic::ViewLayer concept.
+  template<GARLIC_VIEW Layer>
+  static inline ::rapidjson::StringBuffer
+  dump(Layer&& layer, bool pretty = false) {
+    return internal::dump(layer, pretty);
   }
 
 }

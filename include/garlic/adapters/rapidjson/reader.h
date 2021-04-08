@@ -10,7 +10,7 @@
 namespace garlic::adapters::rapidjson {
 
   //! RapidJSON read handler type that would populate a layer.
-  //! \tparam Layer Any type conforming to garlic::RefLayer concept.
+  //! \tparam Layer Any type conforming to garlic::RefLayer concept that is to be populated.
   template<GARLIC_REF Layer>
   class LayerHandler {
     using Ch = char;
@@ -144,16 +144,28 @@ namespace garlic::adapters::rapidjson {
       auto& item = nodes_.front();
       switch (item.state) {
         case node_state::set: {
-          item.layer.set_double(static_cast<double>(value));
+          if (value < INT32_MAX) {
+            item.layer.set_int(static_cast<int>(value));
+          } else {
+            item.layer.set_double(static_cast<double>(value));
+          }
           nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          item.layer.push_back(static_cast<double>(value));
+          if (value < INT32_MAX) {
+            item.layer.push_back(static_cast<int>(value));
+          } else {
+            item.layer.push_back(static_cast<double>(value));
+          }
           return true;
         }
         case node_state::value: {
-          this->add_member(static_cast<double>(value));
+          if (value < INT32_MAX) {
+            this->add_member(static_cast<int>(value));
+          } else {
+            this->add_member(static_cast<double>(value));
+          }
           return true;
         }
         default: return false;
@@ -252,7 +264,7 @@ namespace garlic::adapters::rapidjson {
           this->add_member();
           nodes_.front().state = node_state::key;
           this->nodes_.emplace_front( node((*--item.layer.end_member()).value, node_state::key) );
-          item.layer.set_object();
+          nodes_.front().layer.set_object();
           return true;
         }
         default: return false;
@@ -314,8 +326,10 @@ namespace garlic::adapters::rapidjson {
     }
   };
 
+  //! Convenient shortcut method to create a layer handler to be used in a rapidjson reader.
+  //! \tparam Layer any type conforming to garlic::RefLayer concept that is to be populated.
   template<GARLIC_REF Layer>
-  static inline LayerHandler<Layer> MakeHandler(Layer&& layer) {
+  static inline LayerHandler<Layer> make_handler(Layer&& layer) {
     return LayerHandler<Layer>(std::forward<Layer>(layer));
   }
 
