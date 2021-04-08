@@ -84,44 +84,49 @@ namespace garlic::adapters::rapidjson {
       ConstMemberIteratorWrapper<JsonView, typename ::rapidjson::Value::ConstMemberIterator>>;
     using RapidJsonWrapperTraits = WrapperTraits<true>;
 
-    JsonView (const ProviderValueType& value) : value_(value) {}
+    JsonView (const ProviderValueType& value) : value_(&value) {}
+    JsonView (const JsonView& other) : value_(other.value_) {}
+    JsonView (JsonView&& other) : value_(other.value_) {};
 
-    bool is_null() const noexcept { return value_.IsNull(); }
-    bool is_int() const noexcept { return value_.IsInt(); }
-    bool is_string() const noexcept { return value_.IsString(); }
-    bool is_double() const noexcept { return value_.IsDouble(); }
-    bool is_object() const noexcept { return value_.IsObject(); }
-    bool is_list() const noexcept { return value_.IsArray(); }
-    bool is_bool() const noexcept { return value_.IsBool(); }
+    bool is_null() const noexcept { return value_->IsNull(); }
+    bool is_int() const noexcept { return value_->IsInt(); }
+    bool is_string() const noexcept { return value_->IsString(); }
+    bool is_double() const noexcept { return value_->IsDouble(); }
+    bool is_object() const noexcept { return value_->IsObject(); }
+    bool is_list() const noexcept { return value_->IsArray(); }
+    bool is_bool() const noexcept { return value_->IsBool(); }
 
-    int get_int() const noexcept { return value_.GetInt(); }
+    int get_int() const noexcept { return value_->GetInt(); }
     std::string get_string() const noexcept {
-      return std::string(value_.GetString(), value_.GetStringLength());
+      return std::string(value_->GetString(), value_->GetStringLength());
     }
     std::string_view get_string_view() const noexcept {
-      return std::string_view(value_.GetString(), value_.GetStringLength());
+      return std::string_view(value_->GetString(), value_->GetStringLength());
     }
-    const char* get_cstr() const noexcept { return value_.GetString(); }
-    double get_double() const noexcept { return value_.GetDouble(); }
-    bool get_bool() const noexcept { return value_.GetBool(); }
+    const char* get_cstr() const noexcept { return value_->GetString(); }
+    double get_double() const noexcept { return value_->GetDouble(); }
+    bool get_bool() const noexcept { return value_->GetBool(); }
 
-    size_t string_length() const noexcept { return value_.GetStringLength(); }
+    size_t string_length() const noexcept { return value_->GetStringLength(); }
 
-    JsonView operator = (const JsonView& another) { return JsonView(another); }
+    JsonView& operator = (const JsonView& another) {
+      value_ = another.value_;
+      return *this;
+    };
 
     ConstValueIterator begin_list() const {
-      return ConstValueIterator({value_.Begin()});
+      return ConstValueIterator({value_->Begin()});
     }
     ConstValueIterator end_list() const {
-      return ConstValueIterator({value_.End()});
+      return ConstValueIterator({value_->End()});
     }
     auto get_list() const { return ConstListRange<JsonView>{*this}; }
 
     ConstMemberIterator begin_member() const {
-      return ConstMemberIterator({value_.MemberBegin()});
+      return ConstMemberIterator({value_->MemberBegin()});
     }
     ConstMemberIterator end_member() const {
-      return ConstMemberIterator({value_.MemberEnd()});
+      return ConstMemberIterator({value_->MemberEnd()});
     }
     ConstMemberIterator find_member(text key) const {
       return std::find_if(this->begin_member(), this->end_member(),
@@ -130,19 +135,19 @@ namespace garlic::adapters::rapidjson {
           });
     }
     ConstMemberIterator find_member(const JsonView& value) const {
-      return ConstMemberIterator({value_.FindMember(value.get_inner_value())});
+      return ConstMemberIterator({value_->FindMember(value.get_inner_value())});
     }
     auto get_object() const { return ConstMemberRange<JsonView>{*this}; }
 
-    const ProviderValueType& get_inner_value() const { return value_; }
-    JsonView get_view() const { return JsonView{value_}; }
+    const ProviderValueType& get_inner_value() const { return *value_; }
+    JsonView get_view() const { return JsonView{*value_}; }
 
     bool operator == (const JsonView& view) const {
       return view.value_ == value_;
     }
   
   private:
-    const ProviderValueType& value_;
+    const ProviderValueType* value_;
   };
 
   namespace internal {
