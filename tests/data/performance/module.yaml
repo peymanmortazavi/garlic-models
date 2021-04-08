@@ -52,37 +52,33 @@ fields:
 
 models:
     Module:
-        fields:
-            fields: FieldMap?
-            models: ModelMap?
+        fields: FieldMap?
+        models: ModelMap?
 
     ConstraintDefinition:
-        fields:
-            type: string
-            name: string?
-            message: string?
-            leaf: bool?
-            fatal: bool?
+        type: string
+        name: string?
+        message: string?
+        leaf: bool?
+        fatal: bool?
 
     Model:
         fields:
-            fields:
-                optional: true
-                constraints:
-                    - type: map
-                      key: FieldName
-                      value: {type: any, of: [ModelFieldReference, Field]}
-            meta: Meta?
-            inherit: ModelInheritance?
-            description: string?
+            optional: true
+            constraints:
+                - type: map
+                  key: FieldName
+                  value: {type: any, of: [ModelFieldReference, Field]}
+        meta: Meta?
+        inherit: ModelInheritance?
+        description: string?
 
     Field:
-        fields:
-            type: string
-            label: string?
-            description: string?
-            message: string?
-            meta: Meta?
-            constraints:
-                optional: true
-                constraints: [{type: list, of: Constraint}]
+        type: string
+        label: string?
+        description: string?
+        message: string?
+        meta: Meta?
+        constraints:
+            optional: true
+            constraints: [{type: list, of: Constraint}]

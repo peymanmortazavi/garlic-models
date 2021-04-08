@@ -1,29 +1,30 @@
 models:
     Model1:
-        fields:
-            model3: Model3
-            model4: Model4
+        model3: Model3
+        model4: Model4
 
     Model1_without_forwarding:
-        fields:
-            model3: integer
-            model4: integer
+        model3: integer
+        model4: integer
 
     Model2:
-        inherit: Model1
+        .meta:
+            inherit: Model1
 
     Model2_with_exclude:
-        inherit: Model1
-        exclude_fields: [model4]
+        .meta:
+            inherit: Model1
+            exclude_fields: [model4]
 
     Model2_without_forwarding:
-        inherit: [Model1, Model1_without_forwarding]
-        exclude_fields: [model4]
+        .meta:
+            inherit: [Model1, Model1_without_forwarding]
+            exclude_fields: [model4]
 
     Model2_overriding:
-        inherit: [Model1]
-        fields:
-            model3: integer
+        .meta:
+            inherit: [Model1]
+        model3: integer
 
     Model3: {}
     Model4: {}

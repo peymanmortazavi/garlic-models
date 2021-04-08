@@ -13,14 +13,14 @@ fields:
 
 models:
     User:
-        description: "An imaginary user object."
-        fields:
-            first_name: string
-            last_name:
-                type: string
-                label: Surname
-                constraints: [{type: range, min: 2, max: 8}]
-            birthdate: DateTime
-            registration_date:
-                type: DateTime
-                description: The user registration date.
+        .meta:
+            description: "An imaginary user object."
+        first_name: string
+        last_name:
+            type: string
+            label: Surname
+            constraints: [{type: range, min: 2, max: 8}]
+        birthdate: DateTime
+        registration_date:
+            type: DateTime
+            description: The user registration date.
