@@ -354,7 +354,7 @@ namespace garlic::adapters::rapidjson {
 
       template<typename Key>
       void add_member(Key key) {
-        this->add_member(this->build_key(key));
+        this->add_member(this->build_key(key), ProviderValueType());
       }
 
       template<typename Key>
@@ -422,7 +422,7 @@ namespace garlic::adapters::rapidjson {
         return value;
       }
 
-      inline ProviderValueType build_key(const string_ref& key) const noexcept {
+      inline ProviderValueType build_key(string_ref key) const noexcept {
         auto value = ProviderValueType();
         value.SetString(::rapidjson::StringRef(key.data(), key.size()));
         return value;
@@ -490,11 +490,11 @@ namespace garlic::adapters::rapidjson {
   static inline const char* dump(JsonType&& source, bool pretty = false) {
     ::rapidjson::StringBuffer buffer;
     if (pretty) {
-      source.get_inner_value().Accept(
-          ::rapidjson::PrettyWriter<::rapidjson::StringBuffer>(buffer));
+      auto handler = ::rapidjson::PrettyWriter<::rapidjson::StringBuffer>(buffer);
+      source.get_inner_value().Accept(handler);
     } else {
-      source.get_inner_value().Accept(
-          ::rapidjson::Writer<::rapidjson::StringBuffer>(buffer));
+      auto handler = ::rapidjson::Writer<::rapidjson::StringBuffer>(buffer);
+      source.get_inner_value().Accept(handler);
     }
     return buffer.GetString();
   }

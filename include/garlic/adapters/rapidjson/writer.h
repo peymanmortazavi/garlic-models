@@ -6,7 +6,7 @@
 #include "rapidjson/writer.h"
 
 namespace garlic::adapters::rapidjson {
-    
+
   //! Use a rapidjson writer to dump a readable layer.
   //! \tparam Writer a rapidjson Writer
   //! \tparam Layer any readable layer conforming to garlic::ViewLayer

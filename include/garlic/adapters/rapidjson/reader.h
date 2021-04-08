@@ -1,5 +1,5 @@
-#ifndef GARLIC_RAPIDJSON_WRITER_H
-#define GARLIC_RAPIDJSON_WRITER_H
+#ifndef GARLIC_RAPIDJSON_READER_H
+#define GARLIC_RAPIDJSON_READER_H
 
 #include <deque>
 
@@ -9,6 +9,8 @@
 
 namespace garlic::adapters::rapidjson {
 
+  //! RapidJSON read handler type that would populate a layer.
+  //! \tparam Layer Any type conforming to garlic::RefLayer concept.
   template<GARLIC_REF Layer>
   class LayerHandler {
     using Ch = char;
@@ -21,25 +23,36 @@ namespace garlic::adapters::rapidjson {
       value,
     };
 
-  private:
     struct node {
-      std::string_view key;
+      text key;
       reference_type layer;
       node_state state;
+      bool copy_key = true;
 
       node(reference_type layer,
-           node_state state = node_state::set) : key(""), layer(layer), state(state) {}
+           node_state state = node_state::set) : key(""), layer(layer), state(state), copy_key(true) {}
     };
+
+  private:
     std::deque<node> nodes_;
 
-    inline reference_type layer() const { return nodes_.front().layer(); }
-    inline node front() const { return nodes_.front(); }
-    inline void pop() { nodes_.pop_front(); }
-    
-    template<typename Initializer>
-    void add_member(Initializer&& initializer) {
-      initializer(front().key, this->layer());
-      this->front().state = node_state::key;
+    void add_member() {
+      auto& item = nodes_.front();
+      if (item.copy_key)
+        item.layer.add_member(item.key);
+      else
+        item.layer.add_member(item.key.string_ref());
+      item.state = node_state::key;
+    }
+
+    template<typename T>
+    void add_member(T value) {
+      auto& item = nodes_.front();
+      if (item.copy_key)
+        item.layer.add_member(item.key, value);
+      else
+        item.layer.add_member(item.key.string_ref(), value);
+      item.state = node_state::key;
     }
     
   public:
@@ -48,18 +61,19 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Null() {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_null();
-          this->pop();
+          item.layer.set_null();
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back();
+          item.layer.push_back();
           return true;
         }
         case node_state::value: {
-          this->add_member([](auto key, auto ref) { ref.add_member(key); });
+          this->add_member();
           return true;
         }
         default: return false;
@@ -67,38 +81,39 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Bool(bool value) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_bool(value);
-          this->pop();
+          item.layer.set_bool(value);
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back(value);
+          item.layer.push_back(value);
           return true;
         }
         case node_state::value: {
-          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          this->add_member(value);
           return true;
         }
         default: return false;
       }
-      return true;
     }
 
     bool Int(int value) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_int(value);
-          this->pop();
+          item.layer.set_int(value);
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back(value);
+          item.layer.push_back(value);
           return true;
         }
         case node_state::value: {
-          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          this->add_member(value);
           return true;
         }
         default: return false;
@@ -106,18 +121,19 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Double(double value) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_double(value);
-          this->pop();
+          item.layer.set_double(value);
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back(value);
+          item.layer.push_back(value);
           return true;
         }
         case node_state::value: {
-          this->add_member([&value](auto key, auto ref) { ref.add_member(key, value); });
+          this->add_member(value);
           return true;
         }
         default: return false;
@@ -125,20 +141,39 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Uint(unsigned value) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_double(static_cast<double>(value));
-          this->pop();
+          item.layer.set_double(static_cast<double>(value));
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back(static_cast<double>(value));
+          item.layer.push_back(static_cast<double>(value));
           return true;
         }
         case node_state::value: {
-          this->add_member([&value](auto key, auto ref) {
-              ref.add_member(key, static_cast<double>(value));
-              });
+          this->add_member(static_cast<double>(value));
+          return true;
+        }
+        default: return false;
+      }
+    }
+
+    bool Uint64(uint64_t value) {
+      auto& item = nodes_.front();
+      switch (item.state) {
+        case node_state::set: {
+          item.layer.set_double(static_cast<double>(value));
+          nodes_.pop_front();
+          return true;
+        }
+        case node_state::push: {
+          item.layer.push_back(static_cast<double>(value));
+          return true;
+        }
+        case node_state::value: {
+          this->add_member(static_cast<double>(value));
           return true;
         }
         default: return false;
@@ -146,20 +181,19 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Int64(int64_t value) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_double(static_cast<double>(value));
-          this->pop();
+          item.layer.set_double(static_cast<double>(value));
+          nodes_.pop_front();
           return true;
         }
         case node_state::push: {
-          this->layer().push_back(static_cast<double>(value));
+          item.layer.push_back(static_cast<double>(value));
           return true;
         }
         case node_state::value: {
-          this->add_member([&value](auto key, auto ref) {
-              ref.add_member(key, static_cast<double>(value));
-              });
+          this->add_member(static_cast<double>(value));
           return true;
         }
         default: return false;
@@ -167,25 +201,33 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool String(const Ch* str, ::rapidjson::SizeType length, bool copy) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_string(std::string_view(str, length));
-          this->pop();
-          break;
+          if (copy)
+            item.layer.set_string(text(str, length));
+          else
+            item.layer.set_string(string_ref(str, length));
+          nodes_.pop_front();
+          return true;
         }
         case node_state::push: {
-          this->layer().push_back(std::string_view(str, length));
-          break;
+          if (copy) {
+            item.layer.push_back(text(str, length));
+          } else {
+            item.layer.push_back(string_ref(str, length));
+          }
+          return true;
         }
         case node_state::value: {
-          this->add_member([&str, &length](auto key, auto ref) {
-              ref.add_member(key, std::string_view(key, length));
-              });
+            if (copy)
+              this->add_member(text(str, length));
+            else
+              this->add_member(string_ref(str, length));
           return true;
         }
         default: return false;
       }
-      return true;
     }
 
     bool RawNumber(const Ch* str, ::rapidjson::SizeType length, bool copy) {
@@ -193,25 +235,24 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool StartObject() {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (nodes_.front().state) {
         case node_state::set: {
-          this->layer().set_object();
-          this->front().state = node_state::key;
+          item.layer.set_object();
+          item.state = node_state::key;
           return true;
         }
         case node_state::push: {
-          auto& layer = this->layer();
-          layer.push_back();
-          this->nodes_.emplace_front( node(*--layer.end_list(), node_state::key) );
-          this->layer().set_object();
+          item.layer.push_back();
+          this->nodes_.emplace_front( node(*--item.layer.end_list(), node_state::key) );
+          nodes_.front().layer.set_object();
           return true;
         }
         case node_state::value: {
-          auto& layer = this->layer();
-          layer.push_back();
-          front().state = node_state::key;
-          this->nodes_.emplace_front( node((*--layer.end_member()).value, node_state::key) );
-          this->layer().set_object();
+          this->add_member();
+          nodes_.front().state = node_state::key;
+          this->nodes_.emplace_front( node((*--item.layer.end_member()).value, node_state::key) );
+          item.layer.set_object();
           return true;
         }
         default: return false;
@@ -219,10 +260,12 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool Key(const Ch* str, ::rapidjson::SizeType length, bool copy) {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::key: {
-          front().key = std::string_view(str, length);
-          front().state = node_state::value;
+          item.key = text(str, length, (copy ? text_type::copy : text_type::reference));
+          item.state = node_state::value;
+          item.copy_key = copy;
           return true;
         }
         default: return false;
@@ -230,33 +273,32 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool EndObject(::rapidjson::SizeType length) {
-      if (front().state == node_state::key) {
-        this->pop();
+      if (nodes_.front().state == node_state::key) {
+        nodes_.pop_front();
         return true;
       }
       return false;
     }
 
     bool StartArray() {
-      switch (front().state) {
+      auto& item = nodes_.front();
+      switch (item.state) {
         case node_state::set: {
-          this->layer().set_list();
-          this->front().state = node_state::push;
+          item.layer.set_list();
+          item.state = node_state::push;
           return true;
         }
         case node_state::push: {
-          auto& layer = this->layer();
-          layer.push_back();
-          this->nodes_.emplace_front( node(*--layer.end_list(), node_state::push) );
-          this->layer().set_list();
+          item.layer.push_back();
+          nodes_.emplace_front( node(*--item.layer.end_list(), node_state::push) );
+          nodes_.front().layer.set_list();
           return true;
         }
         case node_state::value: {
-          auto& layer = this->layer();
-          layer.push_back();
-          front().state = node_state::key;
-          this->nodes_.emplace_front( node((*--layer.end_member()).value, node_state::push) );
-          this->layer().set_list();
+          this->add_member();
+          item.state = node_state::key;
+          this->nodes_.emplace_front( node((*--item.layer.end_member()).value, node_state::push) );
+          nodes_.front().layer.set_list();
           return true;
         }
         default: return false;
@@ -264,13 +306,18 @@ namespace garlic::adapters::rapidjson {
     }
 
     bool EndArray(::rapidjson::SizeType length) {
-      if (front().state == node_state::push) {
-        this->pop();
+      if (nodes_.front().state == node_state::push) {
+        nodes_.pop_front();
         return true;
       }
       return false;
     }
   };
+
+  template<GARLIC_REF Layer>
+  static inline LayerHandler<Layer> MakeHandler(Layer&& layer) {
+    return LayerHandler<Layer>(std::forward<Layer>(layer));
+  }
 
 }
 
