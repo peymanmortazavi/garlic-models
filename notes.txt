@@ -3,11 +3,8 @@
   When making the Python module, take a look at this:
   https://github.com/python-rapidjson/python-rapidjson
 
-  2. Add optional get_string_length and get_list_length methods.
   5. Attempt to add support for JSON Schema so we can produce some metrics.
   6. Python module test run.
 
 Make sure resolve doesn't use make_unique and it just relied on get_view() functions repeatedly.
-Make sure add_member supports various different string types
-Make sure std::string_view has specific meaning and that is string referencce.
 Make sure libyaml doesn't store temporary string in there.
