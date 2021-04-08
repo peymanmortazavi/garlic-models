@@ -10,6 +10,9 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
 
+#include "reader.h"
+#include "writer.h"
+
 
 namespace garlic::adapters::rapidjson {
 
@@ -497,10 +500,10 @@ namespace garlic::adapters::rapidjson {
       ::rapidjson::FileWriteStream os(file, write_buffer, length);
       if (pretty) {
         auto writer = ::rapidjson::PrettyWriter<::rapidjson::FileWriteStream>(os);
-        dump(writer, source);
+        write(writer, source);
       } else {
         auto writer = ::rapidjson::Writer<::rapidjson::FileWriteStream>(os);
-        dump(writer, source);
+        write(writer, source);
       }
     }
 
