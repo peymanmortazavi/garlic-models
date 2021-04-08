@@ -149,28 +149,30 @@ namespace garlic {
   template<GARLIC_VIEW LayerType, typename Callable>
   static inline void
   resolve_layer_cb(const LayerType& value, std::string_view path, Callable&& cb) {
+    using view_type = decltype(value.get_view());
+
     lazy_string_splitter parts{path};
-    auto cursor = std::make_unique<LayerType>(value);
+    view_type cursor = value.get_view();
     while (true) {
       auto part = parts.next();
       if (part.empty()) {
-        cb(*cursor);
+        cb(cursor);
         return;
       }
-      if (cursor->is_object()) {
+      if (cursor.is_object()) {
         bool found = false;
-        get_member(*cursor, part, [&cursor, &found](const auto& result) {
-            cursor = std::make_unique<LayerType>(result);
+        get_member(cursor, part, [&cursor, &found](const auto& result) {
+            cursor = result.get_view();
             found = true;
             });
         if (!found) return;
-      } else if (cursor->is_list()) {
+      } else if (cursor.is_list()) {
         size_t position;
         if (std::from_chars(part.begin(), part.end(), position).ec == std::errc::invalid_argument)
           return;
         bool found = false;
-        get_item(*cursor, position, [&cursor, &found](const auto& result) {
-            cursor = std::make_unique<LayerType>(result);
+        get_item(cursor, position, [&cursor, &found](const auto& result) {
+            cursor = result.get_view();
             found = true;
             });
         if (!found) return;
