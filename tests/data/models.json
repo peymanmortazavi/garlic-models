@@ -1,7 +1,7 @@
 {
     "fields": {
         "DateTime": {
-            "meta": {
+            "annotations": {
                 "hint": "this is for the django form hints."
             },
             "constraints": [
@@ -11,35 +11,33 @@
     },
     "models": {
         "Company": {
-            "fields": {
-                "name": "string",
-                "founded_on": "DateTime"
-            }
+            "name": "string",
+            "founded_on": "DateTime"
         },
         "User": {
-            "description": "A banking user.",
-            "fields": {
-                "first_name": "string",
-                "last_name": {
-                    "label": "Last Name",
-                    "type": "string"
-                },
-                "zip_code": {
-                    "label": "Zip Code",
-                    "description": "Location of the user.",
-                    "constraints": [
-                        {"type": "regex", "pattern": "\\d{5,13}"}
-                    ]
-                },
-                "age": {
-                    "description": "User's age, used for age restricted services.",
-                    "constraints": [
-                        {"type": "range", "min": 21, "max": 150}
-                    ]
-                },
-                "birthdate": "DateTime",
-                "company": "Company"
-            }
+            ".meta": {
+                "description": "A banking user."
+            },
+            "first_name": "string",
+            "last_name": {
+                "label": "Last Name",
+                "type": "string"
+            },
+            "zip_code": {
+                "label": "Zip Code",
+                "description": "Location of the user.",
+                "constraints": [
+                    {"type": "regex", "pattern": "\\d{5,13}"}
+                ]
+            },
+            "age": {
+                "description": "User's age, used for age restricted services.",
+                "constraints": [
+                    {"type": "range", "min": 21, "max": 150}
+                ]
+            },
+            "birthdate": "DateTime",
+            "company": "Company"
         }
     },
     "root": "User"

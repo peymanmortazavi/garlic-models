@@ -84,48 +84,41 @@ fields:
 
 models:
     User:
-        fields:
-            id: UserId
-            username: string
-            first_name: string
-            last_name: string
+        id: UserId
+        username: string
+        first_name: string
+        last_name: string
 
     AnyTest:
-        fields:
-            user: UserReference
+        user: UserReference
 
     ListTest:
-        fields:
-            users: UserList
+        users: UserList
 
     TupleTest:
-        fields:
-            city: CityTuple
-            location: GeoLocation
-            command: UnixCommand
+        city: CityTuple
+        location: GeoLocation
+        command: UnixCommand
 
     MapTest:
-        fields:
-            _meta: MetaField
-            string_to_any: StringToAny
-            string_to_bool: StringToBool
+        _meta: MetaField
+        string_to_any: StringToAny
+        string_to_bool: StringToBool
 
     AllTest:
-        fields:
-            hide_constraint: ThreeItemsTable
-            hide_constraint_precise: ThreeItemsTablePrecise
+        hide_constraint: ThreeItemsTable
+        hide_constraint_precise: ThreeItemsTablePrecise
 
     LiteralTest:
-        fields:
-            integer:
-                constraints: [{type: literal, value: 5}]
-            double:
-                constraints: [{type: literal, value: 5.5}]
-            string:
-                constraints: [{type: literal, value: "Developer"}]
-            yes:
-                constraints: [{type: literal, value: true}]
-            no:
-                constraints: [{type: literal, value: false}]
-            none:
-                constraints: [{type: literal}]
+        integer:
+            constraints: [{type: literal, value: 5}]
+        double:
+            constraints: [{type: literal, value: 5.5}]
+        string:
+            constraints: [{type: literal, value: "Developer"}]
+        yes:
+            constraints: [{type: literal, value: true}]
+        no:
+            constraints: [{type: literal, value: false}]
+        none:
+            constraints: [{type: literal}]

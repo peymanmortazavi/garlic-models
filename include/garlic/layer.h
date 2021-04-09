@@ -91,9 +91,8 @@ namespace garlic {
    *    // Member iterator. This iterator can yield any type that conforms to RefLayer concept.
    *    typename MemberIterator;
    *
-   *    void set_string(const char*);
-   *    void set_string(const std::string&);  // optional but recommended to have std::string&& as well.
-   *    void set_string(std::string_view);
+   *    void set_string(garlic::text);
+   *    void set_string(garlic::string_ref);  // optional but recommended. do not allocate memory in this case.
    *    void set_bool(bool);
    *    void set_int(int);
    *    void set_double(double);
@@ -114,6 +113,8 @@ namespace garlic {
    *    void clear();  // clears the list of any elements.
    *    void push_back();  // push a null value.
    *    void push_back(const char*);
+   *    void push_back(garlic::text);
+   *    void push_back(garlic::string_ref);  // optional but recommended. do not allocate memory in this case.
    *    void push_back(bool);
    *    void push_back(int);
    *    void push_back(double);
@@ -125,16 +126,16 @@ namespace garlic {
    *    void erase(ValueIterator);
    *    void erase(ValueIterator, ValueIterator);  // erase anything between the two iterators.
    *
-   *    void add_member(const char*);  // add a member with the specified key and null as the value.
-   *    void add_member(const char*, const char*);
-   *    void add_member(const char*, bool);
-   *    void add_member(const char*, int);
-   *    void add_member(const char*, double);
+   *    void add_member(garlic::text);  // add a member with the specified key and null as the value.
+   *    void add_member(garlic::text, const char*);
+   *    void add_member(garlic::text, bool);
+   *    void add_member(garlic::text, int);
+   *    void add_member(garlic::text, double);
    *
    *    // must prepare a value, pass to the callback function to get setup, then add that value.
    *    // the last argument is a callback method that can take any type that conforms to RefLayer
-   *    void add_member_builder(const char*, void(*)(T));
-   *    void remove_member(const char*);
+   *    void add_member_builder(garlic::text, void(*)(T));
+   *    void remove_member(garlic::text);
    *    void erase_member(MemberIterator);
    *
    *    T get_reference();  // must return a RefLayer of the current layer without copying its content.

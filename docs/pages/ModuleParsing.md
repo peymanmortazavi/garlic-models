@@ -17,7 +17,7 @@ Every field can either be an alias to another field (string) or define a Field s
 ```yaml
 fields:
     FieldNameWithoutSpaces:
-        meta:
+        annotations:
             key1: value1
             key2: value2
         message: "This automatically ends up in the meta if defined."
@@ -43,17 +43,17 @@ field by its name in the module or making an anonymous field in-place.
 ```yaml
 models:
     ModelNameWithoutSpaces:
-        meta:
-            key1: value1
-            key2: value2
-        description: "brief description"  # this goes into meta if defined.
-        fields:
-            username: DifferentName
-            alternative_name: DifferentName?
-            anonymous_field:
-                type: string
-                optional: true  # defaults to false
-                constraints: [{type: range, min: 10, max: 25}]
+        .meta:
+            annotations:
+                key1: value1
+                key2: value2
+            description: "brief description"  # this goes into meta if defined.
+        username: DifferentName
+        alternative_name: DifferentName?
+        anonymous_field:
+            type: string
+            optional: true  # defaults to false
+            constraints: [{type: range, min: 10, max: 25}]
 ```
 
 As seen in the example above, you can refer to already defined fields like `username` key that uses `DifferentName`
@@ -71,15 +71,13 @@ Alternatively, you can define an anonymous field.
 ```yaml
 models:
     User:
-        fields:
-            name: string
-            age: integer
+        name: string
+        age: integer
     
     Group:
-        fields:
-            name: string
-            users:
-                constraints: [{type: list, of: User}]  # refers to User
+        name: string
+        users:
+            constraints: [{type: list, of: User}]  # refers to User
 ```
 
 ### Deferred Fields
@@ -95,14 +93,12 @@ fields:
 
 models:
     User:
-        fields:
-            name: string
-            age: integer
+        name: string
+        age: integer
 
     Group:
-        fields:
-            name: string
-            users: UserList
+        name: string
+        users: UserList
 ```
 
 This is the same for aliases, you can make a field alias for a field that is not defined yet.
@@ -114,20 +110,19 @@ Models can inherit from one another. You can either inherit from one model or a 
 ```yaml
 models:
     User:
-        fields:
-            name: string
+        name: string
 
     AdminUser:
-        inherit: User
-        fields:
-            level: integer
+        .meta:
+            inherit: User
+        level: integer
 
     GroupMembership:
-        fields:
-            group: string
+        group: string
 
     GroupAdmin:
-        inherit: [GroupMembership, AdminUser]
+        .meta:
+            inherit: [GroupMembership, AdminUser]
 ```
 
 #### Exclude some fields
@@ -137,13 +132,13 @@ You may exclude some fields from getting inherited.
 ```yaml
 models:
     User:
-        fields:
-            name: string
-            password: string
+        name: string
+        password: string
 
     UserInfo:
-        inherit: User
-        exclude_fields: [password]
+        .meta:
+            inherit: User
+            exclude_fields: [password]
 ```
 
 #### Override fields
@@ -153,29 +148,12 @@ If a model defines a field, that will override the inheritance.
 ```yaml
 models:
     User:
-        fields:
-            name: string
-            age: integer
-
-    YoungUser:
-        inherit: User
-        fields:
-            age:
-                constraints: [integer, {type: range, min: 5, max: 18}]
-```
-
-### ATTENTION
-
-This format is very tentative and is still work in progress. There might be a change in the structure
-so that fields don't have be explicitly under fields.
-
-```yaml
-models:
-    User:
-        @meta:
-            key1: value1
-        @inherit: []
-        @exclude_fields: []
         name: string
         age: integer
+
+    YoungUser:
+        .meta:
+            inherit: User
+        age:
+            constraints: [integer, {type: range, min: 5, max: 18}]
 ```

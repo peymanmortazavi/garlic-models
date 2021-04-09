@@ -16,16 +16,14 @@ fields:
 
 models:
     User:
-        fields:
-            id: integer
-            username: string
+        id: integer
+        username: string
 
     Account:
-        fields:
-            user: TestField
-            email: EmailField
+        user: TestField
+        email: EmailField
 
     AccountCustomMessage:
-        inherit: Account
-        fields:
-            email: EmailCustomMessage
+        .meta:
+            inherit: Account
+        email: EmailCustomMessage

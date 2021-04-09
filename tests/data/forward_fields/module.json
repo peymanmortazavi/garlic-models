@@ -30,19 +30,17 @@
     },
     "models": {
         "FieldContainerModel": {
-            "fields": {
-                "no_dependency_field": "NoDependencyField",
-                "regular_dependency_field": "RegularDependencyField",
-                "regular_alias": "RegularAlias",
-                "forward_dependency_field": "ForwardDependencyField",
-                "forward_dependency_alias_field": "ForwardDependencyAliasField",
-                "forward_alias": "ForwardAlias",
-                "inner_model": "TestModel",
-                "future_field": "FutureField",
-                "anonymous_field": {
-                    "type": "FutureField",
-                    "constraints": [{"type": "regex", "name": "c5"}]
-                }
+            "no_dependency_field": "NoDependencyField",
+            "regular_dependency_field": "RegularDependencyField",
+            "regular_alias": "RegularAlias",
+            "forward_dependency_field": "ForwardDependencyField",
+            "forward_dependency_alias_field": "ForwardDependencyAliasField",
+            "forward_alias": "ForwardAlias",
+            "inner_model": "TestModel",
+            "future_field": "FutureField",
+            "anonymous_field": {
+                "type": "FutureField",
+                "constraints": [{"type": "regex", "name": "c5"}]
             }
         }
     }

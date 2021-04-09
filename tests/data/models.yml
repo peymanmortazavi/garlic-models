@@ -20,26 +20,24 @@ fields:
 
 models:
   Activity:
-    strict: true  # this can be overriden
-    fields:
       id:
       first_login: datetime
       last_activity: datetime
 
   User:
-    description: A banking user.
-    fields:
-      first_name:
+    .meta:
+        description: A banking user.
+    first_name:
         name: First Name  # name and description automatically go to meta.
         description: User's first name to be entered into the system
         constraints:  # the ability to say either this or type is required. so a composite constraint maybe?
-          - regex: \w{3,}
-      last_name:
+            - regex: \w{3,}
+    last_name:
         name: Last Name
         type: string
-      zip_code:
-        name: Zip Code
-        digits: 5
-        type: zipcode
-      location: string
-      created_on: datetime
+        zip_code:
+            name: Zip Code
+            digits: 5
+            type: zipcode
+            location: string
+            created_on: datetime

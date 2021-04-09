@@ -67,40 +67,42 @@ namespace garlic::parsing {
     Module& module_;
 
     template<GARLIC_VIEW Input>
-    void process_field_meta(Field& field, Input&& layer) {
-      get_member(layer, "meta", [&field](const auto& item) {
+    void process_field_annotations(Field& field, Input&& layer) {
+      get_member(layer, "annotations", [&field](const auto& item) {
         for (const auto& member : item.get_object()) {
-          field.meta().emplace(
+          field.annotations().emplace(
               decode<text>(member.key).clone(),
               decode<text>(member.value).clone());
         }
       });
 
-      auto add_meta_field = [&layer, &field](text&& name) {
+      auto add_annotation = [&layer, &field](text&& name) {
         get_member(layer, name.data(), [&field, &name](const auto& item) {
           // since name is from stack, no need to copy its content.
-          field.meta().emplace(std::move(name), decode<text>(item).clone());
+          field.annotations().emplace(std::move(name), decode<text>(item).clone());
         });
       };
 
-      add_meta_field("label");
-      add_meta_field("description");
-      add_meta_field("message");
+      add_annotation("label");
+      add_annotation("description");
+      add_annotation("message");
     }
 
     template<GARLIC_VIEW Layer>
-    void process_model_meta(Model& model, Layer&& layer) {
+    void process_model_meta(model_pointer model, Layer&& layer) {
       get_member(layer, "description", [&model](const auto& item) {
-        model.meta().emplace("description", decode<text>(item).clone());
+        model->annotations().emplace("description", decode<text>(item).clone());
       });
 
-      get_member(layer, "meta", [&model](const auto& item) {
+      get_member(layer, "annotations", [&model](const auto& item) {
         std::for_each(item.begin_member(), item.end_member(), [&model](const auto& meta_member) {
-          model.meta().emplace(
+          model->annotations().emplace(
               decode<text>(meta_member.key).clone(),
               decode<text>(meta_member.value).clone());
         });
       });
+
+      this->process_model_inheritance(model, layer);
     }
 
     template<GARLIC_VIEW Layer, typename SuccessCallable, typename FailCallable>
@@ -122,7 +124,7 @@ namespace garlic::parsing {
           field_dependents_[reference_name].fields.push_back(ptr);
       });
 
-      this->process_field_meta(*ptr, layer);
+      this->process_field_annotations(*ptr, layer);
 
       get_member(layer, "constraints", [this, &ptr](const auto& value) {
         for (const auto& constraint_info : value.get_list()) {
@@ -252,19 +254,22 @@ namespace garlic::parsing {
     void parse_model(text&& name, Layer&& layer, Callable&& cb) {
       auto model_ptr = make_model(name.clone());
 
-      get_member(layer, "fields", [this, &model_ptr](const auto& value) {
-        std::for_each(value.begin_member(), value.end_member(), [this, &model_ptr](const auto& item) {
-          this->parse_field(text::no_text(), item.value,
-              [&model_ptr, &item](auto ptr, auto complete, auto optional) {
-                model_ptr->add_field(decode<text>(item.key).clone(), ptr, !optional);
-          }, [this, &model_ptr, &item](const text& name, auto optional) {
-            add_deferred_model_field(model_ptr, decode<text>(item.key), name.view(), !optional);
-          });
-        });
-      });
+      for (const auto& item : layer.get_object()) {
+        if (strncmp(item.key.get_cstr(), ".meta", 5) == 0) {
+          continue;
+        }
+        this->parse_field(text::no_text(), item.value,
+            [&model_ptr, &item](auto ptr, auto complete, auto optional) {
+              model_ptr->add_field(decode<text>(item.key).clone(), ptr, !optional);
+            },
+            [this, &model_ptr, &item](const text& name, auto optional) {
+              add_deferred_model_field(model_ptr, decode<text>(item.key), name.view(), !optional);
+            });
+      }
 
-      this->process_model_meta(*model_ptr, layer);
-      this->process_model_inheritance(model_ptr, layer);
+      get_member(layer, ".meta", [this, &model_ptr](const auto& meta) {
+          this->process_model_meta(model_ptr, meta);
+          });
 
       auto model_field = make_field(
           model_ptr->name().view(),
