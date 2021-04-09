@@ -157,7 +157,7 @@ namespace garlic {
       sequence<Constraint> constraints(1);
       constraints.push_back(make_constraint<ConstraintTag>(std::forward<Args>(args)...));
       return std::make_shared<field_type>(Field::Properties {
-          .meta = {},
+          .annotations = {},
           .constraints = std::move(constraints),
           .name = std::move(name),
           .ignore_details = false

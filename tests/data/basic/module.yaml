@@ -2,7 +2,7 @@ fields:
     DateTime:
         label: Date Time
         description: A US standard date mm/dd/yyyy format.
-        meta:
+        annotations:
             hint: You may also use mm/dd/yy format for short.
         type: string
         constraints:

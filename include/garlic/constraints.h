@@ -1063,7 +1063,7 @@ namespace garlic {
     };
 
     struct Properties {
-      std::unordered_map<text, text> meta;
+      std::unordered_map<text, text> annotations;
       sequence<Constraint> constraints;
       text name;
       bool ignore_details = false;
@@ -1100,11 +1100,11 @@ namespace garlic {
           another.end_constraints());
     }
 
-    //! \return meta object.
-    auto& meta() noexcept { return properties_.meta; }
+    //! \return annotations object.
+    auto& annotations() noexcept { return properties_.annotations; }
 
-    //! \return meta object.
-    const auto& meta() const noexcept { return properties_.meta; }
+    //! \return annotations object.
+    const auto& annotations() const noexcept { return properties_.annotations; }
 
     /*! \return whether or not the field should ignore details and return
      *          a leaf ConstraintResult when testing/validating.
@@ -1116,8 +1116,8 @@ namespace garlic {
 
     //! \return the message to display when making failed ConstraintResult instances.
     text message() const noexcept {
-      const auto& meta = properties_.meta;
-      if (auto it = meta.find("message"); it != meta.end()) {
+      const auto& annotations = properties_.annotations;
+      if (auto it = annotations.find("message"); it != annotations.end()) {
         return it->second;
       }
       return text::no_text();
@@ -1169,7 +1169,7 @@ namespace garlic {
 
     struct Properties {
       std::unordered_map<text, FieldDescriptor> field_map;
-      std::unordered_map<text, text> meta;
+      std::unordered_map<text, text> annotations;
       text name;
       bool strict = false;
     };
@@ -1207,11 +1207,11 @@ namespace garlic {
       return nullptr;
     }
 
-    //! \return the model's meta map.
-    auto& meta() noexcept { return properties_.meta; }
+    //! \return the model's annotations map.
+    auto& annotations() noexcept { return properties_.annotations; }
 
-    //! \copydoc meta()
-    const auto& meta() const noexcept { return properties_.meta; }
+    //! \copydoc annotations()
+    const auto& annotations() const noexcept { return properties_.annotations; }
 
     //! \return name of the Model.
     const text& name() const noexcept { return properties_.name; }
