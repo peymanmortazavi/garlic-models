@@ -1,8 +1,8 @@
 #ifndef GARLIC_ENCODING_H
 #define GARLIC_ENCODING_H
 
-/*! \file encoding.h
- *  \brief Contains classes and methods for defining and using encoders/decoders for various types.
+/*! @file encoding.h
+ *  @brief Contains classes and methods for defining and using encoders/decoders for various types.
  */
 
 #include "layer.h"
@@ -266,9 +266,9 @@ namespace garlic {
 
   //! Decodes a layer.
   /*!
-   *  \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
-   *  \tparam Type the output type.
-   *  \param layer the layer to read from.
+   *  @tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+   *  @tparam Type the output type.
+   *  @param layer the layer to read from.
    */
   template<typename Type, GARLIC_VIEW Layer>
   static inline std::enable_if_t<internal::use_explicit_decoder<Type, Layer>, Type>
@@ -282,10 +282,10 @@ namespace garlic {
 
   //! Safely attempt to decode a value and if successful, call the callback method.
   /*!
-   *  \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
-   *  \tparam Callable any lambda or callable type.
-   *  \param layer the layer to read from.
-   *  \param cb the callback function to call with a successfully decoded value.
+   *  @tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+   *  @tparam Callable any lambda or callable type.
+   *  @param layer the layer to read from.
+   *  @param cb the callback function to call with a successfully decoded value.
    */
   template<typename Type, GARLIC_VIEW Layer, typename Callable>
   static inline std::enable_if_t<internal::use_safe_decode_layer_method<Type, Layer>>
@@ -303,9 +303,9 @@ namespace garlic {
   /*! If an encoder is defined for the **Type**, it will be used to encode
    *  that value into the layer.
    *
-   *  \tparam Layer any writable layer that conforms to the garlic::RefLayer concept.
-   *  \param layer the layer to write to.
-   *  \param value the value to encode to the layer.
+   *  @tparam Layer any writable layer that conforms to the garlic::RefLayer concept.
+   *  @param layer the layer to write to.
+   *  @param value the value to encode to the layer.
    */
   template<GARLIC_REF Layer, typename Type>
   static inline std::enable_if_t<internal::use_encode_layer_method<Type, Layer>>

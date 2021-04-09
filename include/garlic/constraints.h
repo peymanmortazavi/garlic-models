@@ -1,7 +1,7 @@
 #ifndef GARLIC_CONSTRAINTS_H
 #define GARLIC_CONSTRAINTS_H
 
-//! \file constraints.h \brief Contains constraints, built-in constraint tags, fields and models.
+//! @file constraints.h @brief Contains constraints, built-in constraint tags, fields and models.
 
 #include <algorithm>
 #include <unordered_set>
@@ -33,19 +33,19 @@ namespace garlic {
 
     flags flag;
 
-    //! \return whether or not the constraint is a leaf meaning it does not have any extra details.
+    //! @return whether or not the constraint is a leaf meaning it does not have any extra details.
     inline bool is_leaf()  const noexcept { return !details.size();  }
 
-    //! \return whether or not the constraint test has passed, meaning no failure.
+    //! @return whether or not the constraint test has passed, meaning no failure.
     inline bool is_valid() const noexcept { return flag & flags::valid; }
 
-    //! \return whether or not the constraint corresponds to a field/key, if so, **name** will be the field name.
+    //! @return whether or not the constraint corresponds to a field/key, if so, **name** will be the field name.
     inline bool is_field() const noexcept { return flag & flags::field; }
 
     inline void set_valid() noexcept { flag = static_cast<flags>(flag & flags::valid); }
     inline void set_field() noexcept { flag = static_cast<flags>(flag & flags::field); }
 
-    //! \copydoc is_valid()
+    //! @copydoc is_valid()
     inline operator bool() const { return is_valid(); }
 
     template<flags Flag = flags::none>
@@ -260,17 +260,17 @@ namespace garlic {
    * but this Constraint should not be passed to any other object as it is uninitialized
    * and can lead to crashes or at least undefined behaviors.
    *
-   * \note You should think of Constraint as a shared pointer to a context data that
+   * @note You should think of Constraint as a shared pointer to a context data that
    *       can be used to instantiate **test** and **quick_test** methods when needed.
    *       Thus, copying a Constraint does not really deep copy its inside, it creates
    *       a new pointer that holds onto the inner context, much like a shared pointer.
    *       In fact it does use a shared pointer inside.
    *
-   * \code
+   * @code
    * auto regex_constriant = garlic::make_constraint<garlic::regex_tag>("\\d");
    * auto copy = regex_constraint;  // uses the same context as regex_constraint.
    * &copy.context() == &regex_constraint.context();  // true
-   * \endcode
+   * @endcode
    */
   class Constraint final {
   private:
@@ -282,9 +282,9 @@ namespace garlic {
 
   public:
     //! Create a generic Constraint based on a constraint tag.
-    /*! \tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
-     *  \tparam Args appropriate set of arguments for the constraint tag used.
-     *  \note You will get a compile-time error if you use a tag that is not registered.
+    /*! @tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
+     *  @tparam Args appropriate set of arguments for the constraint tag used.
+     *  @note You will get a compile-time error if you use a tag that is not registered.
      */
     template<typename Tag, typename... Args>
     static Constraint make(Args&&... args) noexcept;
@@ -294,19 +294,19 @@ namespace garlic {
       return Constraint(0, nullptr);
     }
 
-    //! \return whether or not the constraint is initialized.
+    //! @return whether or not the constraint is initialized.
     inline operator bool () const noexcept {
       return context_ != nullptr;
     }
 
     //! Perform the constraint test on the layer and return the result.
-    /*! \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+    /*! @tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
      */
     template<GARLIC_VIEW Layer>
     inline ConstraintResult test(const Layer& value) const noexcept;
 
     //! Very similar to Constraint::test() but it only returns a boolean.
-    /*! \tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
+    /*! @tparam Layer any readable layer that conforms to the garlic::ViewLayer concept.
      */
     template<GARLIC_VIEW Layer>
     inline bool quick_test(const Layer& value) const noexcept;
@@ -335,9 +335,9 @@ namespace garlic {
 
 
   //! Run a number of constraints on a layer.
-  /*! \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
-   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
-   *  \param it a back inserter iterator to store ConstraintResult items.
+  /*! @tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  @tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+   *  @param it a back inserter iterator to store ConstraintResult items.
    */
   template<GARLIC_VIEW Layer, typename Container, typename BackInserterIterator>
   inline void test_constraints(
@@ -354,9 +354,9 @@ namespace garlic {
   }
 
 
-  /*! \return whether or not a readable layer passes all constraint tests.
-   *  \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
-   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+  /*! @return whether or not a readable layer passes all constraint tests.
+   *  @tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  @tparam Container any constainer that stores a number of Constraint items and has begin() and end()
    */
   template<GARLIC_VIEW Layer, typename Container>
   static inline bool
@@ -368,9 +368,9 @@ namespace garlic {
   }
 
 
-  /*! \return the first failed Constraint or return an ok Constraint if all Constraint checks pass.
-   *  \tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
-   *  \tparam Container any constainer that stores a number of Constraint items and has begin() and end()
+  /*! @return the first failed Constraint or return an ok Constraint if all Constraint checks pass.
+   *  @tparam Layer any readable layer that conforms to garlic::ViewLayer concept.
+   *  @tparam Container any constainer that stores a number of Constraint items and has begin() and end()
    */
   template<GARLIC_VIEW Layer, typename Container>
   static inline ConstraintResult
@@ -384,9 +384,9 @@ namespace garlic {
   }
 
   //! Constraint Tag that passes if the layer has matching data type.
-  /*! \code{.cpp}
+  /*! @code{.cpp}
    *  make_constraint<type_tag>(TypeTag);
-   *  \endcode
+   *  @endcode
    */
   struct type_tag {
     
@@ -462,9 +462,9 @@ namespace garlic {
    *  If layer is a *list*, its element count will be checked.
    *
    *  It passes the test for all other types including *null*.
-   * \code{.cpp}
+   * @code{.cpp}
    *  make_constraint<range_tag>(size_t min, size_t max);
-   *  \endcode
+   *  @endcode
    */
   struct range_tag {
     using size_type = size_t;
@@ -530,11 +530,11 @@ namespace garlic {
 
 
   //! Constraint Tag that passes if a specified regex pattern passes the test.
-  /*! \note It passes the test if the layer is not a string type.
+  /*! @note It passes the test if the layer is not a string type.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<regex_tag>(text&& pattern);
-   *  \endcode
+   *  @endcode
    */
   struct regex_tag {
 
@@ -568,9 +568,9 @@ namespace garlic {
 
 
   //! Constraint Tag that passes if any of the inner constraints pass.
-   /*! \code{.cpp}
+   /*! @code{.cpp}
    *   make_constraint<any_tag>(sequence<Constraint>&& constraints);
-   *   \endcode
+   *   @endcode
    */
   struct any_tag {
     struct Context : public constraint_context {
@@ -602,13 +602,13 @@ namespace garlic {
   };
 
 
-  /*! \brief Constraint Tag that passes if the layer is a list and all its
+  /*! @brief Constraint Tag that passes if the layer is a list and all its
    *         elements pass the inner constraints.
-   *  \note If the layer is not a *list*, the test will fail.
+   *  @note If the layer is not a *list*, the test will fail.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<list_tag>(Constraint&& constraint);
-   *  \endcode
+   *  @endcode
    */
   struct list_tag {
     struct Context : public constraint_context {
@@ -674,22 +674,22 @@ namespace garlic {
     }
   };
 
-  /*! \brief Constraint Tag that passes if the layer is a list and its first n
+  /*! @brief Constraint Tag that passes if the layer is a list and its first n
    *         elements pass the first n constraints.
    *
    *  Basically when constraint[N] passes layer.begin_list()[N]
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<tuple_tag>(sequence<Constraint>&& constraints,
                                  bool strict = true,
                                  bool ignore_details = false);
-   *  \endcode
+   *  @endcode
    *
-   *  \param constraints ordered list of constraints to match the elements in the layer.
-   *  \param strict if true, layer can only have as many elements as there are constraints.
-   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *  @param constraints ordered list of constraints to match the elements in the layer.
+   *  @param strict if true, layer can only have as many elements as there are constraints.
+   *  @param ignore_details if true, failing constraints will not be added to the resulting
    *                        ConstraintResult as details.
-   *  \return The resulting ConstraintResult will have one extra detail and it's name is the index of element
+   *  @return The resulting ConstraintResult will have one extra detail and it's name is the index of element
    *          in the tuple.
    */
   class tuple_tag {
@@ -779,19 +779,19 @@ namespace garlic {
     }
   };
 
-  /*! \brief Constraint Tag that passes if the layer's members pass key and value constraints.
+  /*! @brief Constraint Tag that passes if the layer's members pass key and value constraints.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<map_tag>(Constraint&& key_constraint,
                                Constraint&& value_constraint,
                                bool ignore_details);
-   *  \endcode
+   *  @endcode
    *
-   *  \note In this tag, it is **valid** to pass empty (uninitialized) constraints, they will be ignored in that case.
+   *  @note In this tag, it is **valid** to pass empty (uninitialized) constraints, they will be ignored in that case.
    *
-   *  \param key_constraint member keys must pass this constraint if constraint is not empty.
-   *  \param value_constraint member values must pass this constraint if constraint is not empty.
-   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *  @param key_constraint member keys must pass this constraint if constraint is not empty.
+   *  @param value_constraint member values must pass this constraint if constraint is not empty.
+   *  @param ignore_details if true, failing constraints will not be added to the resulting
    *                        ConstraintResult as details.
    */
   class map_tag {
@@ -882,18 +882,18 @@ namespace garlic {
     }
   };
 
-  /*! \brief Constraint Tag that passes if all inner constraints pass the layer.
+  /*! @brief Constraint Tag that passes if all inner constraints pass the layer.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<all_tag>(sequence<Constraint>&& constraints,
                                bool hide = true,
                                bool ignore_details = false);
-   *  \endcode
+   *  @endcode
    *
-   *  \param hide if true, ConstraintResult from the first failing constraint will be
+   *  @param hide if true, ConstraintResult from the first failing constraint will be
    *              returned. This practically hides this constraint and leaves no trace
    *              of it in the resulting ConstraintResult.
-   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *  @param ignore_details if true, failing constraints will not be added to the resulting
    *                        ConstraintResult as details.
    */
   struct all_tag {
@@ -936,15 +936,15 @@ namespace garlic {
     }
   };
 
-  /*! \brief Constraint Tag that passes if layer is equal to a specified value.
+  /*! @brief Constraint Tag that passes if layer is equal to a specified value.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<string_literal_tag>("text");
    *  make_constraint<int_literal_tag>(12);
    *  make_constraint<double_literal_tag>(10.5);
    *  make_constraint<bool_literal_tag>(false);
    *  make_constraint<null_literal_tag>();
-   *  \endcode
+   *  @endcode
    */
   template<typename T>
   struct literal_tag {
@@ -1055,10 +1055,10 @@ namespace garlic {
 
       constraint_sequence failures; //!< all failed constraints.
 
-      //! \return whether or not the layer is valid.
+      //! @return whether or not the layer is valid.
       inline bool is_valid() const noexcept { return failures.empty(); }
 
-      //! \copydoc is_valid()
+      //! @copydoc is_valid()
       inline operator bool() const { return is_valid(); }
     };
 
@@ -1100,13 +1100,13 @@ namespace garlic {
           another.end_constraints());
     }
 
-    //! \return annotations object.
+    //! @return annotations object.
     auto& annotations() noexcept { return properties_.annotations; }
 
-    //! \return annotations object.
+    //! @return annotations object.
     const auto& annotations() const noexcept { return properties_.annotations; }
 
-    /*! \return whether or not the field should ignore details and return
+    /*! @return whether or not the field should ignore details and return
      *          a leaf ConstraintResult when testing/validating.
      */
     bool ignore_details() const { return properties_.ignore_details; }
@@ -1114,7 +1114,7 @@ namespace garlic {
     //! Set whether or not the field should ignore details.
     void set_ignore_details(bool value) { properties_.ignore_details = value; }
 
-    //! \return the message to display when making failed ConstraintResult instances.
+    //! @return the message to display when making failed ConstraintResult instances.
     text message() const noexcept {
       const auto& annotations = properties_.annotations;
       if (auto it = annotations.find("message"); it != annotations.end()) {
@@ -1122,14 +1122,14 @@ namespace garlic {
       }
       return text::no_text();
     }
-    //! \return name of the field.
+    //! @return name of the field.
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const noexcept { return properties_; }
 
-    //! \return an iterator (const) pointing to the first constraint in the field.
+    //! @return an iterator (const) pointing to the first constraint in the field.
     const_constraint_iterator begin_constraints() const noexcept { return properties_.constraints.begin(); }
 
-    //! \return an iterator (const) pointing to one past the last constraint in the field.
+    //! @return an iterator (const) pointing to one past the last constraint in the field.
     const_constraint_iterator end_constraints() const noexcept { return properties_.constraints.end(); }
 
     //! test the layer with all the constraints in the field.
@@ -1185,10 +1185,10 @@ namespace garlic {
     }
 
     //! Add a new field.
-    /*! \param name the name/key of the member.
-     *  \param field std::shared_ptr<Field>
-     *  \param required whether or not this field is required.
-     *  \note If a member by such name already exists, this function will not do anything.
+    /*! @param name the name/key of the member.
+     *  @param field std::shared_ptr<Field>
+     *  @param required whether or not this field is required.
+     *  @note If a member by such name already exists, this function will not do anything.
      */
     void add_field(text&& name, field_pointer field, bool required = true) {
       properties_.field_map.emplace(
@@ -1197,7 +1197,7 @@ namespace garlic {
           );
     }
 
-    //! \return a shared pointer to the Field instance or nullptr if such key is not defined yet.
+    //! @return a shared pointer to the Field instance or nullptr if such key is not defined yet.
     template<typename KeyType>
     field_pointer get_field(KeyType&& name) const {
       auto it = properties_.field_map.find(name);
@@ -1207,23 +1207,23 @@ namespace garlic {
       return nullptr;
     }
 
-    //! \return the model's annotations map.
+    //! @return the model's annotations map.
     auto& annotations() noexcept { return properties_.annotations; }
 
-    //! \copydoc annotations()
+    //! @copydoc annotations()
     const auto& annotations() const noexcept { return properties_.annotations; }
 
-    //! \return name of the Model.
+    //! @return name of the Model.
     const text& name() const noexcept { return properties_.name; }
     const Properties& properties() const { return properties_; }
 
-    //! \return an iterator (const) pointing to the first (basic_text, FieldDescriptor) pair.
+    //! @return an iterator (const) pointing to the first (basic_text, FieldDescriptor) pair.
     const_field_iterator begin_fields() const noexcept { return properties_.field_map.begin(); }
 
-    //! \return an iterator (const) pointing to one past the last (basic_text, FieldDescriptor) pair.
+    //! @return an iterator (const) pointing to one past the last (basic_text, FieldDescriptor) pair.
     const_field_iterator end_fields() const noexcept { return properties_.field_map.end(); }
 
-    //! \return an iterator (const) pointing to found (basic_text, FieldDescriptor) pair or end_fields()
+    //! @return an iterator (const) pointing to found (basic_text, FieldDescriptor) pair or end_fields()
     const_field_iterator find_field(const text& name) const noexcept { return properties_.field_map.find(name); }
 
     //! Run a quick test on a layer.
@@ -1318,11 +1318,11 @@ namespace garlic {
     }
   };
 
-  /*! \brief Constraint Tag that passes if the specified Model passes the layer.
+  /*! @brief Constraint Tag that passes if the specified Model passes the layer.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<model_tag>(std::shared_ptr<Model>&& model);
-   *  \endcode
+   *  @endcode
    */
   struct model_tag {
     struct Context : public constraint_context {
@@ -1368,18 +1368,18 @@ namespace garlic {
     return std::make_shared<Model>(std::forward<Args>(args)...);
   }
 
-  /*! \brief Constraint Tag that passes if the specified Field passes the layer.
+  /*! @brief Constraint Tag that passes if the specified Field passes the layer.
    *
-   *  \code{.cpp}
+   *  @code{.cpp}
    *  make_constraint<field_tag>(std::shared_ptr<Field> pointer,
    *                             bool hide = false,
    *                             bool ignore_details = false);
-   *  \endcode
-   *  \param field_pointer a pointer to the Field instance.
-   *  \param hide if true, ConstraintResult from the first failing constraint will be
+   *  @endcode
+   *  @param field_pointer a pointer to the Field instance.
+   *  @param hide if true, ConstraintResult from the first failing constraint will be
    *              returned. This practically hides this constraint and leaves no trace
    *              of it in the resulting ConstraintResult.
-   *  \param ignore_details if true, failing constraints will not be added to the resulting
+   *  @param ignore_details if true, failing constraints will not be added to the resulting
    *                        ConstraintResult as details.
    */
   struct field_tag {
@@ -1477,9 +1477,9 @@ namespace garlic {
   }
 
   //! Create a generic Constraint based on a constraint tag.
-  /*! \tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
-   *  \tparam Args appropriate set of arguments for the constraint tag used.
-   *  \note You will get a compile-time error if you use a tag that is not registered.
+  /*! @tparam Tag any **built-in** constraint tag that is registered in constraint_registry.
+   *  @tparam Args appropriate set of arguments for the constraint tag used.
+   *  @note You will get a compile-time error if you use a tag that is not registered.
    */
   template<typename Tag, typename... Args>
   inline Constraint
