@@ -121,10 +121,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#a0693663bc1b1332824927c364c178547">inherit_constraints_from</a> (const <a class="el" href="classgarlic_1_1Field.html">Field</a> &amp;another)</td></tr>
 <tr class="memdesc:a0693663bc1b1332824927c364c178547"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds all the constraints from the specified field to the front. <br /></td></tr>
 <tr class="separator:a0693663bc1b1332824927c364c178547"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27cdd405be3fa8fcd1aaa5592cf9d82a"><td class="memItemLeft" align="right" valign="top">auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#a27cdd405be3fa8fcd1aaa5592cf9d82a">meta</a> () noexcept</td></tr>
-<tr class="separator:a27cdd405be3fa8fcd1aaa5592cf9d82a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6130b30c845860047e26cd454309a28"><td class="memItemLeft" align="right" valign="top">const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#aa6130b30c845860047e26cd454309a28">meta</a> () const noexcept</td></tr>
-<tr class="separator:aa6130b30c845860047e26cd454309a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1674a268c87f4b7a36af14753be85d3"><td class="memItemLeft" align="right" valign="top">auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#aa1674a268c87f4b7a36af14753be85d3">annotations</a> () noexcept</td></tr>
+<tr class="separator:aa1674a268c87f4b7a36af14753be85d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab145190b081d6d86b46e39f0e4f06c83"><td class="memItemLeft" align="right" valign="top">const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#ab145190b081d6d86b46e39f0e4f06c83">annotations</a> () const noexcept</td></tr>
+<tr class="separator:ab145190b081d6d86b46e39f0e4f06c83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada61d164487cd83bf6547465744233d1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Field.html#ada61d164487cd83bf6547465744233d1">ignore_details</a> () const</td></tr>
 <tr class="separator:ada61d164487cd83bf6547465744233d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a062d4bcd7b4c3fc91097028e98ce643f"><td class="memItemLeft" align="right" valign="top"><a id="a062d4bcd7b4c3fc91097028e98ce643f"></a>
@@ -181,6 +181,58 @@ template&lt;typename Tag , typename... Args&gt; </div>
 
 <p>Helper method to create and add a constriant to the <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a>. </p>
 <p>Uses <a class="el" href="constraints_8h.html#ab092fe8be61488b61ea4bee14afce412" title="Create a generic Constraint based on a constraint tag.">make_constraint()</a> and adds the resulting <a class="el" href="classgarlic_1_1Constraint.html" title="Smallest unit of data validation.">Constraint</a> to the Filed. </p>
+
+</div>
+</div>
+<a id="ab145190b081d6d86b46e39f0e4f06c83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab145190b081d6d86b46e39f0e4f06c83">&#9670;&nbsp;</a></span>annotations() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const auto&amp; garlic::Field::annotations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>annotations object. </dd></dl>
+
+</div>
+</div>
+<a id="aa1674a268c87f4b7a36af14753be85d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1674a268c87f4b7a36af14753be85d3">&#9670;&nbsp;</a></span>annotations() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto&amp; garlic::Field::annotations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>annotations object. </dd></dl>
 
 </div>
 </div>
@@ -285,58 +337,6 @@ template&lt;typename Tag , typename... Args&gt; </div>
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>the message to display when making failed <a class="el" href="structgarlic_1_1ConstraintResult.html" title="Result of a constriant test.">ConstraintResult</a> instances. </dd></dl>
-
-</div>
-</div>
-<a id="aa6130b30c845860047e26cd454309a28"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa6130b30c845860047e26cd454309a28">&#9670;&nbsp;</a></span>meta() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const auto&amp; garlic::Field::meta </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>meta object. </dd></dl>
-
-</div>
-</div>
-<a id="a27cdd405be3fa8fcd1aaa5592cf9d82a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a27cdd405be3fa8fcd1aaa5592cf9d82a">&#9670;&nbsp;</a></span>meta() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto&amp; garlic::Field::meta </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>meta object. </dd></dl>
 
 </div>
 </div>

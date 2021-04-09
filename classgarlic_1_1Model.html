@@ -115,10 +115,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8bcf8c55be0542c6634e77c873cd4fe1"><td class="memTemplParams" colspan="2">template&lt;typename KeyType &gt; </td></tr>
 <tr class="memitem:a8bcf8c55be0542c6634e77c873cd4fe1"><td class="memTemplItemLeft" align="right" valign="top">field_pointer&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a8bcf8c55be0542c6634e77c873cd4fe1">get_field</a> (KeyType &amp;&amp;<a class="el" href="classgarlic_1_1Model.html#a173ff536d79b7f4c713284061889b351">name</a>) const</td></tr>
 <tr class="separator:a8bcf8c55be0542c6634e77c873cd4fe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b34322a17625c59e43be52992952487"><td class="memItemLeft" align="right" valign="top">auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a0b34322a17625c59e43be52992952487">meta</a> () noexcept</td></tr>
-<tr class="separator:a0b34322a17625c59e43be52992952487"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c7782506ad1bbd2f7a0dbe1476775aa"><td class="memItemLeft" align="right" valign="top">const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a0c7782506ad1bbd2f7a0dbe1476775aa">meta</a> () const noexcept</td></tr>
-<tr class="separator:a0c7782506ad1bbd2f7a0dbe1476775aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5374c5c8194474025cafbf0b76543e7c"><td class="memItemLeft" align="right" valign="top">auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a5374c5c8194474025cafbf0b76543e7c">annotations</a> () noexcept</td></tr>
+<tr class="separator:a5374c5c8194474025cafbf0b76543e7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56db8babf7eeba26964b6a204665cd74"><td class="memItemLeft" align="right" valign="top">const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a56db8babf7eeba26964b6a204665cd74">annotations</a> () const noexcept</td></tr>
+<tr class="separator:a56db8babf7eeba26964b6a204665cd74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a173ff536d79b7f4c713284061889b351"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgarlic_1_1basic__text.html">text</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#a173ff536d79b7f4c713284061889b351">name</a> () const noexcept</td></tr>
 <tr class="separator:a173ff536d79b7f4c713284061889b351"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad953322056b87dc37c349c055d817947"><td class="memItemLeft" align="right" valign="top">const_field_iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgarlic_1_1Model.html#ad953322056b87dc37c349c055d817947">begin_fields</a> () const noexcept</td></tr>
@@ -140,7 +140,7 @@ template&lt;GARLIC_VIEW Layer&gt; </td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An object to describe a <a class="el" href="classgarlic_1_1Model.html" title="An object to describe a Model.">Model</a>. </p>
-<p>A model will contain a table <a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can manage both act as a view and as an owner.">basic_text</a> -&gt; {field: <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a>, required: bool} </p>
+<p>A model will contain a table <a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can either act as a view or as an owner.">basic_text</a> -&gt; {field: <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a>, required: bool} </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="af9e20aa5ade7f13f60e3812f0051cce1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af9e20aa5ade7f13f60e3812f0051cce1">&#9670;&nbsp;</a></span>add_field()</h2>
@@ -195,6 +195,60 @@ template&lt;GARLIC_VIEW Layer&gt; </td></tr>
 
 </div>
 </div>
+<a id="a56db8babf7eeba26964b6a204665cd74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56db8babf7eeba26964b6a204665cd74">&#9670;&nbsp;</a></span>annotations() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const auto&amp; garlic::Model::annotations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p></p>
+<dl class="section return"><dt>Returns</dt><dd>the model's annotations map. </dd></dl>
+
+</div>
+</div>
+<a id="a5374c5c8194474025cafbf0b76543e7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5374c5c8194474025cafbf0b76543e7c">&#9670;&nbsp;</a></span>annotations() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto&amp; garlic::Model::annotations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>the model's annotations map. </dd></dl>
+
+</div>
+</div>
 <a id="ad953322056b87dc37c349c055d817947"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad953322056b87dc37c349c055d817947">&#9670;&nbsp;</a></span>begin_fields()</h2>
 
@@ -217,7 +271,7 @@ template&lt;GARLIC_VIEW Layer&gt; </td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to the first (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can manage both act as a view and as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to the first (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can either act as a view or as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair. </dd></dl>
 
 </div>
 </div>
@@ -243,7 +297,7 @@ template&lt;GARLIC_VIEW Layer&gt; </td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to one past the last (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can manage both act as a view and as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to one past the last (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can either act as a view or as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair. </dd></dl>
 
 </div>
 </div>
@@ -270,7 +324,7 @@ template&lt;GARLIC_VIEW Layer&gt; </td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to found (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can manage both act as a view and as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair or <a class="el" href="classgarlic_1_1Model.html#a879ca475fd4a43b6dec365d099bc6a23">end_fields()</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an iterator (const) pointing to found (<a class="el" href="classgarlic_1_1basic__text.html" title="A container for storing small strings that can either act as a view or as an owner.">basic_text</a>, <a class="el" href="structgarlic_1_1Model_1_1FieldDescriptor.html" title="Field Record.">FieldDescriptor</a>) pair or <a class="el" href="classgarlic_1_1Model.html#a879ca475fd4a43b6dec365d099bc6a23">end_fields()</a> </dd></dl>
 
 </div>
 </div>
@@ -300,60 +354,6 @@ template&lt;typename KeyType &gt; </div>
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>a shared pointer to the <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">Field</a> instance or nullptr if such key is not defined yet. </dd></dl>
-
-</div>
-</div>
-<a id="a0c7782506ad1bbd2f7a0dbe1476775aa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0c7782506ad1bbd2f7a0dbe1476775aa">&#9670;&nbsp;</a></span>meta() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const auto&amp; garlic::Model::meta </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p></p>
-<dl class="section return"><dt>Returns</dt><dd>the model's meta map. </dd></dl>
-
-</div>
-</div>
-<a id="a0b34322a17625c59e43be52992952487"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0b34322a17625c59e43be52992952487">&#9670;&nbsp;</a></span>meta() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto&amp; garlic::Model::meta </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>the model's meta map. </dd></dl>
 
 </div>
 </div>

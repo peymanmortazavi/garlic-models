@@ -24,14 +24,14 @@ var NAVTREE =
 [
   [ "Garlic Model", "index.html", [
     [ "Introduction", "index.html", [
-      [ "What is this?", "index.html#autotoc_md35", [
-        [ "1. Data Container Protocol", "index.html#autotoc_md36", null ],
-        [ "2. Schema Validation to validate data containers", "index.html#autotoc_md37", null ],
-        [ "3. Encoding Utilities to serialize and deserialize custom C++ classes and types.", "index.html#autotoc_md38", null ]
+      [ "What is this?", "index.html#autotoc_md34", [
+        [ "1. Data Container Protocol", "index.html#autotoc_md35", null ],
+        [ "2. Schema Validation to validate data containers", "index.html#autotoc_md36", null ],
+        [ "3. Encoding Utilities to serialize and deserialize custom C++ classes and types.", "index.html#autotoc_md37", null ]
       ] ],
-      [ "What's missing?", "index.html#autotoc_md39", null ],
-      [ "How do I play with this?", "index.html#autotoc_md40", null ],
-      [ "Performance Tests", "index.html#autotoc_md41", null ]
+      [ "What's missing?", "index.html#autotoc_md38", null ],
+      [ "How do I play with this?", "index.html#autotoc_md39", null ],
+      [ "Performance Tests", "index.html#autotoc_md40", null ]
     ] ],
     [ "Encoding and Decoding", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Encoding.html", [
       [ "Encoding", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Encoding.html#autotoc_md1", null ],
@@ -46,10 +46,10 @@ var NAVTREE =
     ] ],
     [ "Module Parsing", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html", null ],
     [ "Validation", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html", [
-      [ "Why not use JSON Schema?", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md28", null ],
-      [ "Constraint", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md29", null ],
-      [ "Field", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md30", null ],
-      [ "Model", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md31", [
+      [ "Why not use JSON Schema?", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md27", null ],
+      [ "Constraint", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md28", null ],
+      [ "Field", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md29", null ],
+      [ "Model", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md30", [
         [ "Automatic Fields", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md21", null ],
         [ "Deferred Fields", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md22", null ],
         [ "Model Inheritance", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md23", [
@@ -70,9 +70,8 @@ var NAVTREE =
           [ "Exclude some fields", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md24", null ],
           [ "Override fields", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md25", null ]
         ] ],
-        [ "ATTENTION", "md__home_runner_work_garlic-models_garlic-models_docs_pages_ModuleParsing.html#autotoc_md26", null ],
-        [ "Model and Field Tags", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md32", null ],
-        [ "Module", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md33", null ]
+        [ "Model and Field Tags", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md31", null ],
+        [ "Module", "md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html#autotoc_md32", null ]
       ] ]
     ] ],
     [ "Data Structures", "annotated.html", [
@@ -93,7 +92,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"utility_8h_source.html"
+"utility_8h.html#ad0889f1349f9272adf6e6ccaa29ce2af"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

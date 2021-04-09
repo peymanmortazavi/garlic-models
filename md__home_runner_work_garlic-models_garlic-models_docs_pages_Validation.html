@@ -85,11 +85,11 @@ $(document).ready(function(){initNavTree('md__home_runner_work_garlic-models_gar
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>This is the part of the library that allows validating a data container is valid!</p>
-<h1><a class="anchor" id="autotoc_md28"></a>
+<h1><a class="anchor" id="autotoc_md27"></a>
 Why not use JSON Schema?</h1>
 <p>There is actually a plan to digest JSON Schema as well, this library just provides a way to define constraints and enforce them. So one could build a JSON schema parser that makes these constraints and then we could test the validity of any data container.</p>
 <p>This library focuses on working with <a class="el" href="md__home_runner_work_garlic-models_garlic-models_docs_pages_Layer.html">garlic layers</a> for validation meaning you can test against any type that conforms to <a class="el" href="classgarlic_1_1ViewLayer.html" title="Concept for reading values from containers.">garlic::ViewLayer</a> and that could include std::vector, RapidJSON types and your own custom types so long as you make wrappers for them.</p>
-<h1><a class="anchor" id="autotoc_md29"></a>
+<h1><a class="anchor" id="autotoc_md28"></a>
 Constraint</h1>
 <p>A constraint is the smallest unit of validation, a constraint should take a layer and say if it is valid or not. It has two primary methods.</p>
 <ul>
@@ -124,7 +124,7 @@ Constraint</h1>
 <div class="line">}</div>
 <div class="line"><span class="keywordflow">if</span> (constraint)  <span class="comment">// check if constraint is initialized</span></div>
 <div class="line">  <span class="keyword">auto</span> result = constraint.quick_test(...);</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md30"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md29"></a>
 Field</h1>
 <p>A <a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">garlic::Field</a> is just a group of constraints stored in a single entity with meta data and some properties.</p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span> user_name = garlic::make_field(<span class="stringliteral">&quot;User Name&quot;</span>);</div>
@@ -138,7 +138,7 @@ Field</h1>
 </div><!-- fragment --><p>That meta data is meant to be used to store arbitrary information so it can be used for future tools to generate other formats like making migration scripts, or build html forms.</p>
 <p>If you set a field to ignore details, it'll return a leaf <a class="el" href="structgarlic_1_1ConstraintResult.html" title="Result of a constriant test.">garlic::ConstraintResult</a> without any details from its inner constraints. This is helpful when you want to use a Field as a constraint that is made of other constraints. For instance, you can pack a bunch of constraints that together validate whether a user name is valid not, but the resulting constraint should only say "invalid username.".</p>
 <div class="fragment"><div class="line">user_name-&gt;set_ignore_details(<span class="keyword">true</span>);  <span class="comment">// default is false.</span></div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md31"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md30"></a>
 Model</h1>
 <p>A <a class="el" href="classgarlic_1_1Model.html" title="An object to describe a Model.">garlic::Model</a> is a way to describe an object's structure. It is essentially a mapping of keys to a field descriptor object.</p>
 <p><code>key -&gt; { required: bool, field: std::shared_ptr&lt;<a class="el" href="classgarlic_1_1Field.html" title="A named group of Constraint elements.">garlic::Field</a>&gt; }</code></p>
@@ -151,14 +151,14 @@ Model</h1>
 <div class="line"> </div>
 <div class="line"><a class="code" href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">CloveDocument</a> doc;  <span class="comment">// some arbitrary document.</span></div>
 <div class="line"><span class="keyword">auto</span> result = user_model-&gt;validate(doc);</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md31"></a>
 Model and Field Tags</h2>
 <p>You can make constraints that validate a model or a field. See <a class="el" href="structgarlic_1_1field__tag.html" title="Constraint Tag that passes if the specified Field passes the layer.">garlic::field_tag</a> and <a class="el" href="structgarlic_1_1model__tag.html" title="Constraint Tag that passes if the specified Model passes the layer.">garlic::model_tag</a>.</p>
 <div class="fragment"><div class="line"><span class="comment">// ignore details regardless of what &#39;user_name&#39; field&#39;s ignore detail settings.</span></div>
 <div class="line"><span class="keyword">auto</span> field_constraint = garlic::make_constraint&lt;garlic::field_tag&gt;(user_name, <span class="keyword">false</span>, <span class="keyword">true</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">auto</span> model_constraint = garlic::make_constraint&lt;garlic::model_tag&gt;(user_model);</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md33"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
 Module</h2>
 <p>Now a <a class="el" href="classgarlic_1_1Module.html" title="A Module is a repository of models, fields and constraints.">garlic::Module</a> is simply a repository that contains a bunch of models and fields.</p>
 <div class="fragment"><div class="line"><a class="code" href="classgarlic_1_1Module.html">garlic::Module</a> module;</div>
@@ -183,8 +183,8 @@ Module</h2>
 </div><!-- doc-content -->
 <div class="ttc" id="aclassgarlic_1_1Module_html"><div class="ttname"><a href="classgarlic_1_1Module.html">garlic::Module</a></div><div class="ttdoc">A Module is a repository of models, fields and constraints.</div><div class="ttdef"><b>Definition:</b> module.h:39</div></div>
 <div class="ttc" id="aclassgarlic_1_1Module_html_ad9a2b2a41ad17084712f62c2a3e87126"><div class="ttname"><a href="classgarlic_1_1Module.html#ad9a2b2a41ad17084712f62c2a3e87126">garlic::Module::add_model</a></div><div class="ttdeci">tl::expected&lt; void, std::error_code &gt; add_model(model_pointer model) noexcept</div><div class="ttdef"><b>Definition:</b> module.h:76</div></div>
-<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:520</div></div>
-<div class="ttc" id="aparsing_2module_8h_html_a735bd6cb519d51825dc05eeabca5ef0f"><div class="ttname"><a href="parsing_2module_8h.html#a735bd6cb519d51825dc05eeabca5ef0f">garlic::parsing::load_module</a></div><div class="ttdeci">static tl::expected&lt; Module, std::error_code &gt; load_module(Layer &amp;&amp;layer) noexcept</div><div class="ttdoc">Loads a Module from any layer.</div><div class="ttdef"><b>Definition:</b> module.h:399</div></div>
+<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:502</div></div>
+<div class="ttc" id="aparsing_2module_8h_html_a735bd6cb519d51825dc05eeabca5ef0f"><div class="ttname"><a href="parsing_2module_8h.html#a735bd6cb519d51825dc05eeabca5ef0f">garlic::parsing::load_module</a></div><div class="ttdeci">static tl::expected&lt; Module, std::error_code &gt; load_module(Layer &amp;&amp;layer) noexcept</div><div class="ttdoc">Loads a Module from any layer.</div><div class="ttdef"><b>Definition:</b> module.h:404</div></div>
 <div class="ttc" id="aclassgarlic_1_1Module_html_afdc90b2a7d90ce6e097640b050b36ce8"><div class="ttname"><a href="classgarlic_1_1Module.html#afdc90b2a7d90ce6e097640b050b36ce8">garlic::Module::get_field</a></div><div class="ttdeci">field_pointer get_field(const text &amp;name) const noexcept</div><div class="ttdef"><b>Definition:</b> module.h:134</div></div>
 <div class="ttc" id="aclassgarlic_1_1Module_html_ab1710bfa02f96f8c21b6b302e5f64f89"><div class="ttname"><a href="classgarlic_1_1Module.html#ab1710bfa02f96f8c21b6b302e5f64f89">garlic::Module::add_field</a></div><div class="ttdeci">tl::expected&lt; void, std::error_code &gt; add_field(text &amp;&amp;alias, field_pointer field) noexcept</div><div class="ttdef"><b>Definition:</b> module.h:90</div></div>
 <div class="ttc" id="astructgarlic_1_1regex__tag_html"><div class="ttname"><a href="structgarlic_1_1regex__tag.html">garlic::regex_tag</a></div><div class="ttdoc">Constraint Tag that passes if a specified regex pattern passes the test.</div><div class="ttdef"><b>Definition:</b> constraints.h:539</div></div>

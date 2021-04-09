@@ -88,10 +88,10 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <blockquote class="doxtable">
 <p>Currently this is only working for GCC 10 and C++ 20 but other compilers will be supported. </p>
 </blockquote>
-<h1><a class="anchor" id="autotoc_md35"></a>
+<h1><a class="anchor" id="autotoc_md34"></a>
 What is this?</h1>
 <p>This library provides three things:</p>
-<h2><a class="anchor" id="autotoc_md36"></a>
+<h2><a class="anchor" id="autotoc_md35"></a>
 1. Data Container Protocol</h2>
 <p>Woooah what a buzz word. It's just two C++ concepts to provide a common interface so that various different data containers could be described using a set of methods.</p>
 <p>Long story short, most JSON and YAML libraries you find are probably going to have ways to get strings, numbers, booleans, lists and objects. What if we make a contract that designates one interface that includes a common set of functions these libraries provide. Then we can wrap these types with adapters so they all have same methods then we can write code agnostic to what library we're working with.</p>
@@ -105,7 +105,7 @@ What is this?</h1>
 <div class="line">    }</div>
 <div class="line">}</div>
 </div><!-- fragment --><p><a href="https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Layer.html">Read More About This</a></p>
-<h2><a class="anchor" id="autotoc_md37"></a>
+<h2><a class="anchor" id="autotoc_md36"></a>
 2. Schema Validation to validate data containers</h2>
 <p>There is a constraint system you can work with. The plan is to add parsers for JSON Schema and other formats to enable the developers use whatever format they like.</p>
 <p>But there is also a built-in format for describing models and schemas.</p>
@@ -159,7 +159,7 @@ What is this?</h1>
 <div class="line">}</div>
 </div><!-- fragment --><p>The nice thing is that these wrappers likely get optimized away, leaving very minimal cost to this abstraction.</p>
 <p><a href="https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Validation.html">Read More</a></p>
-<h2><a class="anchor" id="autotoc_md38"></a>
+<h2><a class="anchor" id="autotoc_md37"></a>
 3. Encoding Utilities to serialize and deserialize custom C++ classes and types.</h2>
 <div class="fragment"><div class="line"><span class="keyword">struct </span>User {</div>
 <div class="line">    std::string name;</div>
@@ -196,7 +196,7 @@ What is this?</h1>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p><a href="https://peymanmortazavi.github.io/garlic-models/md__home_runner_work_garlic-models_garlic-models_docs_pages_Encoding.html">Read More</a></p>
-<h1><a class="anchor" id="autotoc_md39"></a>
+<h1><a class="anchor" id="autotoc_md38"></a>
 What's missing?</h1>
 <ul>
 <li>There's just more work to be done to make this ready for production use and there are still parts that might change since they're not battle tested.</li>
@@ -206,11 +206,11 @@ What's missing?</h1>
 <li>Compilation takes forever! This is going to become annoying. There are ways to improve this.</li>
 <li>Better documentation, there are some but not sure if it's good to set someone up their way.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<h1><a class="anchor" id="autotoc_md39"></a>
 How do I play with this?</h1>
 <p>You can either use the docker-compose file in the <code>docker</code> directory to compile all tests and lab.cpp or if you have GCC 10 and C++ 20 around, you can just compile lab.cpp and take it for a ride!</p>
 <p>You might want to disable running tests in <code>tests/CMakeLists.txt</code> if that long compilation bothers you.</p>
-<h1><a class="anchor" id="autotoc_md41"></a>
+<h1><a class="anchor" id="autotoc_md40"></a>
 Performance Tests</h1>
 <p>Just don't run them :) they're not ready but if you do, run the following commands beforehand.</p>
 <div class="fragment"><div class="line">sudo cpupower frequency-set --governor performance</div>
@@ -219,8 +219,8 @@ Performance Tests</h1>
 </div><!-- fragment --> </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
-<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:520</div></div>
-<div class="ttc" id="aparsing_2module_8h_html_a735bd6cb519d51825dc05eeabca5ef0f"><div class="ttname"><a href="parsing_2module_8h.html#a735bd6cb519d51825dc05eeabca5ef0f">garlic::parsing::load_module</a></div><div class="ttdeci">static tl::expected&lt; Module, std::error_code &gt; load_module(Layer &amp;&amp;layer) noexcept</div><div class="ttdoc">Loads a Module from any layer.</div><div class="ttdef"><b>Definition:</b> module.h:399</div></div>
+<div class="ttc" id="aclove_8h_html_a510118787dcd3f227971552ffa69d6f7"><div class="ttname"><a href="clove_8h.html#a510118787dcd3f227971552ffa69d6f7">garlic::CloveDocument</a></div><div class="ttdeci">GenericCloveDocument&lt; CAllocator &gt; CloveDocument</div><div class="ttdoc">A clove document (value) conforming to garlic::RefLayer.</div><div class="ttdef"><b>Definition:</b> clove.h:502</div></div>
+<div class="ttc" id="aparsing_2module_8h_html_a735bd6cb519d51825dc05eeabca5ef0f"><div class="ttname"><a href="parsing_2module_8h.html#a735bd6cb519d51825dc05eeabca5ef0f">garlic::parsing::load_module</a></div><div class="ttdeci">static tl::expected&lt; Module, std::error_code &gt; load_module(Layer &amp;&amp;layer) noexcept</div><div class="ttdoc">Loads a Module from any layer.</div><div class="ttdef"><b>Definition:</b> module.h:404</div></div>
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

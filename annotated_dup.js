@@ -7,6 +7,9 @@ var annotated_dup =
           [ "ParserProblem", "structgarlic_1_1adapters_1_1libyaml_1_1ParserProblem.html", "structgarlic_1_1adapters_1_1libyaml_1_1ParserProblem" ],
           [ "YamlDocument", "classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument.html", "classgarlic_1_1adapters_1_1libyaml_1_1YamlDocument" ],
           [ "YamlView", "classgarlic_1_1adapters_1_1libyaml_1_1YamlView.html", null ]
+        ] ],
+        [ "rapidjson", null, [
+          [ "LayerHandler", "classgarlic_1_1adapters_1_1rapidjson_1_1LayerHandler.html", null ]
         ] ]
       ] ],
       [ "all_tag", "structgarlic_1_1all__tag.html", null ],

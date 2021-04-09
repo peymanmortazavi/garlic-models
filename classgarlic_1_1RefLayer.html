@@ -100,9 +100,8 @@ $(document).ready(function(){initNavTree('classgarlic_1_1RefLayer.html',''); ini
 <div class="line">  <span class="comment">// Member iterator. This iterator can yield any type that conforms to RefLayer concept.</span></div>
 <div class="line">  <span class="keyword">typename</span> MemberIterator;</div>
 <div class="line"> </div>
-<div class="line">  <span class="keywordtype">void</span> set_string(<span class="keyword">const</span> <span class="keywordtype">char</span>*);</div>
-<div class="line">  <span class="keywordtype">void</span> set_string(<span class="keyword">const</span> std::string&amp;);  <span class="comment">// optional but recommended to have std::string&amp;&amp; as well.</span></div>
-<div class="line">  <span class="keywordtype">void</span> set_string(std::string_view);</div>
+<div class="line">  <span class="keywordtype">void</span> set_string(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>);</div>
+<div class="line">  <span class="keywordtype">void</span> set_string(garlic::string_ref);  <span class="comment">// optional but recommended. do not allocate memory in this case.</span></div>
 <div class="line">  <span class="keywordtype">void</span> set_bool(<span class="keywordtype">bool</span>);</div>
 <div class="line">  <span class="keywordtype">void</span> set_int(<span class="keywordtype">int</span>);</div>
 <div class="line">  <span class="keywordtype">void</span> set_double(<span class="keywordtype">double</span>);</div>
@@ -123,6 +122,8 @@ $(document).ready(function(){initNavTree('classgarlic_1_1RefLayer.html',''); ini
 <div class="line">  <span class="keywordtype">void</span> clear();  <span class="comment">// clears the list of any elements.</span></div>
 <div class="line">  <span class="keywordtype">void</span> push_back();  <span class="comment">// push a null value.</span></div>
 <div class="line">  <span class="keywordtype">void</span> push_back(<span class="keyword">const</span> <span class="keywordtype">char</span>*);</div>
+<div class="line">  <span class="keywordtype">void</span> push_back(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>);</div>
+<div class="line">  <span class="keywordtype">void</span> push_back(garlic::string_ref);  <span class="comment">// optional but recommended. do not allocate memory in this case.</span></div>
 <div class="line">  <span class="keywordtype">void</span> push_back(<span class="keywordtype">bool</span>);</div>
 <div class="line">  <span class="keywordtype">void</span> push_back(<span class="keywordtype">int</span>);</div>
 <div class="line">  <span class="keywordtype">void</span> push_back(<span class="keywordtype">double</span>);</div>
@@ -134,16 +135,16 @@ $(document).ready(function(){initNavTree('classgarlic_1_1RefLayer.html',''); ini
 <div class="line">  <span class="keywordtype">void</span> erase(ValueIterator);</div>
 <div class="line">  <span class="keywordtype">void</span> erase(ValueIterator, ValueIterator);  <span class="comment">// erase anything between the two iterators.</span></div>
 <div class="line"> </div>
-<div class="line">  <span class="keywordtype">void</span> add_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*);  <span class="comment">// add a member with the specified key and null as the value.</span></div>
-<div class="line">  <span class="keywordtype">void</span> add_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keyword">const</span> <span class="keywordtype">char</span>*);</div>
-<div class="line">  <span class="keywordtype">void</span> add_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">bool</span>);</div>
-<div class="line">  <span class="keywordtype">void</span> add_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">int</span>);</div>
-<div class="line">  <span class="keywordtype">void</span> add_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">double</span>);</div>
+<div class="line">  <span class="keywordtype">void</span> add_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>);  <span class="comment">// add a member with the specified key and null as the value.</span></div>
+<div class="line">  <span class="keywordtype">void</span> add_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>, <span class="keyword">const</span> <span class="keywordtype">char</span>*);</div>
+<div class="line">  <span class="keywordtype">void</span> add_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>, <span class="keywordtype">bool</span>);</div>
+<div class="line">  <span class="keywordtype">void</span> add_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>, <span class="keywordtype">int</span>);</div>
+<div class="line">  <span class="keywordtype">void</span> add_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>, <span class="keywordtype">double</span>);</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// must prepare a value, pass to the callback function to get setup, then add that value.</span></div>
 <div class="line">  <span class="comment">// the last argument is a callback method that can take any type that conforms to RefLayer</span></div>
-<div class="line">  <span class="keywordtype">void</span> add_member_builder(<span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">void</span>(*)(T));</div>
-<div class="line">  <span class="keywordtype">void</span> remove_member(<span class="keyword">const</span> <span class="keywordtype">char</span>*);</div>
+<div class="line">  <span class="keywordtype">void</span> add_member_builder(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>, <span class="keywordtype">void</span>(*)(T));</div>
+<div class="line">  <span class="keywordtype">void</span> remove_member(<a class="code" href="classgarlic_1_1basic__text.html">garlic::text</a>);</div>
 <div class="line">  <span class="keywordtype">void</span> erase_member(MemberIterator);</div>
 <div class="line"> </div>
 <div class="line">  T get_reference();  <span class="comment">// must return a RefLayer of the current layer without copying its content.</span></div>
@@ -153,6 +154,7 @@ $(document).ready(function(){initNavTree('classgarlic_1_1RefLayer.html',''); ini
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="aclassgarlic_1_1basic__text_html"><div class="ttname"><a href="classgarlic_1_1basic__text.html">garlic::basic_text&lt; char &gt;</a></div></div>
 <div class="ttc" id="aclassgarlic_1_1RefLayer_html"><div class="ttname"><a href="classgarlic_1_1RefLayer.html">RefLayer</a></div><div class="ttdoc">Concept for reading from and writing to containers.</div></div>
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->

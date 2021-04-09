@@ -91,7 +91,7 @@ $(document).ready(function(){initNavTree('md__home_runner_work_garlic-models_gar
 <p>Every field can either be an alias to another field (string) or define a Field structure (object).</p>
 <div class="fragment"><div class="line">fields:</div>
 <div class="line">    FieldNameWithoutSpaces:</div>
-<div class="line">        meta:</div>
+<div class="line">        annotations:</div>
 <div class="line">            key1: value1</div>
 <div class="line">            key2: value2</div>
 <div class="line">        message: &quot;This automatically ends up in the meta if defined.&quot;</div>
@@ -111,17 +111,17 @@ $(document).ready(function(){initNavTree('md__home_runner_work_garlic-models_gar
 </div><!-- fragment --><p>Models are defined in a somewhat similar format. Each model can define <code>fields</code> which is an object whose keys become field names and values become field descriptors. Either directly referring to a defined field by its name in the module or making an anonymous field in-place.</p>
 <div class="fragment"><div class="line">models:</div>
 <div class="line">    ModelNameWithoutSpaces:</div>
-<div class="line">        meta:</div>
-<div class="line">            key1: value1</div>
-<div class="line">            key2: value2</div>
-<div class="line">        description: &quot;brief description&quot;  # this goes into meta if defined.</div>
-<div class="line">        fields:</div>
-<div class="line">            username: DifferentName</div>
-<div class="line">            alternative_name: DifferentName?</div>
-<div class="line">            anonymous_field:</div>
-<div class="line">                type: string</div>
-<div class="line">                optional: true  # defaults to false</div>
-<div class="line">                constraints: [{type: range, min: 10, max: 25}]</div>
+<div class="line">        .meta:</div>
+<div class="line">            annotations:</div>
+<div class="line">                key1: value1</div>
+<div class="line">                key2: value2</div>
+<div class="line">            description: &quot;brief description&quot;  # this goes into meta if defined.</div>
+<div class="line">        username: DifferentName</div>
+<div class="line">        alternative_name: DifferentName?</div>
+<div class="line">        anonymous_field:</div>
+<div class="line">            type: string</div>
+<div class="line">            optional: true  # defaults to false</div>
+<div class="line">            constraints: [{type: range, min: 10, max: 25}]</div>
 </div><!-- fragment --><p>As seen in the example above, you can refer to already defined fields like <code>username</code> key that uses <code>DifferentName</code> defined earlier in the file. If you end the field name by <code>?</code> it makes that field optional.</p>
 <p>Alternatively, you can define an anonymous field.</p>
 <blockquote class="doxtable">
@@ -135,15 +135,13 @@ Automatic Fields</h2>
 </blockquote>
 <div class="fragment"><div class="line">models:</div>
 <div class="line">    User:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            age: integer</div>
+<div class="line">        name: string</div>
+<div class="line">        age: integer</div>
 <div class="line">    </div>
 <div class="line">    Group:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            users:</div>
-<div class="line">                constraints: [{type: list, of: User}]  # refers to User</div>
+<div class="line">        name: string</div>
+<div class="line">        users:</div>
+<div class="line">            constraints: [{type: list, of: User}]  # refers to User</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md22"></a>
 Deferred Fields</h2>
 <p>It is possible to use a field even prior to its definition so long as it gets defined somewhere in the module.</p>
@@ -154,71 +152,56 @@ Deferred Fields</h2>
 <div class="line"> </div>
 <div class="line">models:</div>
 <div class="line">    User:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            age: integer</div>
+<div class="line">        name: string</div>
+<div class="line">        age: integer</div>
 <div class="line"> </div>
 <div class="line">    Group:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            users: UserList</div>
+<div class="line">        name: string</div>
+<div class="line">        users: UserList</div>
 </div><!-- fragment --><p>This is the same for aliases, you can make a field alias for a field that is not defined yet.</p>
 <h2><a class="anchor" id="autotoc_md23"></a>
 Model Inheritance</h2>
 <p>Models can inherit from one another. You can either inherit from one model or a series of models.</p>
 <div class="fragment"><div class="line">models:</div>
 <div class="line">    User:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
+<div class="line">        name: string</div>
 <div class="line"> </div>
 <div class="line">    AdminUser:</div>
-<div class="line">        inherit: User</div>
-<div class="line">        fields:</div>
-<div class="line">            level: integer</div>
+<div class="line">        .meta:</div>
+<div class="line">            inherit: User</div>
+<div class="line">        level: integer</div>
 <div class="line"> </div>
 <div class="line">    GroupMembership:</div>
-<div class="line">        fields:</div>
-<div class="line">            group: string</div>
+<div class="line">        group: string</div>
 <div class="line"> </div>
 <div class="line">    GroupAdmin:</div>
-<div class="line">        inherit: [GroupMembership, AdminUser]</div>
+<div class="line">        .meta:</div>
+<div class="line">            inherit: [GroupMembership, AdminUser]</div>
 </div><!-- fragment --><h3><a class="anchor" id="autotoc_md24"></a>
 Exclude some fields</h3>
 <p>You may exclude some fields from getting inherited.</p>
 <div class="fragment"><div class="line">models:</div>
 <div class="line">    User:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            password: string</div>
+<div class="line">        name: string</div>
+<div class="line">        password: string</div>
 <div class="line"> </div>
 <div class="line">    UserInfo:</div>
-<div class="line">        inherit: User</div>
-<div class="line">        exclude_fields: [password]</div>
+<div class="line">        .meta:</div>
+<div class="line">            inherit: User</div>
+<div class="line">            exclude_fields: [password]</div>
 </div><!-- fragment --><h3><a class="anchor" id="autotoc_md25"></a>
 Override fields</h3>
 <p>If a model defines a field, that will override the inheritance.</p>
 <div class="fragment"><div class="line">models:</div>
 <div class="line">    User:</div>
-<div class="line">        fields:</div>
-<div class="line">            name: string</div>
-<div class="line">            age: integer</div>
-<div class="line"> </div>
-<div class="line">    YoungUser:</div>
-<div class="line">        inherit: User</div>
-<div class="line">        fields:</div>
-<div class="line">            age:</div>
-<div class="line">                constraints: [integer, {type: range, min: 5, max: 18}]</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md26"></a>
-ATTENTION</h2>
-<p>This format is very tentative and is still work in progress. There might be a change in the structure so that fields don't have be explicitly under fields.</p>
-<div class="fragment"><div class="line">models:</div>
-<div class="line">    User:</div>
-<div class="line">        @meta:</div>
-<div class="line">            key1: value1</div>
-<div class="line">        @inherit: []</div>
-<div class="line">        @exclude_fields: []</div>
 <div class="line">        name: string</div>
 <div class="line">        age: integer</div>
+<div class="line"> </div>
+<div class="line">    YoungUser:</div>
+<div class="line">        .meta:</div>
+<div class="line">            inherit: User</div>
+<div class="line">        age:</div>
+<div class="line">            constraints: [integer, {type: range, min: 5, max: 18}]</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
