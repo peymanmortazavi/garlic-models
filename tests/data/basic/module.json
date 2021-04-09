@@ -3,7 +3,7 @@
         "DateTime": {
             "label": "Date Time",
             "description": "A US standard date mm/dd/yyyy format.",
-            "meta": {
+            "annotations": {
                 "hint": "You may also use mm/dd/yy format for short."
             },
             "type": "string",
@@ -19,21 +19,21 @@
     },
     "models": {
         "User": {
-            "description": "An imaginary user object.",
-            "fields": {
-                "first_name": "string",
-                "last_name": {
-                    "type": "string",
-                    "label": "Surname",
-                    "constraints": [
-                        {"type": "range", "min": 2, "max": 8}
-                    ]
-                },
-                "birthdate": "DateTime",
-                "registration_date": {
-                    "type": "DateTime",
-                    "description": "The user registration date."
-                }
+            ".meta": {
+                "description": "An imaginary user object."
+            },
+            "first_name": "string",
+            "last_name": {
+                "type": "string",
+                "label": "Surname",
+                "constraints": [
+                    {"type": "range", "min": 2, "max": 8}
+                ]
+            },
+            "birthdate": "DateTime",
+            "registration_date": {
+                "type": "DateTime",
+                "description": "The user registration date."
             }
         }
     }

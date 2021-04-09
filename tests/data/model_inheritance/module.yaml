@@ -15,26 +15,25 @@ fields:
 
 models:
     BaseUser:
-        fields:
-            id: integer
-            username: string
-            password: PasswordField
+        id: integer
+        username: string
+        password: PasswordField
 
     AdminUser:
-        inherit: BaseUser
-        fields:
-            is_super: bool
+        .meta:
+            inherit: BaseUser
+        is_super: bool
 
     MobileUser:
-        inherit: BaseUser
-        fields:
-            username: StrictUserName
+        .meta:
+            inherit: BaseUser
+        username: StrictUserName
 
     BaseQuery:
-        fields:
-            skip: integer
-            limit: integer
+        skip: integer
+        limit: integer
 
     UserQuery:
-        inherit: [BaseQuery, MobileUser]
-        exclude_fields: [password]
+        .meta:
+            inherit: [BaseQuery, MobileUser]
+            exclude_fields: [password]

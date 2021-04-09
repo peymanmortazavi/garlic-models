@@ -21,11 +21,11 @@
             "message": "Field reference must be a valid field name that can end with a ? to indicate an optional field."
         },
         "FieldMap": {
-            "meta": {"description": "A map of declared fields."},
+            "annotations": {"description": "A map of declared fields."},
             "constraints": [{"type": "map", "key": "FieldName", "value": "Field"}]
         },
         "ModelMap": {
-            "meta": {"description": "A map of declared models."},
+            "annotations": {"description": "A map of declared models."},
             "constraints": [{"type": "map", "key": "ModelName", "value": "Model"}]
         },
         "Meta": {

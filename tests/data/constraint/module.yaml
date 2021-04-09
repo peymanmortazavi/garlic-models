@@ -27,7 +27,6 @@ fields:
 
 models:
     User:
-        fields:
-            concise_email: ConciseEmail
-            regular_email: RegularEmail
-            flat_email: FlatEmail
+        concise_email: ConciseEmail
+        regular_email: RegularEmail
+        flat_email: FlatEmail
