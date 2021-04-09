@@ -1,8 +1,8 @@
 #ifndef GARLIC_LAYER_H
 #define GARLIC_LAYER_H
 
-/*! \file layer.h
- *  \brief This file contains concepts for C++ 20 along with some helper types to
+/*! @file layer.h
+ *  @brief This file contains concepts for C++ 20 along with some helper types to
  *         make it easier to produce iterators for the container wrappers (providers).
  */
 
@@ -36,10 +36,10 @@ namespace garlic {
   template<typename T> using ConstMemberIteratorOf = typename std::decay_t<T>::ConstMemberIterator;
   template<typename T> using MemberIteratorOf = typename std::decay_t<T>::MemberIterator;
 
-  /*! \class garlic::ViewLayer
-   *  \brief Concept for reading values from containers.
+  /*! @class garlic::ViewLayer
+   *  @brief Concept for reading values from containers.
    *
-   *  \code
+   *  @code
    *  concept ViewLayer {
    *
    *    // Const value iterator. This iterator can yield any type that conforms to garlic::ViewLayer concept.
@@ -75,14 +75,14 @@ namespace garlic {
    *
    *    T get_view() const;  // must return a garlic::ViewLayer of the current layer without copying its content.
    *  }
-   *  \endcode
+   *  @endcode
    */
 
-  /*! \class garlic::RefLayer
-   *  \brief Concept for reading from and writing to containers.
-   *  \note RefLayer concept requires conforming to garlic::ViewLayer
+  /*! @class garlic::RefLayer
+   *  @brief Concept for reading from and writing to containers.
+   *  @note RefLayer concept requires conforming to garlic::ViewLayer
    *
-   *  \code
+   *  @code
    *  concept RefLayer {
    *
    *    // Value iterator. This iterator can yield any type that conforms to RefLayer concept.
@@ -139,18 +139,18 @@ namespace garlic {
    *
    *    T get_reference();  // must return a RefLayer of the current layer without copying its content.
    *  }
-   *  \endcode
+   *  @endcode
    */
 
-  /*! \class garlic::IteratorWrapper
-   *  \brief Concept for iterator wrapping guidelines.
+  /*! @class garlic::IteratorWrapper
+   *  @brief Concept for iterator wrapping guidelines.
    *
    *  There are base iterator instances like ForwardIterator and RandomAccessIterator 
    *  that take a IteratorWrapper to provide the code to wrap an iterator's value
    *  with another type to produce a full and complete iterator. This is mostly to avoid
    *  repeated iterator code.
    *
-   *  \code
+   *  @code
    *  concept IteratorWrapper {
    *
    *    // The type of the resulting wrapped type.
@@ -163,7 +163,7 @@ namespace garlic {
    *
    *    output_type wrap() const;
    *  }
-   *  \endcode
+   *  @endcode
    */
 
 #ifdef GARLIC_USE_CONCEPTS
@@ -284,12 +284,12 @@ namespace garlic {
   };
 #endif
 
-  /*! \brief A trivial and basic iterator wrapper that conforms to the **IteratorWrapper** concept.
+  /*! @brief A trivial and basic iterator wrapper that conforms to the **IteratorWrapper** concept.
    *
    * The result of the *wrap()* method will be **ValueType { *iterator };**
    *
-   * \tparam ValueType must be a garlic Layer.
-   * \tparam Iterator is the underlying iterator type whose value will be wrapped by the **ValueType**
+   * @tparam ValueType must be a garlic Layer.
+   * @tparam Iterator is the underlying iterator type whose value will be wrapped by the **ValueType**
    */
   template<typename ValueType, typename Iterator>
   struct BasicIteratorWrapper {
@@ -336,13 +336,13 @@ namespace garlic {
 
     bool operator != (const self& other) const { return !(other == *this); }
 
-    //! \return a reference to the underlying iterator.
+    //! @return a reference to the underlying iterator.
     iterator_type& get_inner_iterator() { return container_.iterator; }
 
-    //! \return a const reference to the underlying iterator.
+    //! @return a const reference to the underlying iterator.
     const iterator_type& get_inner_iterator() const { return container_.iterator; }
 
-    //! \return a Layer value returned by the supplied *IteratorWrapper*
+    //! @return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const { return container_.wrap(); }
 
   private:
@@ -437,15 +437,15 @@ namespace garlic {
       return *(*this + index);
     }
 
-    //! \return a reference to the underlying iterator.
+    //! @return a reference to the underlying iterator.
     iterator_type& get_inner_iterator() { return container_.iterator; }
 
-    //! \return a const reference to the underlying iterator.
+    //! @return a const reference to the underlying iterator.
     const iterator_type& get_inner_iterator() const {
       return container_.iterator;
     }
 
-    //! \return a Layer value returned by the supplied *IteratorWrapper*
+    //! @return a Layer value returned by the supplied *IteratorWrapper*
     inline value_type operator * () const {
       return container_.wrap();
     }
@@ -475,19 +475,19 @@ namespace garlic {
     Container container_;
   };
 
-  /*! \brief A generic bask inserter iterator for all garlic Layer types.
+  /*! @brief A generic bask inserter iterator for all garlic Layer types.
    *
    * This is similar to std::back_inserter_iterator but it works on garlic Layer types.
    * Usage is the same exact way as the STL counterpart.
    *
-   * \tparam LayerType any type that conforms to the RefLayer concept.
+   * @tparam LayerType any type that conforms to the RefLayer concept.
    *
-   * \code{.cpp}
+   * @code{.cpp}
    * CloveDocument doc;
    * doc.set_list();
    * int values[] = {1, 2, 3};
    * std::copy(std::begin(values), std::end(values), garlic::back_inserter(doc));
-   * \endcode
+   * @endcode
    */
   template<GARLIC_REF LayerType>
   class back_inserter_iterator {
@@ -523,18 +523,18 @@ namespace garlic {
 
   /*! Very basic forward iterator useful for making wrapper iterators for new providers.
    *
-   * \tparam ValueType is the output garlic Layer type.
-   * \tparam Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
+   * @tparam ValueType is the output garlic Layer type.
+   * @tparam Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
    */
   template<typename ValueType, typename Iterator>
   using BasicForwardIterator = ForwardIterator<
     BasicIteratorWrapper<ValueType, Iterator>
     >;
 
-  /*! \brief Very basic random access iterator useful for making wrapper iterators for new providers.
+  /*! @brief Very basic random access iterator useful for making wrapper iterators for new providers.
    *
-   * \tparam ValueType is the output garlic Layer type.
-   * \tparam Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
+   * @tparam ValueType is the output garlic Layer type.
+   * @tparam Iterator is the underlying iterator type whose values get wrapped by the **ValueType**.
    */
   template<typename ValueType, typename Iterator>
   using BasicRandomAccessIterator = RandomAccessIterator<
@@ -548,13 +548,13 @@ namespace garlic {
     ValueType value;
   };
 
-  /*! \brief Wrapper struct that can be used in a for-loop range iterating over lists.
+  /*! @brief Wrapper struct that can be used in a for-loop range iterating over lists.
    *
    * Since a Layer must contain **begin_list()** and **end_list()** methods, it can't be used in for-loops.
    *
-   * \code{.cpp}
+   * @code{.cpp}
    * ConstListRange get_list() const { return ConstListRange<LayerType>(layer); }
-   * \endcode
+   * @endcode
    */
   template <typename LayerType>
   struct ConstListRange {
@@ -564,13 +564,13 @@ namespace garlic {
     ConstValueIteratorOf<LayerType> end() const { return layer.end_list(); }
   };
 
-  /*! \brief Wrapper struct that can be used in a for-loop range iterating over lists.
+  /*! @brief Wrapper struct that can be used in a for-loop range iterating over lists.
    *
    * Since a Layer must contain **begin_list()** and **end_list()** methods, it can't be used in for-loops.
    *
-   * \code{.cpp}
+   * @code{.cpp}
    * ListRange get_list() { return ListRange<LayerType>(layer); }
-   * \endcode
+   * @endcode
    */
   template <typename LayerType>
   struct ListRange {
@@ -580,13 +580,13 @@ namespace garlic {
     ValueIteratorOf<LayerType> end() { return layer.end_list(); }
   };
 
-  /*! \brief Wrapper struct that can be used in a for-loop range iterating over an object's members.
+  /*! @brief Wrapper struct that can be used in a for-loop range iterating over an object's members.
    *
    * Since a Layer must contain **begin_member()** and **end_member()** methods, it can't be used in for-loops.
    *
-   * \code{.cpp}
+   * @code{.cpp}
    * ConstMemberRange get_member() const { return ConstMemberRange<LayerType>(layer); }
-   * \endcode
+   * @endcode
    */
   template <typename LayerType>
   struct ConstMemberRange {
@@ -596,13 +596,13 @@ namespace garlic {
     ConstMemberIteratorOf<LayerType> end() const { return layer.end_member(); }
   };
 
-  /*! \brief Wrapper struct that can be used in a for-loop range iterating over an object's members.
+  /*! @brief Wrapper struct that can be used in a for-loop range iterating over an object's members.
    *
    * Since a Layer must contain **begin_member()** and **end_member()** methods, it can't be used in for-loops.
    *
-   * \code{.cpp}
+   * @code{.cpp}
    * MemberRange get_member() { return MemberRange<LayerType>(layer); }
-   * \endcode
+   * @endcode
    */
   template <typename LayerType>
   struct MemberRange {

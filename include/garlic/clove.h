@@ -1,14 +1,14 @@
 #ifndef GARLIC_CLOVE_H
 #define GARLIC_CLOVE_H
 
-/*! \file clove.h
- *  \brief Built-in type that provides readable and writable layers.
- *  \code
+/*! @file clove.h
+ *  @brief Built-in type that provides readable and writable layers.
+ *  @code
  *  CloveDocument doc;  // contains an allocator for the entire object. (conforms to garlic::RefLayer)
  *  CloveView view = doc.get_view();  // a view to the doc. (conforms to garlic::ViewLayer)
  *  CloveRef ref = doc.get_reference();  // get a reference to the doc. (conforms to garlic::RefLayer)
  *  CloveValue value(doc);  // use the allocator of the document root. (conforms to garlic::RefLayer)
- *  \endcode
+ *  @endcode
  */
 
 #include "garlic.h"
